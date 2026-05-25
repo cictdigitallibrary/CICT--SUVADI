@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+@theme {
+  --color-maroon: #5C0A0A;
+  --color-maroon-dark: #3D0707;
+  --color-maroon-light: #7A0D0D;
+  
+  --color-gold: #C9973B;
+  --color-gold-dark: #A67B2E;
+  --color-gold-light: #E8B86D;
+  
+  --color-bronze: #8B5E3C;
+  --color-ivory: #F5F0E8;
+  --color-parchment: #E8D5B0;
+  --color-stone: #3D3530;
+  --color-ink: #1A1008;
+
+  /* Tamil font families */
+  --font-tamil-bold: "Baloo Thambi 2", "Noto Sans Tamil", sans-serif;
+  --font-tamil-elegant: "Tiro Tamil", "Noto Sans Tamil", serif;
+  --font-noto: "Noto Sans Tamil", sans-serif;
+  --font-inter: "Inter", sans-serif;
+  --font-playfair: "Cormorant Garamond", "Playfair Display", serif;
+  --font-cinzel: "Cinzel", serif;
+
+  --background-image-paper-texture: url('https://www.transparenttextures.com/patterns/dark-leather.png');
+  --background-image-gold-gradient: linear-gradient(135deg, #C9973B 0%, #E8B86D 50%, #C9973B 100%);
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply font-inter bg-ivory text-stone overflow-x-hidden;
+  background-image: url('https://www.transparenttextures.com/patterns/paper.png');
+}
+
+h1, h2, h3, h4, .font-playfair {
+  @apply font-playfair;
+}
+
+/* ─── Base link reset ─────────────────────────────────── */
+a {
+  text-decoration: none;
+}
+
+/* ── TAMIL FONT CLASSES ─────────────────────────────── */
+
+/* Default Tamil text - clean Noto */
+.tamil-text {
+  font-family: "Noto Sans Tamil", sans-serif;
+  font-weight: 500;
+  line-height: 1.9;
+  letter-spacing: 0.01em;
+}
+
+/* Bold & stylish Tamil headings - Baloo Thambi 2 */
+.tamil-heading {
+  font-family: "Baloo Thambi 2", "Noto Sans Tamil", sans-serif;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+/* Medium weight for labels and buttons */
+.tamil-label {
+  font-family: "Baloo Thambi 2", "Noto Sans Tamil", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Elegant / literary Tamil - Tiro Tamil */
+.tamil-elegant {
+  font-family: "Tiro Tamil", "Noto Sans Tamil", serif;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 2;
+}
+
+/* Body Tamil prose */
+.tamil-body {
+  font-family: "Baloo Thambi 2", "Noto Sans Tamil", sans-serif;
+  font-weight: 500;
+  line-height: 2;
+  font-size: 1rem;
+}
+
+/* ── NAV ─────────────────────────────────────────────── */
+/* (Navbar now uses inline Tailwind styles for scroll state theming) */
+.nav-link {
+  @apply relative text-[11px] uppercase tracking-[0.12em] font-bold transition-all duration-300 hover:text-gold;
+  font-family: "Baloo Thambi 2", "Cinzel", sans-serif;
+}
+
+.nav-link::after {
+  content: '';
+  @apply absolute -bottom-1 left-0 w-0 h-[2px] bg-gold rounded-full transition-all duration-300;
+}
+
+.nav-link:hover::after {
+  @apply w-full;
+}
+
+/* ── BUTTONS ─────────────────────────────────────────── */
+.btn-primary {
+  @apply bg-maroon text-white px-8 py-3 font-bold tracking-wider transition-all duration-300 hover:bg-maroon-light shadow-lg hover:shadow-maroon/25 hover:-translate-y-0.5;
+  font-family: "Baloo Thambi 2", "Cinzel", sans-serif;
+}
+
+.btn-outline {
+  @apply border border-maroon text-maroon px-8 py-3 font-bold tracking-wider transition-all duration-300 hover:bg-maroon hover:text-white hover:-translate-y-0.5;
+  font-family: "Baloo Thambi 2", "Cinzel", sans-serif;
+}
+
+/* ── GLASS ────────────────────────────────────────────── */
+.glass-morphism {
+  background: rgba(26, 5, 5, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(201, 151, 59, 0.15);
+}
+
+/* ── SCROLLBAR ────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-ivory;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gold/40 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gold/70;
+}
+
+/* ── CANVAS ───────────────────────────────────────────── */
+.canvas-container {
+  @apply absolute inset-0 -z-10 bg-ivory;
+}
+
+/* ── DECORATIVE DIVIDERS ──────────────────────────────── */
+.ornamental-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ornamental-divider::before,
+.ornamental-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #C9973B, transparent);
+}
+
+/* ── PULSE GLOW ANIMATION ─────────────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 151, 59, 0); }
+  50% { box-shadow: 0 0 20px 4px rgba(201, 151, 59, 0.25); }
+}
+
+.glow-pulse {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* ── SHIMMER ANIMATION ────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.text-shimmer {
+  background: linear-gradient(90deg, #C9973B 0%, #E8B86D 40%, #C9973B 60%, #A67B2E 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ── FADE UP ANIMATION ────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeUp {
+  animation: fadeUp 0.8s ease forwards;
+}
+
+/* ── CURSOR ───────────────────────────────────────────── */
+.custom-cursor {
+  @apply fixed w-8 h-8 border border-gold rounded-full pointer-events-none z-[9999] transition-transform duration-100 ease-out;
+  transform: translate(-50%, -50%);
+}
