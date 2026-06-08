@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import PageHero from '../components/PageHero';
 
 const API = 'http://localhost:3001';
 
-// Book descriptions from the real website
 const BOOK_DESCRIPTIONS = {
-  9:  { ta: 'தொல்காப்பியத்தின் அச்சுப் பதிப்பு வரலாறு 1847ஆம் ஆண்டு மகாலிங்கையரின் பதிப்பிலிருந்து தொடங்குகிறது.', en: 'The printing history of Tolkappiyam begins with Mahalinga Iyer\'s 1847 edition.' },
+  9:  { ta: 'தொல்காப்பியத்தின் அச்சுப் பதிப்பு வரலாறு 1847ஆம் ஆண்டு மகாலிங்கையரின் பதிப்பிலிருந்து தொடங்குகிறது.', en: "The printing history of Tolkappiyam begins with Mahalinga Iyer's 1847 edition." },
   10: { ta: 'கலித்தொகை 1887ஆம் ஆண்டு சி.வை. தாமோதரம் பிள்ளை நச்சினார்க்கினியர் உரையுடன் வெளியிட்டது சங்க இலக்கிய பதிப்பு வரலாற்றின் தொடக்கம்.', en: 'Kalitogai, published in 1887 by C.W. Damodaram Pillai, marked the start of Sangam literature printing.' },
   11: { ta: 'பத்துப்பாட்டினுள் ஒன்றாகிய திருமுருகாற்றுப்படைக்கு பல அச்சுப் பதிப்புகள் வெளிவந்துள்ளன.', en: 'Several printed editions of Thirumurugatruppadai, a text of Pattupattu, have been published.' },
   12: { ta: '1872ஆம் ஆண்டில் சிலப்பதிகாரம் முதன் முதலாக அச்சுவடிவம் பெற்றது.', en: 'Silappatikaram first received a printed form in 1872.' },
@@ -22,62 +22,65 @@ const BOOK_YEAR_MAP = {
   12: '1872', 13: '1812', 15: '1883', 16: '1905',
 };
 
+const LIBRARIES = [
+  { ta: 'மறைமலையடிகள் நூலகம்',           en: 'Maraimalai Adigal Library' },
+  { ta: 'உ.வே.சாமிநாதையர் நூல்நிலையம்',  en: 'U.Ve.Swaminatha Iyer Library' },
+  { ta: 'ரோஜா முத்தையா ஆராய்ச்சி நூலகம்', en: 'Roja Muthiah Research Library' },
+  { ta: 'தமிழ்ப் பல்கலைக்கழக நூலகம்',    en: 'Tamil University Library' },
+  { ta: 'தமிழ் இணையக் கல்விக்கழகம்',     en: 'Tamil Virtual Academy' },
+];
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } },
+};
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+};
+
 const EBooks = () => {
   const { t } = useLanguage();
 
   const { data: ebooks = [], isLoading } = useQuery({
     queryKey: ['ebooks'],
-    queryFn: async () => {
-      const res = await axios.get(`${API}/api/ebooks`);
-      return res.data;
-    },
+    queryFn: async () => (await axios.get(`${API}/api/ebooks`)).data,
   });
 
   return (
-    <div className="pt-32 pb-24 bg-ivory min-h-screen selection:bg-maroon selection:text-white">
-      <div className="container mx-auto px-6 max-w-6xl">
+    <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
 
-        {/* Header */}
-        <header className="mb-16 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <p className="text-bronze font-cinzel text-[10px] uppercase tracking-[0.5em] mb-4">
-              {t('மின் நூலகம்', 'DIGITAL LIBRARY')}
-            </p>
-            <h1 className="tamil-heading text-5xl md:text-6xl text-maroon mb-6 italic">
-              {t('முதல் அச்சுப் பதிப்புகள்', 'First Printed Editions')}
-            </h1>
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="h-[1px] w-12 bg-gold/50" />
-              <div className="w-1.5 h-1.5 rounded-full bg-gold/50" />
-              <div className="h-[1px] w-12 bg-gold/50" />
-            </div>
-          </motion.div>
-        </header>
+      <PageHero
+        label={t('மின் நூலகம்', 'DIGITAL LIBRARY')}
+        title={t('முதல் அச்சுப் பதிப்புகள்', 'First Printed Editions')}
+        subtitle={t(
+          'செம்மொழித் தமிழுக்கு ஆதாரமான நூல்களின் முதல் அச்சுப் பதிப்புகளை ஆவணப்படுத்திச் செம்மொழி நிறுவனம் வெளியிடுகிறது.',
+          'The Central Institute curates and publishes the earliest printed editions of Classical Tamil foundational texts for global scholarly access.'
+        )}
+        badge={ebooks.length > 0 ? `${ebooks.length} ${t('நூல்கள்', 'Volumes Available')}` : undefined}
+        glyphs={['முதல்', 'அச்சு', 'நூல்', 'பத்து', 'திரு', 'கலி']}
+      />
 
-        {/* Introduction Panel */}
+      <div className="container mx-auto px-6 max-w-6xl py-20">
+
+        {/* ── Introduction Panel ── */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="bg-white border border-maroon/10 shadow-xl p-8 md:p-12 mb-16 relative overflow-hidden"
+          className="bg-white border border-maroon/10 shadow-xl mb-16 relative overflow-hidden"
         >
-          {/* Decorative corner */}
-          <div className="absolute top-0 right-0 w-32 h-32 opacity-[0.03] pointer-events-none">
-            <svg viewBox="0 0 100 100" fill="currentColor" className="text-maroon">
-              <path d="M100,0 V100 H0 Q100,100 100,0" />
-            </svg>
-          </div>
+          {/* Gold top accent */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-maroon via-gold to-maroon" />
 
-          <div className="grid lg:grid-cols-2 gap-12 xl:gap-20 relative z-10">
-            <div>
+          <div className="grid lg:grid-cols-2 gap-0">
+            {/* Intro */}
+            <div className="p-8 md:p-12 border-b lg:border-b-0 lg:border-r border-maroon/5">
               <h2 className="tamil-label text-xl text-maroon border-b border-maroon/10 pb-4 mb-8">
                 {t('அறிமுகம்', 'Introduction')}
               </h2>
-              <p className="tamil-body text-stone/80 mb-6 font-medium">
+              <p className="tamil-body text-stone/80 mb-5 font-medium">
                 {t(
                   'தமிழின் தொன்மை, தனித்தன்மை, தமிழர்களின் நாகரிகம், பண்பாடு ஆகியவற்றின் சிறப்புகளைக் கவனத்தில் கொண்டு பல்வேறு வெளியீடுகளைக் கொண்டுவருவதைச் செம்மொழி நிறுவனம் குறிக்கோளாகக் கொண்டுள்ளது.',
                   'The Central Institute of Classical Tamil documents the unique heritage of Classical Tamil by publishing digital versions of rare first-printed editions.'
@@ -90,33 +93,27 @@ const EBooks = () => {
                 )}
               </p>
             </div>
-            <div>
+
+            {/* Acknowledgements */}
+            <div className="p-8 md:p-12 bg-maroon/[0.015]">
               <h2 className="tamil-label text-xl text-maroon border-b border-maroon/10 pb-4 mb-8">
                 {t('நன்றியுரை', 'Acknowledgements')}
               </h2>
               <p className="tamil-text text-sm text-stone/60 mb-6 font-bold uppercase tracking-wider">
-                {t(
-                  'இந்த அச்சுப் பதிப்புகளை நிறுவனத்திற்கு வழங்கி உதவிய நூலகங்கள்:',
-                  'Libraries that provided originals to CICT:'
-                )}
+                {t('இந்த அச்சுப் பதிப்புகளை நிறுவனத்திற்கு வழங்கி உதவிய நூலகங்கள்:', 'Libraries that provided originals to CICT:')}
               </p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                {[
-                  { ta: 'மறைமலையடிகள் நூலகம்', en: 'Maraimalai Adigal Library' },
-                  { ta: 'உ.வே.சாமிநாதையர் நூல்நிலையம்', en: 'U.Ve.Swaminatha Iyer Library' },
-                  { ta: 'ரோஜா முத்தையா ஆராய்ச்சி நூலகம்', en: 'Roja Muthiah Research Library' },
-                  { ta: 'தமிழ்ப் பல்கலைக்கழக நூலகம்', en: 'Tamil University Library' },
-                  { ta: 'தமிழ் இணையக் கல்விக்கழகம்', en: 'Tamil Virtual Academy' },
-                ].map((lib, i) => (
-                  <motion.li 
-                    key={i} 
+              <ul className="space-y-4">
+                {LIBRARIES.map((lib, i) => (
+                  <motion.li
+                    key={i}
                     initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
                     transition={{ delay: 0.1 * i }}
-                    className="flex items-start gap-3"
+                    className="flex items-start gap-3 group"
                   >
-                    <span className="text-gold mt-1.5 flex-shrink-0">✦</span>
-                    <span className="tamil-text text-stone/70 font-semibold leading-relaxed">
+                    <span className="text-gold mt-1.5 flex-shrink-0 group-hover:scale-125 transition-transform">✦</span>
+                    <span className="tamil-text text-stone/70 font-semibold leading-relaxed group-hover:text-maroon transition-colors">
                       {t(lib.ta, lib.en)}
                     </span>
                   </motion.li>
@@ -126,15 +123,15 @@ const EBooks = () => {
           </div>
         </motion.div>
 
-        {/* E-Book Cards Grid */}
+        {/* ── Book Cards ── */}
         <div className="mb-16">
-          <div className="flex items-center justify-between mb-10 pb-4 border-b border-maroon/5">
-             <h2 className="tamil-label text-2xl text-maroon">
-               {t('நூல் தொகுப்புகள்', 'Archived Collections')}
-             </h2>
-             <div className="hidden md:block text-[10px] font-bold text-bronze uppercase tracking-[0.3em]">
-               {ebooks.length} {t('நூல்கள்', 'Volumes Available')}
-             </div>
+          <div className="flex items-center justify-between mb-10 pb-4 border-b border-maroon/8">
+            <h2 className="tamil-label text-2xl text-maroon">
+              {t('நூல் தொகுப்புகள்', 'Archived Collections')}
+            </h2>
+            <div className="hidden md:block text-[10px] font-bold text-bronze uppercase tracking-[0.3em]">
+              {ebooks.length} {t('நூல்கள்', 'Volumes Available')}
+            </div>
           </div>
 
           {isLoading ? (
@@ -145,16 +142,22 @@ const EBooks = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8">
-              {ebooks.map((book, idx) => (
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, amount: 0.1 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8"
+            >
+              {ebooks.map((book) => (
                 <motion.div
                   key={book.id}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="group bg-white border border-maroon/10 shadow hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-full cursor-pointer hover:border-gold/30 hover:-translate-y-1.5"
+                  variants={fadeUp}
+                  className="group bg-white border border-maroon/10 shadow hover:shadow-2xl hover:shadow-maroon/5 transition-all duration-500 overflow-hidden flex flex-col h-full cursor-pointer hover:border-gold/30 hover:-translate-y-2 relative"
                 >
+                  {/* Top accent line */}
+                  <div className="absolute top-0 left-0 w-0 group-hover:w-full h-[3px] bg-gradient-to-r from-gold to-gold-light transition-all duration-700" />
+
                   {/* Cover */}
                   <div className="relative bg-maroon/[0.02] flex items-center justify-center overflow-hidden border-b border-maroon/5 group-hover:bg-ivory transition-colors duration-500"
                        style={{ height: 220 }}>
@@ -167,10 +170,12 @@ const EBooks = () => {
                     ) : (
                       <span className="text-6xl opacity-[0.08]">📚</span>
                     )}
-                    {/* Badge */}
-                    <div className="absolute top-4 right-4 bg-maroon text-gold text-[9px] font-bold px-2 py-0.5 shadow-lg opacity-0 translate-y-[-10px] group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                    {/* Year badge */}
+                    <div className="absolute top-3 right-3 bg-maroon text-gold text-[9px] font-bold px-2 py-0.5 shadow-lg opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
                       {BOOK_YEAR_MAP[book.id] || 'N.A.'}
                     </div>
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-maroon/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </div>
 
                   {/* Info */}
@@ -181,7 +186,7 @@ const EBooks = () => {
                     <p className="font-cinzel text-[9px] text-bronze uppercase tracking-widest font-bold mb-4 opacity-60">
                       {book.title_english}
                     </p>
-                    
+
                     {BOOK_DESCRIPTIONS[book.id] && (
                       <p className="tamil-text text-[13px] text-stone/50 leading-relaxed line-clamp-3 mb-6 font-medium italic">
                         {t(BOOK_DESCRIPTIONS[book.id].ta, BOOK_DESCRIPTIONS[book.id].en)}
@@ -199,25 +204,26 @@ const EBooks = () => {
                   </div>
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
 
-        {/* Publishing Notes */}
+        {/* ── Publishing Notes (dark banner) ── */}
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-maroon relative overflow-hidden shadow-2xl p-8 md:p-12 mb-10"
+          transition={{ duration: 0.8 }}
+          className="bg-maroon relative overflow-hidden shadow-2xl mb-10"
         >
-          {/* Decorative Pattern */}
-          <div className="absolute inset-0 opacity-[0.06]"
+          <div className="absolute inset-0 opacity-[0.05]"
             style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/dark-leather.png')" }} />
-          
-          <div className="relative z-10">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
+
+          <div className="relative z-10 p-8 md:p-12">
             <h2 className="tamil-heading text-2xl text-gold mb-8 flex items-center gap-4">
               <span>{t('பதிப்புக் குறிப்புகள்', 'Publishing Excellence')}</span>
-              <div className="h-[1px] flex-1 bg-gold/20" />
+              <div className="h-px flex-1 bg-gold/20" />
             </h2>
             <div className="grid lg:grid-cols-2 gap-10 xl:gap-20 text-[15px] leading-loose text-white/70">
               <p className="tamil-body font-medium">
@@ -229,7 +235,7 @@ const EBooks = () => {
               <p className="tamil-body font-medium">
                 {t(
                   'தொல்காப்பியத்தின் அச்சுப் பதிப்பு வரலாறு மழைவை மகாலிங்கையர் பதிப்பித்த எழுத்ததிகார நச்சினார்க்கினியர் உரைப் பதிப்பிலிருந்து தொடங்குகிறது. 1847ஆம் ஆண்டு அப்பதிப்பு வெளிவந்தது.',
-                  'Tolkappiyam\'s printed history began with the 1847 edition of Eluthathikaram, with Nachinarkkiniyar\'s commentary, published by the scholar Mazhaivai Mahalinga Iyer.'
+                  "Tolkappiyam's printed history began with the 1847 edition of Eluthathikaram, with Nachinarkkiniyar's commentary, published by the scholar Mazhaivai Mahalinga Iyer."
                 )}
               </p>
             </div>
