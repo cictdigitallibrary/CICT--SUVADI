@@ -1,11 +1,17 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 
+const API = 'http://localhost:3001';
+
 const Contact = () => {
   const { t } = useLanguage();
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [status, setStatus] = useState('idle'); // idle | loading | success | error
+  const [errorMsg, setErrorMsg] = useState('');
 
   const contactInfo = [
     {
@@ -144,58 +150,131 @@ const Contact = () => {
                 {t('தொடர்பு படிவம்', 'Direct Message')}
               </h3>
 
-              <form className="space-y-6" onSubmit={e => e.preventDefault()}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { label: t('உங்கள் பெயர்', 'Your Name'), type: 'text', id: 'contact-name' },
-                    { label: t('மின்னஞ்சல்', 'Email Address'), type: 'email', id: 'contact-email' },
-                  ].map(field => (
-                    <div key={field.id} className="space-y-2 group">
-                      <label htmlFor={field.id} className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
-                        {field.label}
+              <AnimatePresence mode="wait">
+                {status === 'success' ? (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center py-16 text-center space-y-6"
+                  >
+                    <div className="w-20 h-20 rounded-full bg-green-50 border-2 border-green-200 flex items-center justify-center text-4xl">✅</div>
+                    <div>
+                      <h4 className="tamil-heading text-2xl text-maroon mb-2">{t('நன்றி!', 'Message Sent!')}</h4>
+                      <p className="tamil-text text-stone/60 font-medium">{t('உங்கள் செய்தி பெறப்பட்டது. நாங்கள் விரைவில் தொடர்பு கொள்வோம்.', 'Your message has been received. We will get back to you shortly.')}</p>
+                    </div>
+                    <button
+                      onClick={() => { setStatus('idle'); setFormData({ name: '', email: '', subject: '', message: '' }); }}
+                      className="px-8 py-3 border-2 border-maroon text-maroon text-xs font-black uppercase tracking-widest hover:bg-maroon hover:text-gold transition-all duration-300"
+                    >
+                      {t('மீண்டும் அனுப்ப', 'Send Another')}
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.form
+                    key="form"
+                    className="space-y-6"
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      setStatus('loading');
+                      setErrorMsg('');
+                      try {
+                        await axios.post(`${API}/api/contact`, formData);
+                        setStatus('success');
+                      } catch (err) {
+                        setErrorMsg(err.response?.data?.error || 'Something went wrong. Please try again.');
+                        setStatus('error');
+                      }
+                    }}
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2 group">
+                        <label htmlFor="contact-name" className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
+                          {t('உங்கள் பெயர்', 'Your Name')} <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          id="contact-name"
+                          type="text"
+                          required
+                          value={formData.name}
+                          onChange={e => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full bg-ivory border border-maroon/10 p-4 outline-none focus:border-gold focus:bg-white transition-all duration-200 tamil-text text-sm font-bold"
+                        />
+                      </div>
+                      <div className="space-y-2 group">
+                        <label htmlFor="contact-email" className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
+                          {t('மின்னஞ்சல்', 'Email Address')} <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          id="contact-email"
+                          type="email"
+                          required
+                          value={formData.email}
+                          onChange={e => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full bg-ivory border border-maroon/10 p-4 outline-none focus:border-gold focus:bg-white transition-all duration-200 tamil-text text-sm font-bold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="contact-subject" className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
+                        {t('பொருள்', 'Subject of Inquiry')}
                       </label>
                       <input
-                        id={field.id}
-                        type={field.type}
+                        id="contact-subject"
+                        type="text"
+                        value={formData.subject}
+                        onChange={e => setFormData({ ...formData, subject: e.target.value })}
                         className="w-full bg-ivory border border-maroon/10 p-4 outline-none focus:border-gold focus:bg-white transition-all duration-200 tamil-text text-sm font-bold"
                       />
                     </div>
-                  ))}
-                </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="contact-subject" className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
-                    {t('பொருள்', 'Subject of Inquiry')}
-                  </label>
-                  <input
-                    id="contact-subject"
-                    type="text"
-                    className="w-full bg-ivory border border-maroon/10 p-4 outline-none focus:border-gold focus:bg-white transition-all duration-200 tamil-text text-sm font-bold"
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <label htmlFor="contact-message" className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
+                        {t('செய்தி', 'Your Message')} <span className="text-red-400">*</span>
+                      </label>
+                      <textarea
+                        id="contact-message"
+                        rows={5}
+                        required
+                        value={formData.message}
+                        onChange={e => setFormData({ ...formData, message: e.target.value })}
+                        className="w-full bg-ivory border border-maroon/10 p-4 outline-none focus:border-gold focus:bg-white transition-all duration-200 tamil-text text-sm font-bold resize-none"
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="contact-message" className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
-                    {t('செய்தி', 'Your Message')}
-                  </label>
-                  <textarea
-                    id="contact-message"
-                    rows={5}
-                    className="w-full bg-ivory border border-maroon/10 p-4 outline-none focus:border-gold focus:bg-white transition-all duration-200 tamil-text text-sm font-bold resize-none"
-                  />
-                </div>
+                    {status === 'error' && (
+                      <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold p-4 rounded">
+                        ⚠️ {errorMsg}
+                      </div>
+                    )}
 
-                <button
-                  type="submit"
-                  className="group w-full py-4 bg-maroon text-gold text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-maroon-dark hover:shadow-maroon/20 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-gold/0 via-gold/10 to-gold/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                  <span className="relative tamil-label">{t('அனுப்புக', 'TRANSMIT MESSAGE')}</span>
-                </button>
-              </form>
+                    <button
+                      type="submit"
+                      disabled={status === 'loading'}
+                      className="group w-full py-4 bg-maroon text-gold text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-maroon-dark hover:shadow-maroon/20 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-gold/0 via-gold/10 to-gold/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                      <span className="relative tamil-label flex items-center justify-center gap-3">
+                        {status === 'loading' ? (
+                          <>
+                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                            </svg>
+                            {t('அனுப்புகிறது...', 'SENDING...')}
+                          </>
+                        ) : t('அனுப்புக', 'TRANSMIT MESSAGE')}
+                      </span>
+                    </button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </div>
+
 
         {/* ── Location visual ── */}
         <div className="mt-24 bg-stone/5 border border-maroon/10 overflow-hidden relative group h-[360px]">

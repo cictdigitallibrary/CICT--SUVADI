@@ -53,6 +53,18 @@ db.exec(`
   )
 `);
 
+// Initialize contacts table
+db.exec(`
+  CREATE TABLE IF NOT EXISTS contacts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    subject TEXT,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
 // Multer config for song uploads
 const songStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -87,6 +99,16 @@ app.put('/api/admin/books/:id', (req, res) => {
 });
 app.delete('/api/admin/books/:id', (req, res) => {
   db.prepare('DELETE FROM sv_book WHERE book_id = ?').run(req.params.id);
+  // Cascade delete
+  const categories = db.prepare('SELECT cid FROM sv_main_category WHERE book_id = ?').all(req.params.id);
+  for (const cat of categories) {
+    db.prepare('DELETE FROM sv_main_category WHERE cid = ?').run(cat.cid);
+    const subcats = db.prepare('SELECT id FROM sv_sub_category WHERE main_category_id = ?').all(cat.cid);
+    for (const sub of subcats) {
+      db.prepare('DELETE FROM sv_sub_category WHERE id = ?').run(sub.id);
+      db.prepare('UPDATE sv_songs SET trash = 1 WHERE cid = ?').run(sub.id);
+    }
+  }
   res.json({ success: true });
 });
 
@@ -103,6 +125,16 @@ app.post('/api/admin/categories', (req, res) => {
 app.put('/api/admin/categories/:id', (req, res) => {
   const { book_id, cname, status } = req.body;
   db.prepare('UPDATE sv_main_category SET book_id = ?, cname = ?, status = ? WHERE cid = ?').run(book_id, cname, status, req.params.id);
+  res.json({ success: true });
+});
+app.delete('/api/admin/categories/:id', (req, res) => {
+  db.prepare('DELETE FROM sv_main_category WHERE cid = ?').run(req.params.id);
+  // Cascade delete
+  const subcats = db.prepare('SELECT id FROM sv_sub_category WHERE main_category_id = ?').all(req.params.id);
+  for (const sub of subcats) {
+    db.prepare('DELETE FROM sv_sub_category WHERE id = ?').run(sub.id);
+    db.prepare('UPDATE sv_songs SET trash = 1 WHERE cid = ?').run(sub.id);
+  }
   res.json({ success: true });
 });
 
@@ -122,6 +154,15 @@ app.post('/api/admin/subcategories', (req, res) => {
   const info = db.prepare('INSERT INTO sv_sub_category (book_id, main_category_id, sub_cat_name, status) VALUES (?, ?, ?, ?)').run(book_id, main_category_id, sub_cat_name, status);
   res.json({ id: info.lastInsertRowid });
 });
+app.put('/api/admin/subcategories/:id', (req, res) => {
+  const { book_id, main_category_id, sub_cat_name, status } = req.body;
+  db.prepare('UPDATE sv_sub_category SET book_id = ?, main_category_id = ?, sub_cat_name = ?, status = ? WHERE id = ?').run(book_id, main_category_id, sub_cat_name, status, req.params.id);
+  res.json({ success: true });
+});
+app.delete('/api/admin/subcategories/:id', (req, res) => {
+  db.prepare('DELETE FROM sv_sub_category WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
 
 // SONGS CRUD
 app.get('/api/admin/songs', (req, res) => {
@@ -131,9 +172,10 @@ app.get('/api/admin/songs', (req, res) => {
     SELECT s.*, sc.sub_cat_name 
     FROM sv_songs s 
     LEFT JOIN sv_sub_category sc ON sc.id = s.cid
+    WHERE s.trash = 0
     ORDER BY s.id DESC LIMIT ? OFFSET ?
   `).all(limit, offset);
-  const total = db.prepare('SELECT COUNT(*) as c FROM sv_songs').get().c;
+  const total = db.prepare('SELECT COUNT(*) as c FROM sv_songs WHERE trash = 0').get().c;
   res.json({ rows, total });
 });
 
@@ -151,6 +193,42 @@ app.post('/api/admin/songs', uploadSong.single('image'), (req, res) => {
   res.json({ id: info.lastInsertRowid });
 });
 
+app.put('/api/admin/songs/:id', uploadSong.single('image'), (req, res) => {
+  const { cid, fid, description, status } = req.body;
+  
+  if (req.file) {
+    const fname = req.file.originalname;
+    db.prepare('UPDATE sv_songs SET cid = ?, fid = ?, fname = ?, description = ?, status = ? WHERE id = ?').run(cid, fid, fname, description, status, req.params.id);
+    
+    const newName = `${req.params.id}_${fname}`;
+    const oldPath = req.file.path;
+    const newPath = path.join(path.dirname(oldPath), newName);
+    fs.renameSync(oldPath, newPath);
+  } else {
+    // Check if category changed and move file if it did
+    const oldSong = db.prepare('SELECT cid, fname FROM sv_songs WHERE id = ?').get(req.params.id);
+    if (oldSong && String(oldSong.cid) !== String(cid) && oldSong.fname) {
+      const oldFilePath = path.join(SONGS_PATH, String(oldSong.cid), `${req.params.id}_${oldSong.fname}`);
+      const newDir = path.join(SONGS_PATH, String(cid));
+      if (!fs.existsSync(newDir)) fs.mkdirSync(newDir, { recursive: true });
+      const newFilePath = path.join(newDir, `${req.params.id}_${oldSong.fname}`);
+      
+      if (fs.existsSync(oldFilePath)) {
+        fs.renameSync(oldFilePath, newFilePath);
+      }
+    }
+    
+    db.prepare('UPDATE sv_songs SET cid = ?, fid = ?, description = ?, status = ? WHERE id = ?').run(cid, fid, description, status, req.params.id);
+  }
+  res.json({ success: true });
+});
+
+app.delete('/api/admin/songs/:id', (req, res) => {
+  // Soft Delete: Keep physical file and update trash flag
+  db.prepare('UPDATE sv_songs SET trash = 1 WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
 // USERS CRUD
 app.get('/api/admin/users', (req, res) => {
   const rows = db.prepare('SELECT id, username, email, role, status, created_at FROM sv_users').all();
@@ -160,6 +238,15 @@ app.post('/api/admin/users', (req, res) => {
   const { username, password, email, role } = req.body;
   const info = db.prepare('INSERT INTO sv_users (username, password, email, role) VALUES (?, ?, ?, ?)').run(username, password, email, role);
   res.json({ id: info.lastInsertRowid });
+});
+app.put('/api/admin/users/:id', (req, res) => {
+  const { username, password, email, role, status } = req.body;
+  if (password) {
+    db.prepare('UPDATE sv_users SET username = ?, password = ?, email = ?, role = ?, status = ? WHERE id = ?').run(username, password, email, role, status, req.params.id);
+  } else {
+    db.prepare('UPDATE sv_users SET username = ?, email = ?, role = ?, status = ? WHERE id = ?').run(username, email, role, status, req.params.id);
+  }
+  res.json({ success: true });
 });
 app.delete('/api/admin/users/:id', (req, res) => {
   db.prepare('DELETE FROM sv_users WHERE id = ?').run(req.params.id);
@@ -379,8 +466,29 @@ app.get('/api/songs', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// 8. Contact form submission
+app.post('/api/contact', (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'Name, email, and message are required.' });
+    }
+    db.prepare('INSERT INTO contacts (name, email, subject, message) VALUES (?, ?, ?, ?)').run(name, email, subject || '', message);
+    res.json({ success: true, message: 'Message received. Thank you!' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 9. Admin - View contact messages
+app.get('/api/admin/contacts', (req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM contacts ORDER BY created_at DESC').all();
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // Health check
 app.get('/health', (req, res) => res.send('OK'));
+
 
 // ── Robust server start ─────────────────────────────────────────────────────
 function startServer(port) {
