@@ -16,11 +16,17 @@ const AdminPortal = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({});
   const [stats, setStats] = useState({ books: 0, categories: 0, songs: 0 });
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab]);
 
   useEffect(() => {
     fetchData();
     fetchStats();
-  }, [activeTab]);
+  }, [activeTab, page]);
 
   const fetchStats = async () => {
     try {
@@ -36,8 +42,14 @@ const AdminPortal = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/${activeTab}`);
-      setData(Array.isArray(res.data) ? res.data : (res.data.rows || []));
+      const res = await axios.get(`${API}/${activeTab}?page=${page}&limit=50`);
+      if (res.data.rows) {
+        setData(res.data.rows);
+        setTotalPages(Math.ceil(res.data.total / 50));
+      } else {
+        setData(Array.isArray(res.data) ? res.data : []);
+        setTotalPages(1);
+      }
     } catch (e) {
       console.error(e);
       setData([]);
@@ -50,7 +62,18 @@ const AdminPortal = () => {
     e.preventDefault();
     try {
       if (editingItem) {
-        await axios.put(`${API}/${activeTab}/${editingItem.book_id || editingItem.cid || editingItem.id}`, formData);
+        if (activeTab === 'songs' && formData.imageFile) {
+          const data = new FormData();
+          Object.keys(formData).forEach(key => {
+            if (key !== 'imageFile') data.append(key, formData[key]);
+          });
+          data.append('image', formData.imageFile);
+          await axios.put(`${API}/${activeTab}/${editingItem.book_id || editingItem.cid || editingItem.id}`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+        } else {
+          await axios.put(`${API}/${activeTab}/${editingItem.book_id || editingItem.cid || editingItem.id}`, formData);
+        }
       } else {
         if (activeTab === 'songs' && formData.imageFile) {
           const data = new FormData();
@@ -291,6 +314,28 @@ const AdminPortal = () => {
                 </tbody>
               </table>
             </div>
+
+            {totalPages > 1 && (
+              <div className="p-6 border-t border-stone/10 flex items-center justify-between bg-stone/5">
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-6 py-2 bg-white border border-stone/20 rounded-xl text-[10px] font-black text-maroon hover:bg-maroon hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-maroon transition-all uppercase tracking-widest shadow-sm"
+                >
+                  Previous
+                </button>
+                <div className="text-[10px] font-black text-stone/40 uppercase tracking-widest">
+                  Page <span className="text-maroon text-xs mx-1">{page}</span> of {totalPages}
+                </div>
+                <button 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-6 py-2 bg-white border border-stone/20 rounded-xl text-[10px] font-black text-maroon hover:bg-maroon hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-maroon transition-all uppercase tracking-widest shadow-sm"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -342,6 +387,23 @@ const AdminPortal = () => {
                        <div>
                           <label className="block text-[10px] font-black text-stone/40 uppercase tracking-widest mb-3">Category Name (Tamil)</label>
                           <input type="text" required value={formData.cname || ''} onChange={e => setFormData({...formData, cname: e.target.value})} className="w-full bg-stone/5 border border-stone/10 rounded-xl px-6 py-4 tamil-body font-bold text-maroon" />
+                       </div>
+                    </div>
+                 )}
+
+                 {activeTab === 'subcategories' && (
+                    <div className="space-y-6">
+                       <div>
+                          <label className="block text-[10px] font-black text-stone/40 uppercase tracking-widest mb-3">Parent Book ID</label>
+                          <input type="number" required value={formData.book_id || ''} onChange={e => setFormData({...formData, book_id: e.target.value})} className="w-full bg-stone/5 border border-stone/10 rounded-xl px-6 py-4" />
+                       </div>
+                       <div>
+                          <label className="block text-[10px] font-black text-stone/40 uppercase tracking-widest mb-3">Parent Category ID</label>
+                          <input type="number" required value={formData.main_category_id || ''} onChange={e => setFormData({...formData, main_category_id: e.target.value})} className="w-full bg-stone/5 border border-stone/10 rounded-xl px-6 py-4" />
+                       </div>
+                       <div>
+                          <label className="block text-[10px] font-black text-stone/40 uppercase tracking-widest mb-3">Sub-Category Name (Tamil)</label>
+                          <input type="text" required value={formData.sub_cat_name || ''} onChange={e => setFormData({...formData, sub_cat_name: e.target.value})} className="w-full bg-stone/5 border border-stone/10 rounded-xl px-6 py-4 tamil-body font-bold text-maroon" />
                        </div>
                     </div>
                  )}
