@@ -91,7 +91,7 @@ const Team = () => {
                         <img
                           src={photoUrl}
                           alt={member.name_english}
-                          className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-700 ease-out"
                           onError={e => {
                             e.target.style.display = 'none';
                             e.target.nextSibling.style.display = 'flex';
