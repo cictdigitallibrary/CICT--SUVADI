@@ -123,13 +123,10 @@ const EBookDetail = () => {
 
                     <div>
                       {/* Edition Cover (Flat Image with 3D Opening Effect) */}
-                      <div className="w-full h-[260px] mb-6 flex items-center justify-center" style={{ perspective: '1200px' }}>
-                        <div 
-                          className="relative w-[150px] h-[220px] transition-transform duration-700 ease-out group-hover:-translate-x-2" 
-                          style={{ transformStyle: 'preserve-3d' }}
-                        >
+                      <div className="book-3d-wrapper w-full h-[260px] mb-6 flex items-center justify-center">
+                        <div className="book-3d-container relative w-[150px] h-[220px]">
                           {/* Front Cover */}
-                          <div className="absolute inset-0 z-20 origin-left transition-transform duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:[-webkit-transform:rotateY(-35deg)] group-hover:[transform:rotateY(-35deg)] bg-white shadow-[2px_2px_10px_rgba(0,0,0,0.3)] border border-black/5">
+                          <div className="book-3d-cover absolute inset-0 z-20 bg-white shadow-[2px_2px_10px_rgba(0,0,0,0.3)] border border-black/5">
                             <img 
                               src={edition.image_folder ? `https://suvadi.cict.in/asp/ebooks/${edition.image_folder}/files/mobile/1.jpg` : `${API}${book.cover_image}`} 
                               alt={edition.title_english} 
@@ -141,7 +138,7 @@ const EBookDetail = () => {
 
                           {/* Book Block / Pages (visible behind the cover when open) */}
                           <div 
-                            className="absolute inset-0 z-10 origin-left transition-transform duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:[-webkit-transform:rotateY(-8deg)] group-hover:[transform:rotateY(-8deg)] bg-[#f8f5f0] border border-stone-300 shadow-xl rounded-r-[2px]" 
+                            className="absolute inset-0 z-10 origin-left bg-[#f8f5f0] border border-stone-300 shadow-xl rounded-r-[2px]" 
                             style={{ transform: 'translateZ(-8px)' }}
                           >
                             {/* Pages Edge Texture */}

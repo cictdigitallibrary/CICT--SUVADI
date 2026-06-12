@@ -240,3 +240,23 @@ a {
   left: 150%;
 }
 
+/* ── 3D BOOK HOVER EFFECT ── */
+.book-3d-wrapper {
+  perspective: 1200px;
+}
+.book-3d-container {
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.group:hover .book-3d-container {
+  transform: translateX(-8px) rotateY(-8deg);
+}
+.book-3d-cover {
+  transform-origin: left center;
+  transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+.group:hover .book-3d-cover {
+  transform: rotateY(-35deg);
+}

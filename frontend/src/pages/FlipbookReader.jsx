@@ -84,7 +84,12 @@ const PDFPage = React.forwardRef(({ pageNum, currentPage, pageWidth }, ref) => {
 });
 PDFPage.displayName = 'PDFPage';
 
-const PDF_OPTIONS = { cMapUrl: 'https://unpkg.com/pdfjs-dist/cmaps/', cMapPacked: true };
+const PDF_OPTIONS = { 
+  cMapUrl: 'https://unpkg.com/pdfjs-dist/cmaps/', 
+  cMapPacked: true,
+  disableRange: true,
+  disableStream: true
+};
 
 /* ──────────────────────────────────────────────────────────────
    FlipbookReader – main viewer component
