@@ -5,15 +5,16 @@ import { useLocation } from 'react-router-dom';
 
 const Layout = ({ children }) => {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
+  const isAdmin  = location.pathname.startsWith('/admin');
+  const isReader = location.pathname.includes('/read');
 
   return (
     <div className="min-h-screen flex flex-col">
-      {!isAdmin && <Navbar />}
+      {!isAdmin && !isReader && <Navbar />}
       <main className={`flex-grow ${isAdmin ? 'h-screen overflow-hidden' : ''}`}>
         {children}
       </main>
-      {!isAdmin && <Footer />}
+      {!isAdmin && !isReader && <Footer />}
     </div>
   );
 };

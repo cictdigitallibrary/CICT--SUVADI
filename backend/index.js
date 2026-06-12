@@ -266,15 +266,67 @@ const BOOK_COVER_MAP = {
   16: '/images/ebook_title/mutholaiyram.png',
 };
 
-// English names for sv_book
 const BOOK_ENGLISH_MAP = {
   9:  'Tolkappiyam',
   10: 'Ettuthokai',
-  11: 'Pathuppattu',
-  12: 'Silapathikaram',
+  11: 'Pattupattu',
+  12: 'Silappatikaram',
   13: 'Pathinenkilkanakku',
-  15: 'Irayanar',
-  16: 'Muttollaiyiram',
+  15: 'Irayanar Agapporul',
+  16: 'Muttollayiram'
+};
+
+// ── 3D Edition Covers Map ───────────────────────────────────────────────────
+const EDITION_3D_COVERS = {
+  1: '/images/thol-cvr-sl/1.jpg',
+  2: '/images/thol-cvr-sl/2.jpg',
+  3: '/images/thol-cvr-sl/3.jpg',
+  4: '/images/thol-cvr-sl/thol.porul-1917.jpg',
+  5: '/images/thol-cvr-sl/5.jpg',
+  6: '/images/thol-cvr-sl/6.jpg',
+  7: '/images/thol-cvr-sl/7.jpg',
+  8: '/images/thol-cvr-sl/empty.jpg',
+  9: '/images/thol-cvr-sl/9.jpg',
+  10: '/images/thol-cvr-sl/10.jpg',
+  11: '/images/thol-cvr-sl/11.jpg',
+  12: '/images/thol-cvr-sl/12.jpg',
+  13: '/images/thol-cvr-sl/13.jpg',
+  14: '/images/thol-cvr-sl/14.jpg', 
+  15: '/images/thol-cvr-sl/15.jpg',
+  16: '/images/thol-cvr-sl/thol_kal.jpg',
+  17: '/images/8t10p-cvr-sl/1.jpg',
+  18: '/images/8t10p-cvr-sl/2.jpg',
+  19: '/images/8t10p-cvr-sl/3.jpg',
+  20: '/images/8t10p-cvr-sl/4.jpg',
+  21: '/images/8t10p-cvr-sl/5.jpg',
+  22: '/images/8t10p-cvr-sl/6.jpg',
+  23: '/images/8t10p-cvr-sl/7.jpg',
+  24: '/images/8t10p-cvr-sl/8.jpg',
+  25: '/images/8t10p-cvr-sl/9.jpg',
+  26: '/images/Silappathikaram/1.1872.jpg',
+  27: '/images/Silappathikaram/2.1876.jpg',
+  28: '/images/Silappathikaram/3.1880.jpg',
+  29: '/images/Silappathikaram/silambu-1892.jpg',
+  30: '/images/kilkanakku/small cover page/1.thirukkural.jpg',
+  31: '/images/kilkanakku/small cover page/2.naladiyar.jpg',
+  32: '/images/kilkanakku/small cover page/iniyavai 40.jpg',
+  33: '/images/kilkanakku/small cover page/04.aasarakovai.jpg',
+  34: '/images/kilkanakku/small cover page/thirukadugam.jpg',
+  35: '/images/kilkanakku/small cover page/nanmanikadigai.jpg',
+  36: '/images/kilkanakku/small cover page/palamoli 400.jpg',
+  37: '/images/kilkanakku/small cover page/sirupanchamoolam.jpg',
+  38: '/images/kilkanakku/small cover page/kalavizhi 40.jpg',
+  39: '/images/kilkanakku/small cover page/10.kaar40.jpg',
+  40: '/images/kilkanakku/small cover page/inna40.jpg',
+  41: '/images/kilkanakku/small cover page/muthumozi.jpg',
+  42: '/images/kilkanakku/small cover page/13.elathi.jpg',
+  43: '/images/kilkanakku/small cover page/aintenai-50.jpg',
+  44: '/images/kilkanakku/small cover page/15.thinai malai 150.jpg',
+  45: '/images/kilkanakku/small cover page/ainthenai 70.jpg',
+  46: '/images/kilkanakku/small cover page/thinaimozhi 50.jpg',
+  47: '/images/kilkanakku/small cover page/18.kainilai_1931.jpg',
+  48: '/images/irayanar/book cover.jpg',
+  49: '/images/mutholayiram/muthol_1905.jpg'
 };
 
 // ── Team photo map ──────────────────────────────────────────────────────────
@@ -384,19 +436,104 @@ app.get('/api/manuscripts/search', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 4. Ebooks — each book entry with cover image
+// PDF proxy — bypasses CORS and supports Range Requests for fast streaming
+const https = require('https');
+app.get('/api/proxy/pdf', (req, res) => {
+  const { url } = req.query;
+  if (!url || !url.startsWith('https://suvadi.cict.in/')) {
+    return res.status(403).json({ error: 'Forbidden URL' });
+  }
+
+  const options = { headers: {} };
+  // Forward range request to support pdf.js chunked loading
+  if (req.headers.range) {
+    options.headers.range = req.headers.range;
+  }
+
+  https.get(url, options, (proxyRes) => {
+    // Copy all headers from the remote server (including Content-Range, Accept-Ranges, Content-Length)
+    for (const [key, value] of Object.entries(proxyRes.headers)) {
+      res.setHeader(key, value);
+    }
+    // Override/Ensure CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Range, Content-Length, Content-Type');
+    
+    // Forward the exact status code (200 OK or 206 Partial Content)
+    res.status(proxyRes.statusCode);
+
+    proxyRes.pipe(res);
+  }).on('error', (err) => {
+    console.error('PDF proxy error:', err.message);
+    if (!res.headersSent) res.status(500).json({ error: err.message });
+  });
+});
+
+// Book reader URLs from live site
+const BOOK_URL_MAP = {
+  9:  'https://suvadi.cict.in/asp/thol.aspx',
+  10: 'https://suvadi.cict.in/asp/ettuthokai.aspx',
+  11: 'https://suvadi.cict.in/asp/pathuppaatu.aspx',
+  12: 'https://suvadi.cict.in/asp/silappathikaram.aspx',
+  13: 'https://suvadi.cict.in/asp/kilkanakku.aspx',
+  15: 'https://suvadi.cict.in/asp/irayanar.aspx',
+  16: 'https://suvadi.cict.in/asp/mutholayiram.aspx',
+};
+
+// 4. Ebooks — book list
 app.get('/api/ebooks', (req, res) => {
   try {
-    const rows = db.prepare('SELECT book_id as id, name as title_tamil FROM sv_book WHERE status = 1').all();
+    const rows = db.prepare(`
+      SELECT b.book_id as id,
+             b.name as title_tamil,
+             b.title_english,
+             b.description_tamil,
+             b.description_english,
+             b.cover_image,
+             b.first_edition_year,
+             COUNT(e.id) as edition_count
+      FROM sv_book b
+      LEFT JOIN sv_ebook_editions e ON e.book_id = b.book_id AND e.status = 1
+      WHERE b.status = 1
+      GROUP BY b.book_id
+      ORDER BY b.book_id
+    `).all();
     const ebooks = rows.map(r => ({
-      id:            r.id,
-      title_tamil:   r.title_tamil,
-      title_english: BOOK_ENGLISH_MAP[r.id] || '',
-      cover_image:   BOOK_COVER_MAP[r.id] || null,
-      editor_name:   'CICT Archive',
-      library_source:'செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்',
+      ...r,
+      book_url: `/ebooks/${r.id}`,
     }));
     res.json(ebooks);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 4b. Ebook details — single book
+app.get('/api/ebooks/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const book = db.prepare(`
+      SELECT book_id as id, name as title_tamil, title_english,
+             description_tamil, description_english, cover_image, first_edition_year
+      FROM sv_book WHERE book_id = ?
+    `).get(id);
+    if (!book) return res.status(404).json({ error: 'Book not found' });
+    res.json(book);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 4c. Ebook Editions — fetch list of editions for a book
+app.get('/api/ebooks/:id/editions', (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT e.id, e.title_tamil, e.title_english, e.pdf_url, e.image_folder, e.total_pages, e.editor, e.publisher, e.year_published
+      FROM sv_ebook_editions e
+      WHERE e.book_id = ?
+      ORDER BY e.id ASC
+    `).all(req.params.id);
+    
+    // Map precise 3D edition covers
+    const mapped = rows.map(r => ({ ...r, edition_cover: EDITION_3D_COVERS[r.id] || null }));
+
+    res.json(mapped);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

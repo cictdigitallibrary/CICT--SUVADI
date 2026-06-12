@@ -2,25 +2,11 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 
 const API = 'http://localhost:3001';
-
-const BOOK_DESCRIPTIONS = {
-  9:  { ta: 'தொல்காப்பியத்தின் அச்சுப் பதிப்பு வரலாறு 1847ஆம் ஆண்டு மகாலிங்கையரின் பதிப்பிலிருந்து தொடங்குகிறது.', en: "The printing history of Tolkappiyam begins with Mahalinga Iyer's 1847 edition." },
-  10: { ta: 'கலித்தொகை 1887ஆம் ஆண்டு சி.வை. தாமோதரம் பிள்ளை நச்சினார்க்கினியர் உரையுடன் வெளியிட்டது சங்க இலக்கிய பதிப்பு வரலாற்றின் தொடக்கம்.', en: 'Kalitogai, published in 1887 by C.W. Damodaram Pillai, marked the start of Sangam literature printing.' },
-  11: { ta: 'பத்துப்பாட்டினுள் ஒன்றாகிய திருமுருகாற்றுப்படைக்கு பல அச்சுப் பதிப்புகள் வெளிவந்துள்ளன.', en: 'Several printed editions of Thirumurugatruppadai, a text of Pattupattu, have been published.' },
-  12: { ta: '1872ஆம் ஆண்டில் சிலப்பதிகாரம் முதன் முதலாக அச்சுவடிவம் பெற்றது.', en: 'Silappatikaram first received a printed form in 1872.' },
-  13: { ta: 'திருக்குறள், நாலடியார் ஆகிய இரு நூல்களே முதன் முதலாக அச்சு வடிவம் பெற்றன — 1812இல்.', en: 'Thirukkural and Naladiyar were the first to be printed in 1812.' },
-  15: { ta: '1883இல் இறையனார் களவியலுரைக்கு முதல் அச்சுப் பதிப்பு வெளிவந்துள்ளது.', en: 'The first printed edition of Irayanar Kalaviyal-urai appeared in 1883.' },
-  16: { ta: '1905இல் முத்தொள்ளாயிரத்திற்கு முதல் அச்சுப் பதிப்பு வெளிவந்துள்ளது.', en: 'The first printed edition of Muttollayiram was published in 1905.' },
-};
-
-const BOOK_YEAR_MAP = {
-  9:  '1847', 10: '1887', 11: '1885',
-  12: '1872', 13: '1812', 15: '1883', 16: '1905',
-};
 
 const LIBRARIES = [
   { ta: 'மறைமலையடிகள் நூலகம்',           en: 'Maraimalai Adigal Library' },
@@ -150,59 +136,64 @@ const EBooks = () => {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8"
             >
               {ebooks.map((book) => (
-                <motion.div
+                <Link
                   key={book.id}
-                  variants={fadeUp}
-                  className="group bg-white border border-maroon/10 shadow hover:shadow-2xl hover:shadow-maroon/5 transition-all duration-500 overflow-hidden flex flex-col h-full cursor-pointer hover:border-gold/30 hover:-translate-y-2 relative"
+                  to={book.book_url || '#'}
+                  className="no-underline text-inherit"
                 >
-                  {/* Top accent line */}
-                  <div className="absolute top-0 left-0 w-0 group-hover:w-full h-[3px] bg-gradient-to-r from-gold to-gold-light transition-all duration-700" />
+                  <motion.div
+                    variants={fadeUp}
+                    className="group bg-white border border-maroon/10 shadow hover:shadow-2xl hover:shadow-maroon/5 transition-all duration-500 overflow-hidden flex flex-col h-full cursor-pointer hover:border-gold/30 hover:-translate-y-2 relative"
+                  >
+                    {/* Top accent line */}
+                    <div className="absolute top-0 left-0 w-0 group-hover:w-full h-[3px] bg-gradient-to-r from-gold to-gold-light transition-all duration-700" />
 
-                  {/* Cover */}
-                  <div className="relative bg-maroon/[0.02] flex items-center justify-center overflow-hidden border-b border-maroon/5 group-hover:bg-ivory transition-colors duration-500"
-                       style={{ height: 220 }}>
-                    {book.cover_image ? (
-                      <img
-                        src={`${API}${book.cover_image}`}
-                        alt={book.title_tamil}
-                        className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-700 ease-out"
-                      />
-                    ) : (
-                      <span className="text-6xl opacity-[0.08]">📚</span>
-                    )}
-                    {/* Year badge */}
-                    <div className="absolute top-3 right-3 bg-maroon text-gold text-[9px] font-bold px-2 py-0.5 shadow-lg opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                      {BOOK_YEAR_MAP[book.id] || 'N.A.'}
+                    {/* Cover */}
+                    <div className="relative bg-maroon/[0.02] flex items-center justify-center overflow-hidden border-b border-maroon/5 group-hover:bg-ivory transition-colors duration-500"
+                         style={{ height: 220 }}>
+                      {book.cover_image ? (
+                        <img
+                          src={`${API}${book.cover_image}`}
+                          alt={book.title_tamil}
+                          className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-700 ease-out"
+                        />
+                      ) : (
+                        <span className="text-6xl opacity-[0.08]">📚</span>
+                      )}
+                      {/* Year badge */}
+                      <div className="absolute top-3 right-3 bg-maroon text-gold text-[9px] font-bold px-2 py-0.5 shadow-lg opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                        {book.first_edition_year || 'N.A.'}
+                      </div>
+                      {/* Hover overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-maroon/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-maroon/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  </div>
 
-                  {/* Info */}
-                  <div className="p-6 flex flex-col flex-1">
-                    <h3 className="tamil-label text-base text-maroon font-extrabold mb-1 group-hover:text-gold transition-colors line-clamp-1">
-                      {book.title_tamil}
-                    </h3>
-                    <p className="font-cinzel text-[9px] text-bronze uppercase tracking-widest font-bold mb-4 opacity-60">
-                      {book.title_english}
-                    </p>
-
-                    {BOOK_DESCRIPTIONS[book.id] && (
-                      <p className="tamil-text text-[13px] text-stone/50 leading-relaxed line-clamp-3 mb-6 font-medium italic">
-                        {t(BOOK_DESCRIPTIONS[book.id].ta, BOOK_DESCRIPTIONS[book.id].en)}
+                    {/* Info */}
+                    <div className="p-6 flex flex-col flex-1">
+                      <h3 className="tamil-label text-base text-maroon font-extrabold mb-1 group-hover:text-gold transition-colors line-clamp-1">
+                        {book.title_tamil}
+                      </h3>
+                      <p className="font-cinzel text-[9px] text-bronze uppercase tracking-widest font-bold mb-4 opacity-60">
+                        {book.title_english}
                       </p>
-                    )}
 
-                    <div className="mt-auto pt-4 border-t border-maroon/5 flex items-center justify-between">
-                      <span className="text-[9px] text-stone/40 font-cinzel font-bold">
-                        {t('ஆவணம்', 'VOL. ARCHIVE')}
-                      </span>
-                      <span className="text-gold text-[10px] font-bold group-hover:translate-x-1.5 transition-transform tracking-[0.2em] uppercase">
-                        {t('படிக்க', 'READ')} →
-                      </span>
+                      {book.description_tamil && (
+                        <p className="tamil-text text-[13px] text-stone/50 leading-relaxed line-clamp-3 mb-6 font-medium italic">
+                          {t(book.description_tamil, book.description_english)}
+                        </p>
+                      )}
+
+                      <div className="mt-auto pt-4 border-t border-maroon/5 flex items-center justify-between">
+                        <span className="text-[9px] text-stone/40 font-cinzel font-bold">
+                          {t('ஆவணம்', 'VOL. ARCHIVE')}
+                        </span>
+                        <span className="text-gold text-[10px] font-bold group-hover:translate-x-1.5 transition-transform tracking-[0.2em] uppercase">
+                          {t('படிக்க', 'READ')} →
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </Link>
               ))}
             </motion.div>
           )}

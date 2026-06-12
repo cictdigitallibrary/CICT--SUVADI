@@ -8,6 +8,8 @@ import ClassicalTexts from './pages/ClassicalTexts';
 import ManuscriptSearch from './pages/ManuscriptSearch';
 import Team from './pages/Team';
 import EBooks from './pages/EBooks';
+import EBookDetail from './pages/EBookDetail';
+import FlipbookReader from './pages/FlipbookReader';
 import CriticalEditionNeed from './pages/CriticalEditionNeed';
 import Contact from './pages/Contact';
 import Feedback from './pages/Feedback';
@@ -27,6 +29,8 @@ function App() {
               <Route path="/search" element={<ManuscriptSearch />} />
               <Route path="/team" element={<Team />} />
               <Route path="/ebooks" element={<EBooks />} />
+              <Route path="/ebooks/:id" element={<EBookDetail />} />
+              <Route path="/ebooks/:id/read" element={<FlipbookReader />} />
               <Route path="/critical-editions/need" element={<CriticalEditionNeed />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/feedback" element={<Feedback />} />
