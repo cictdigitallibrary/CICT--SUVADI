@@ -10,9 +10,9 @@ import {
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
+import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjs.GlobalWorkerOptions.workerSrc =
-  `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
 const BACKEND   = 'http://localhost:3001';
 const RENDER_WIN = 6; // render pages within this window of current page
@@ -57,6 +57,7 @@ const ImagePage = React.forwardRef(({ src, pageNum, currentPage, onLoad }, ref) 
           src={src}
           alt={`Page ${pageNum}`}
           onLoad={() => { setLoaded(true); onLoad?.(); }}
+          onError={() => { onLoad?.(); }}
           style={{ width: '100%', height: '100%', objectFit: 'fill', display: loaded ? 'block' : 'none' }}
         />
       )}
@@ -68,12 +69,12 @@ ImagePage.displayName = 'ImagePage';
 /* ──────────────────────────────────────────────────────────────
    PDFPage – forwardRef, lazy renders only near current page
 ────────────────────────────────────────────────────────────── */
-const PDFPage = React.forwardRef(({ pageNum, currentPage, pageWidth }, ref) => {
+const PDFPage = React.forwardRef(({ pageNum, currentPage, pageHeight }, ref) => {
   const inView = Math.abs(pageNum - currentPage) <= RENDER_WIN;
   return (
     <div ref={ref} style={{ width: '100%', height: '100%', background: '#fff', overflow: 'hidden', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
       {inView ? (
-        <Page pageNumber={pageNum} width={pageWidth} renderTextLayer={false} renderAnnotationLayer={false} />
+        <Page pageNumber={pageNum} height={pageHeight} renderTextLayer={false} renderAnnotationLayer={false} />
       ) : (
         <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#f7f4ef,#ede8e0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ color: '#c9973b40', fontFamily: 'Cinzel,serif', fontSize: 11 }}>{pageNum}</span>
@@ -84,11 +85,9 @@ const PDFPage = React.forwardRef(({ pageNum, currentPage, pageWidth }, ref) => {
 });
 PDFPage.displayName = 'PDFPage';
 
-const PDF_OPTIONS = { 
-  cMapUrl: 'https://unpkg.com/pdfjs-dist/cmaps/', 
+const PDF_OPTIONS = {
+  cMapUrl: 'https://unpkg.com/pdfjs-dist/cmaps/',
   cMapPacked: true,
-  disableRange: true,
-  disableStream: true
 };
 
 /* ──────────────────────────────────────────────────────────────
@@ -124,7 +123,7 @@ export default function FlipbookReader() {
   const [portrait,   setPortrait]   = useState(false);
   
   const PRELOAD = isImg ? Math.min(4, totalPages) : 1;
-  const ready   = isImg ? imgLoaded >= PRELOAD : pdfReady;
+  const ready   = isImg ? imgLoaded >= PRELOAD : (pdfReady || pdfErr);
 
 
   const bookRef = useRef(null);
@@ -309,7 +308,7 @@ export default function FlipbookReader() {
                   <HTMLFlipBook {...fbProps}>
                     {Array.from({ length: pdfTotal + (pdfTotal % 2) }, (_, i) => i + 1).map(n => (
                       n <= pdfTotal ? (
-                        <PDFPage key={n} pageNum={n} currentPage={page} pageWidth={scaledW} />
+                        <PDFPage key={n} pageNum={n} currentPage={page} pageHeight={scaledH} />
                       ) : (
                         <div key={n} style={{ background: '#fff' }} />
                       )
@@ -371,9 +370,15 @@ export default function FlipbookReader() {
           outline: none !important;
         }
         /* PDF page canvas */
-        .react-pdf__Page          { overflow: hidden !important; margin: 0 !important; }
+        .react-pdf__Page          { margin: 0 !important; }
         .react-pdf__Page canvas   { display: block !important; margin: 0 !important; }
         .react-pdf__Page__canvas  { margin: 0 !important; }
+        /* Left slot: right-align canvas so its right edge is flush with the gutter */
+        .suvadi-flipbook [class*="--left"] .react-pdf__Page canvas,
+        .suvadi-flipbook [class*="--left"] .react-pdf__Page__canvas {
+          left: auto !important;
+          right: 0 !important;
+        }
       `}</style>
     </div>
   );

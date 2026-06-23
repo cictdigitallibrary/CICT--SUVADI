@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { useSearchParams } from 'react-router-dom';
 import {
-  Search, Eye, ChevronDown, BookOpen, Filter, ZoomIn, ZoomOut,
+  Search, Eye, ChevronDown, BookOpen, ZoomIn, ZoomOut,
   RotateCw, X, Maximize, FileText, ChevronLeft, ChevronRight,
-  Scroll, Layers, SlidersHorizontal, Info, ChevronUp, Database
+  Scroll, Layers, SlidersHorizontal, Info, ChevronUp, Database, Languages
 } from 'lucide-react';
 import PageHero from '../components/PageHero';
 
@@ -14,12 +14,12 @@ const API = 'http://localhost:3001';
 
 /* ─── Animation Variants ─────────────────────────────── */
 const fadeUp = {
-  hidden: { opacity: 0, y: 15 },
+  hidden: { opacity: 0, y: 18 },
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
 };
 const stagger = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.05 } },
+  show: { transition: { staggerChildren: 0.06 } },
 };
 
 /* ─── Step badge ──────────────────────────────────────── */
@@ -52,80 +52,203 @@ const StyledSelect = ({ value, onChange, disabled, children }) => (
   </div>
 );
 
-/* ─── Main Component ──────────────────────────────────── */
+/* ─── Highlight matching text ─────────────────────────── */
+const HighlightText = ({ text, query }) => {
+  if (!query || !text) return <span dangerouslySetInnerHTML={{ __html: (text || '').replace(/<br\/>/g, ' ').replace(/\\r\\n/g, ' ') }} />;
+
+  const cleanText = (text || '').replace(/<br\/>/g, ' ').replace(/\\r\\n/g, ' ').replace(/<[^>]+>/g, '');
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = cleanText.split(regex);
+
+  return (
+    <span>
+      {parts.map((part, i) =>
+        regex.test(part)
+          ? <mark key={i} className="bg-gold/25 text-maroon-dark rounded-[2px] px-0.5 font-black">{part}</mark>
+          : <span key={i}>{part}</span>
+      )}
+    </span>
+  );
+};
+
+/* ─── Transliteration helpers ─────────────────────────────── */
+// Returns the trailing run of ASCII letters being typed (the "current word")
+const getTransWord = (text) => (text.match(/[a-zA-Z]+$/) || [''])[0];
+
+// Replace the trailing ASCII word with a Tamil suggestion
+const applyTransSuggestion = (text, tamil) => text.replace(/[a-zA-Z]+$/, tamil);
+
+/* ═══════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════════════ */
 const ManuscriptSearch = () => {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
 
-  const [books, setBooks] = useState([]);
-  const [manuscripts, setManuscripts] = useState([]);
+  /* Hierarchical dropdown states — mirrors main site exactly */
+  const [books, setBooks]                 = useState([]);
+  const [manuscripts, setManuscripts]     = useState([]);
   const [subcategories, setSubcategories] = useState([]);
 
-  const [selectedBook, setSelectedBook] = useState(searchParams.get('book_id') || '');
-  const [selectedMS, setSelectedMS] = useState(searchParams.get('cid') || '');
-  const [selectedSub, setSelectedSub] = useState('');
+  const [selectedBook, setSelectedBook]   = useState(searchParams.get('book_id') || '');
+  const [selectedMS, setSelectedMS]       = useState(searchParams.get('cid') || '');
+  const [selectedSub, setSelectedSub]     = useState('');
 
-  const [searchType, setSearchType] = useState('by_number');
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState(null);
-  const [loading, setLoading] = useState(false);
+  /* Single unified query — just like main site */
+  const [query, setQuery]                 = useState('');
+  const [results, setResults]             = useState(null);
+  const [loading, setLoading]             = useState(false);
+
+  /* Browse mode */
   const [browseResults, setBrowseResults] = useState(null);
-  const [browsePage, setBrowsePage] = useState(1);
-  const [browsing, setBrowsing] = useState(false);
-  const [activeView, setActiveView] = useState(null);
+  const [browsePage, setBrowsePage]       = useState(1);
+  const [browsing, setBrowsing]           = useState(false);
 
-  // Layout states
+  /* Autocomplete */
+  const [suggestions, setSuggestions]     = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestTimeout                    = useRef(null);
+
+  /* UI state */
+  const [activeView, setActiveView]       = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);
   const [showInventory, setShowInventory] = useState(false);
 
-  useEffect(() => {
-    axios.get(`${API}/api/texts`).then(res => setBooks(res.data));
+  /* Transliteration state */
+  const [transSugs, setTransSugs]         = useState([]);
+  const [showTrans, setShowTrans]         = useState(false);
+  const [transIdx, setTransIdx]           = useState(0);
+  const transTimeout                      = useRef(null);
+
+  const searchInputRef = useRef(null);
+
+  /* ── Transliteration: fetch suggestions for current English word ── */
+  const fetchTransliteration = useCallback((word) => {
+    if (!word) { setTransSugs([]); setShowTrans(false); return; }
+    clearTimeout(transTimeout.current);
+    transTimeout.current = setTimeout(async () => {
+      try {
+        const res = await axios.get(`${API}/api/proxy/transliterate?text=${encodeURIComponent(word)}&lang=ta`);
+        const sugs = res.data.suggestions || [];
+        setTransSugs(sugs);
+        setTransIdx(0);
+        setShowTrans(sugs.length > 0);
+      } catch { setTransSugs([]); setShowTrans(false); }
+    }, 200);
   }, []);
 
+  /* ── Autocomplete suggestions (like main site's sdata.php) ─ */
+  const fetchSuggestions = useCallback((val) => {
+    if (!selectedSub || val.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    clearTimeout(suggestTimeout.current);
+    suggestTimeout.current = setTimeout(async () => {
+      try {
+        const isNum = /^\d+$/.test(val.trim());
+        const res = await axios.get(
+          `${API}/api/manuscripts/search?sub_id=${selectedSub}&type=${isNum ? 'by_number' : 'by_word'}&q=${encodeURIComponent(val.trim())}`
+        );
+        if (res.data.results && res.data.results.length > 0) {
+          const sugs = res.data.results.slice(0, 6).map(r => ({
+            label: isNum
+              ? `${t('ஏடு', 'Folio')} #${r.page_number}`
+              : (r.text_content || '').replace(/<br\/>/g, ' ').replace(/\\r\\n/g, ' ').replace(/<[^>]+>/g, '').substring(0, 80) + '…',
+            page_number: r.page_number,
+          }));
+          setSuggestions(sugs);
+          setShowSuggestions(true);
+        } else {
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      } catch {
+        setSuggestions([]);
+      }
+    }, 300);
+  }, [selectedSub, t]);
+
+  /* ── Apply a transliteration suggestion ── */
+  const applyTrans = useCallback((tamil, addSpace = false) => {
+    const newQ = applyTransSuggestion(query, tamil) + (addSpace ? ' ' : '');
+    setQuery(newQ);
+    setShowTrans(false);
+    setTransSugs([]);
+    if (newQ.trim()) fetchSuggestions(newQ.trim());
+    setTimeout(() => searchInputRef.current?.focus(), 0);
+  }, [query, fetchSuggestions]);
+
+  /* ── Load books on mount ─────────────────────────── */
+  useEffect(() => {
+    axios.get(`${API}/api/texts`).then(res => setBooks(res.data)).catch(console.error);
+  }, []);
+
+  /* ── When book changes → load categories ─────────── */
   useEffect(() => {
     if (selectedBook) {
       axios.get(`${API}/api/manuscripts?book_id=${selectedBook}`).then(res => {
         setManuscripts(res.data);
         setSelectedMS(''); setSubcategories([]); setSelectedSub('');
         setResults(null); setBrowseResults(null);
-      });
+      }).catch(console.error);
     } else {
       setManuscripts([]); setSelectedMS(''); setSubcategories([]); setSelectedSub('');
     }
   }, [selectedBook]);
 
+  /* ── When category changes → load sub-categories ─── */
   useEffect(() => {
     if (selectedMS) {
       axios.get(`${API}/api/subcategories?cid=${selectedMS}`).then(res => {
         setSubcategories(res.data); setSelectedSub('');
         setResults(null); setBrowseResults(null);
-      });
+      }).catch(console.error);
     } else {
       setSubcategories([]); setSelectedSub('');
     }
   }, [selectedMS]);
 
-  const handleSearch = async e => {
-    e.preventDefault();
-    if (!selectedSub || !query.trim()) return;
-    setLoading(true); setBrowseResults(null);
+  /* ── Search (unified: number OR word, exactly like main site)
+       If query is empty → show all folios (browse mode) */
+  const handleSearch = async (e) => {
+    e && e.preventDefault();
+    if (!selectedSub) return;
+
+    // Empty query → browse all folios
+    if (!query.trim()) {
+      handleBrowse(1);
+      return;
+    }
+
+    setShowSuggestions(false);
+    setLoading(true);
+    setBrowseResults(null);
     try {
+      const q = query.trim();
+      const isNumber = /^\d+$/.test(q);
+      const searchType = isNumber ? 'by_number' : 'by_word';
       const res = await axios.get(
-        `${API}/api/manuscripts/search?sub_id=${selectedSub}&type=${searchType}&q=${encodeURIComponent(query)}`
+        `${API}/api/manuscripts/search?sub_id=${selectedSub}&type=${searchType}&q=${encodeURIComponent(q)}`
       );
       setResults(res.data);
-      setShowInstructions(false); // Hide guidelines once user executes search
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+      setShowInstructions(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  /* ── Browse all folios ───────────────────────────── */
   const handleBrowse = async (page = 1) => {
     if (!selectedSub) return;
     setBrowsing(true); setResults(null); setBrowsePage(page);
     try {
       const res = await axios.get(`${API}/api/songs?sub_id=${selectedSub}&page=${page}&limit=12`);
       setBrowseResults(res.data);
-      setShowInstructions(false); // Hide guidelines on browse
+      setShowInstructions(false);
     } catch (err) { console.error(err); }
     finally { setBrowsing(false); }
   };
@@ -133,8 +256,7 @@ const ManuscriptSearch = () => {
   const selectedManuscript = manuscripts.find(m => String(m.id) === String(selectedMS));
   const selectedSubData    = subcategories.find(s => String(s.id) === String(selectedSub));
   const selectedBookData   = books.find(b => String(b.id) === String(selectedBook));
-
-  const totalBrowsePages = browseResults ? Math.ceil(browseResults.total / 12) : 1;
+  const totalBrowsePages   = browseResults ? Math.ceil(browseResults.total / 12) : 1;
 
   return (
     <div className="min-h-screen bg-ivory selection:bg-maroon selection:text-white">
@@ -145,14 +267,16 @@ const ManuscriptSearch = () => {
         title={t('சுவடித் தேடல்', 'Manuscript Search')}
         subtitle={t(
           'பாடலின் எண்ணிட்டுத் தேடும் வசதியும் பாடலின் குறிப்பிட்ட சொல்லைக் கொண்டு தேடும் முறையும் உருவாக்கப்பட்டுள்ளது.',
-          'Search precisely by poem number or explore literary themes through keyword-based queries across digitised palm-leaf manuscripts.'
+          'Search by poem number or explore literary themes through keyword queries across digitised palm-leaf manuscripts.'
         )}
         glyphs={['சுவடி', 'ஏடு', 'பாடல்', 'மூலம்', 'தேடல்', 'ஆய்வு']}
       />
 
       <div className="container mx-auto px-4 sm:px-6 max-w-6xl py-10">
 
-        {/* ── Filter Panel ────────────────────────────────── */}
+        {/* ══════════════════════════════════════════════════
+            SEARCH PANEL — mirrors main site: search.php
+        ══════════════════════════════════════════════════ */}
         <motion.div
           variants={fadeUp} initial="hidden" animate="show"
           className="bg-white border border-maroon/10 shadow-lg rounded-sm mb-6 overflow-hidden"
@@ -165,20 +289,20 @@ const ManuscriptSearch = () => {
                 {t('தேடல் வடிகட்டி', 'Search Filters')}
               </span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setShowInstructions(!showInstructions)}
                 className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-sm border transition-all duration-200
-                  ${showInstructions 
-                    ? 'bg-gold/15 text-gold-dark border-gold/30' 
+                  ${showInstructions
+                    ? 'bg-gold/15 text-gold-dark border-gold/30'
                     : 'bg-stone/5 text-stone/50 border-transparent hover:bg-stone/10'}`}
               >
                 <Info className="w-3 h-3" />
-                {t('தேடல் வழிகாட்டி', 'Guidelines')}
+                {t('தேடல் குறிப்புகள்', 'Search Hints')}
               </button>
-              
+
               {selectedSub && (
                 <span className="flex items-center gap-1.5 bg-green-50 text-green-700 px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider border border-green-200">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse" />
@@ -188,7 +312,7 @@ const ManuscriptSearch = () => {
             </div>
           </div>
 
-          {/* Interactive Search Instructions / Guidelines */}
+          {/* ── Search Hints — matching main site's help text ── */}
           <AnimatePresence>
             {showInstructions && (
               <motion.div
@@ -198,70 +322,105 @@ const ManuscriptSearch = () => {
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden bg-gold/5 border-b border-gold/10"
               >
-                <div className="p-5 flex gap-3.5 items-start">
-                  <span className="text-xl leading-none select-none mt-0.5">💡</span>
+                <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Tamil hints */}
                   <div>
-                    <p className="tamil-label text-[10px] font-black text-bronze uppercase tracking-[0.18em] mb-1.5">
-                      {t('பாடல்களை எளிதாகக் கண்டறியும் முறை:', 'How to find manuscripts easily:')}
+                    <p className="tamil-label text-[10px] font-black text-bronze uppercase tracking-[0.18em] mb-3">
+                      தேடல் குறிப்புகள்
                     </p>
-                    <ul className="tamil-text text-[11px] text-stone/60 space-y-1 list-decimal list-inside font-bold">
-                      <li>{t('செவ்வியல் நூலை முதலில் தேர்வு செய்யவும்', 'First, select an authoritative Book Title')}</li>
-                      <li>{t('பின்பு அந்தப் பாடத்தின் சுவடி வகையைத் தேர்வு செய்யவும்', 'Select the specific Manuscript category available')}</li>
-                      <li>{t('தேடல் வசதியைப் பயன்படுத்தி பாடல் எண் அல்லது சொல் இட்டுத் தேடலாம்', 'Perform your search using either Verse Number or Keyword query')}</li>
-                    </ul>
+                    <div className="space-y-3">
+                      <div className="flex gap-2.5 items-start">
+                        <span className="shrink-0 w-5 h-5 bg-maroon/8 rounded-full flex items-center justify-center text-[9px] font-black text-maroon/50 mt-0.5">1</span>
+                        <div>
+                          <p className="tamil-text text-[11px] text-stone/70 font-bold">எண் வழித் தேடல்:</p>
+                          <p className="tamil-text text-[10px] text-stone/45 mt-0.5">தேடலுக்குரிய செவ்வியல் நூலின் பாடல்/ நூற்பா எண்ணைக் கொடுப்பதன் மூலம் உரிய சுவடியின் பக்கம் கிடைக்கப்பெறும்.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2.5 items-start">
+                        <span className="shrink-0 w-5 h-5 bg-maroon/8 rounded-full flex items-center justify-center text-[9px] font-black text-maroon/50 mt-0.5">2</span>
+                        <div>
+                          <p className="tamil-text text-[11px] text-stone/70 font-bold">பாடலின் குறிப்பிட்ட சொல் வழித் தேடல்:</p>
+                          <p className="tamil-text text-[10px] text-stone/45 mt-0.5">தேடலுக்குரிய செவ்வியல் நூல் பாடலின் குறிப்பிட்ட சொல்லைக் கொடுப்பதன் மூலம் உரிய சுவடியின் பக்கம் கிடைக்கப் பெறும்.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* English hints */}
+                  <div>
+                    <p className="tamil-label text-[10px] font-black text-bronze uppercase tracking-[0.18em] mb-3">
+                      Search Hints
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex gap-2.5 items-start">
+                        <span className="shrink-0 w-5 h-5 bg-maroon/8 rounded-full flex items-center justify-center text-[9px] font-black text-maroon/50 mt-0.5">1</span>
+                        <div>
+                          <p className="tamil-text text-[11px] text-stone/70 font-bold">Search by Number:</p>
+                          <p className="tamil-text text-[10px] text-stone/45 mt-0.5">By entering song/nūṟpā number you can get the particular page of the manuscript.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2.5 items-start">
+                        <span className="shrink-0 w-5 h-5 bg-maroon/8 rounded-full flex items-center justify-center text-[9px] font-black text-maroon/50 mt-0.5">2</span>
+                        <div>
+                          <p className="tamil-text text-[11px] text-stone/70 font-bold">Search by Word:</p>
+                          <p className="tamil-text text-[10px] text-stone/45 mt-0.5">By entering any word of the verse you can get the particular page of the manuscript.</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
+          {/* ── Search Form — exactly like main site ─────── */}
           <form onSubmit={handleSearch} className="p-6">
-            {/* Step selectors */}
+
+            {/* 3 cascading dropdowns */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
 
-              {/* Step 1 — Book */}
+              {/* Step 1 — நூல் தலைப்பு (Book Title) */}
               <div className="flex flex-col gap-1.5">
                 <label className="flex items-center gap-2 tamil-label text-[10px] uppercase tracking-widest font-black text-stone/45">
                   <StepBadge n="1" active={!!selectedBook} />
                   <BookOpen className="w-3 h-3" />
-                  {t('தொகுதி', 'Book Title')}
+                  {t('நூல் தலைப்பு', 'Book Title')}
                 </label>
                 <StyledSelect value={selectedBook} onChange={e => setSelectedBook(e.target.value)}>
-                  <option value="">{t('-- தேர்வு செய்யவும் --', '-- Select Book --')}</option>
+                  <option value="">{t('-- நூல் தலைப்பு --', '-- Book Title --')}</option>
                   {books.map(b => <option key={b.id} value={b.id}>{b.title_tamil}</option>)}
                 </StyledSelect>
               </div>
 
-              {/* Step 2 — Manuscript */}
+              {/* Step 2 — செவ்வியல் நூல் (Classical Text) */}
               <div className="flex flex-col gap-1.5">
                 <label className="flex items-center gap-2 tamil-label text-[10px] uppercase tracking-widest font-black text-stone/45">
                   <StepBadge n="2" active={!!selectedMS} />
                   <Layers className="w-3 h-3" />
-                  {t('செம்மை நூல்', 'Classical Text')}
+                  {t('செவ்வியல் நூல்', 'Classical Text')}
                 </label>
                 <StyledSelect
                   value={selectedMS}
                   onChange={e => { setSelectedMS(e.target.value); setResults(null); setBrowseResults(null); }}
                   disabled={!selectedBook}
                 >
-                  <option value="">{t('-- தேர்வு செய்யவும் --', '-- Select Text --')}</option>
+                  <option value="">{t('-- செவ்வியல் நூல் --', '-- Classical Text --')}</option>
                   {manuscripts.map(m => <option key={m.id} value={m.id}>{m.title_tamil}</option>)}
                 </StyledSelect>
               </div>
 
-              {/* Step 3 — Subcategory */}
+              {/* Step 3 — சுவடித் தேர்வு (Manuscript Selection) */}
               <div className="flex flex-col gap-1.5">
                 <label className="flex items-center gap-2 tamil-label text-[10px] uppercase tracking-widest font-black text-stone/45">
                   <StepBadge n="3" active={!!selectedSub} />
                   <Scroll className="w-3 h-3" />
-                  {t('சுவடித் தெரிவு', 'Manuscript Source')}
+                  {t('சுவடித் தேர்வு', 'Manuscript Selection')}
                 </label>
                 <StyledSelect
                   value={selectedSub}
                   onChange={e => { setSelectedSub(e.target.value); setResults(null); setBrowseResults(null); }}
                   disabled={!selectedMS}
                 >
-                  <option value="">{t('-- தேர்வு செய்யவும் --', '-- Select Source --')}</option>
+                  <option value="">{t('-- சுவடித் தேர்வு --', '-- Manuscript Selection --')}</option>
                   {subcategories.map(s => <option key={s.id} value={s.id}>{s.title_tamil}</option>)}
                 </StyledSelect>
               </div>
@@ -270,68 +429,194 @@ const ManuscriptSearch = () => {
             {/* Divider */}
             <div className="h-px bg-maroon/6 mb-5" />
 
-            {/* Search method + Query row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+            {/* Single unified search input — exactly like main site's
+                "எண்/பாடலின் குறிப்பிட்ட சொல்" field */}
+            <div className="mb-5">
+              <label className="flex items-center gap-2 tamil-label text-[10px] uppercase tracking-widest font-black text-stone/45 mb-1.5">
+                <Search className="w-3 h-3" />
+                {t('எண் / பாடலின் குறிப்பிட்ட சொல்', 'Number / Specific Word from Verse')}
+              </label>
 
-              {/* Search type */}
-              <div className="flex flex-col gap-1.5">
-                <label className="tamil-label text-[10px] uppercase tracking-widest font-black text-stone/45">
-                  {t('தேடல் முறை', 'Search Method')}
-                </label>
-                <div className="flex rounded-sm overflow-hidden border border-maroon/15 h-10">
-                  {[
-                    { val: 'by_number', ta: 'எண் வழி', en: 'By Number' },
-                    { val: 'by_word',   ta: 'சொல் வழி', en: 'By Keyword' },
-                  ].map(opt => (
-                    <button
-                      key={opt.val}
-                      type="button"
-                      onClick={() => setSearchType(opt.val)}
-                      className={`flex-1 tamil-label text-[11px] font-black transition-all duration-200
-                        ${searchType === opt.val
-                          ? 'bg-maroon text-white'
-                          : 'bg-white text-maroon/50 hover:bg-maroon/5'
-                        }`}
-                    >
-                      {t(opt.ta, opt.en)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Query input */}
-              <div className="flex flex-col gap-1.5">
-                <label className="tamil-label text-[10px] uppercase tracking-widest font-black text-stone/45">
-                  {t('தேடல் சொல் / எண்', 'Search Query')}
-                </label>
-                <div className="flex h-10 rounded-sm overflow-hidden border border-maroon/15 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/10 transition-all">
+              <div className="relative">
+                <div className={`flex h-11 rounded-sm overflow-hidden border shadow-sm transition-all
+                  ${showTrans
+                    ? 'border-gold/50 ring-2 ring-gold/15'
+                    : 'border-maroon/15 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/10'}`}>
                   <input
+                    ref={searchInputRef}
                     type="text"
                     value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    placeholder={searchType === 'by_number' ? t('எ.கா. 5', 'e.g. 5') : t('எ.கா. வான்', 'e.g. வான்')}
-                    className="flex-grow bg-white px-4 text-sm text-maroon font-bold outline-none"
+                    onChange={e => {
+                      const val = e.target.value;
+                      setQuery(val);
+                      const word = getTransWord(val);
+                      if (word) {
+                        // Typing English → fetch transliteration, suppress DB suggest
+                        fetchTransliteration(word);
+                        setShowSuggestions(false);
+                      } else {
+                        // No trailing English → close trans, open DB suggest
+                        setShowTrans(false);
+                        setTransSugs([]);
+                        fetchSuggestions(val);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (transSugs.length > 0) setShowTrans(true);
+                      else if (suggestions.length > 0) setShowSuggestions(true);
+                    }}
+                    onBlur={() => setTimeout(() => {
+                      setShowSuggestions(false);
+                      setShowTrans(false);
+                    }, 200)}
+                    onKeyDown={e => {
+                      if (showTrans && transSugs.length > 0) {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setTransIdx(i => Math.min(i + 1, transSugs.length - 1));
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setTransIdx(i => Math.max(i - 1, 0));
+                        } else if (e.key === 'Enter' || e.key === 'Tab') {
+                          e.preventDefault();
+                          applyTrans(transSugs[transIdx]);
+                        } else if (e.key === ' ') {
+                          e.preventDefault();
+                          applyTrans(transSugs[transIdx], true);
+                        } else if (e.key === 'Escape') {
+                          setShowTrans(false);
+                          setTransSugs([]);
+                        }
+                      }
+                    }}
+                    disabled={!selectedSub}
+                    placeholder={
+                      !selectedSub
+                        ? t('முதலில் சுவடியைத் தேர்வு செய்யவும்', 'Select a manuscript first')
+                        : t('English phonetics → தமிழ் (e.g. "mayan" → மாயன்) | or Tamil directly | or folio number', 'English phonetics → Tamil (e.g. "mayan" → மாயன்) | Tamil word | or folio number')
+                    }
+                    className="flex-grow bg-white px-4 text-sm text-maroon font-bold outline-none
+                      disabled:bg-stone/3 disabled:text-maroon/25 disabled:cursor-not-allowed
+                      placeholder:text-stone/25"
                     style={{ fontFamily: '"Baloo Thambi 2", sans-serif' }}
+                    autoComplete="off"
+                    spellCheck={false}
                   />
+
+                  {/* Transliteration active indicator */}
+                  {showTrans && (
+                    <div className="px-2.5 flex items-center border-l border-gold/20 bg-gold/8 shrink-0">
+                      <Languages className="w-3.5 h-3.5 text-gold-dark animate-pulse" />
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    disabled={!selectedSub || !query.trim() || loading}
-                    className="bg-maroon text-white px-5 flex items-center gap-2 text-[11px] font-black uppercase tracking-wider
-                      hover:bg-maroon-light transition-colors disabled:opacity-35"
+                    disabled={!selectedSub || loading}
+                    className="bg-maroon text-white px-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-wider
+                      hover:bg-maroon-light transition-colors disabled:opacity-35 shrink-0"
                   >
                     <Search className="w-3.5 h-3.5" />
-                    {t('தேடு', 'Search')}
+                    {t('தேடுக', 'Search')}
                   </button>
                 </div>
+
+                {/* Transliteration dropdown — Google Indic Keyboard style */}
+                <AnimatePresence>
+                  {showTrans && transSugs.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gold/30 shadow-xl rounded-sm overflow-hidden"
+                    >
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-3 py-1.5 bg-gold/[0.06] border-b border-gold/15">
+                        <div className="flex items-center gap-1.5">
+                          <Languages className="w-3 h-3 text-gold-dark/60" />
+                          <span className="font-cinzel text-[8px] font-black text-stone/40 uppercase tracking-[0.3em]">
+                            தமிழில் மாற்று · TRANSLITERATE
+                          </span>
+                        </div>
+                        <span className="font-cinzel text-[8px] text-stone/25">
+                          ↑↓ navigate · Enter/Space to pick
+                        </span>
+                      </div>
+                      {/* Suggestion list */}
+                      <div className="flex flex-wrap gap-0">
+                        {transSugs.map((s, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onMouseDown={e => { e.preventDefault(); applyTrans(s); }}
+                            className={`px-4 py-2.5 tamil-text text-sm font-bold border-r border-b border-maroon/5
+                              transition-all duration-100 flex items-center gap-1.5
+                              ${i === transIdx
+                                ? 'bg-maroon text-white border-maroon'
+                                : 'text-maroon hover:bg-gold/8 hover:text-maroon-dark'}`}
+                          >
+                            <span className={`font-cinzel text-[8px] font-black ${i === transIdx ? 'text-gold/60' : 'text-maroon/20'}`}>
+                              {i + 1}
+                            </span>
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* DB autocomplete dropdown (folio number / word suggestions) */}
+                <AnimatePresence>
+                  {showSuggestions && suggestions.length > 0 && !showTrans && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-maroon/15 shadow-xl rounded-sm overflow-hidden"
+                    >
+                      {suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setQuery(String(s.page_number));
+                            setShowSuggestions(false);
+                            setTimeout(() => handleSearch(), 100);
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm tamil-text text-stone/70 font-bold
+                            hover:bg-gold/8 hover:text-maroon transition-colors border-b border-maroon/5 last:border-b-0
+                            flex items-center gap-3"
+                        >
+                          <span className="shrink-0 w-6 h-6 bg-maroon/5 rounded-sm flex items-center justify-center
+                            font-cinzel text-[9px] font-black text-maroon/40">
+                            {s.page_number}
+                          </span>
+                          <span className="truncate text-xs">{s.label}</span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+
+              {/* Quick tip */}
+              <p className="mt-1.5 tamil-text text-[10px] text-stone/30 italic">
+                {t(
+                  'குறிப்பு: ஆங்கிலத்தில் உச்சரிப்பு வழி தட்டச்சிடும்போது (எ.கா. "mayan") தமிழ் மாற்றுகள் கீழே காட்டப்படும். Space / Enter ஐ அழுத்தி தேர்ந்தெடுக்கவும்.',
+                  'Tip: Type English phonetics (e.g. "mayan") → pick Tamil from the popup (Space/Enter). Or type a folio number. Or type Tamil directly.'
+                )}
+              </p>
             </div>
 
-            {/* Bottom action row */}
+            {/* Bottom row: status + browse */}
             <div className="flex items-center justify-between flex-wrap gap-3 pt-3 border-t border-maroon/5">
               <p className="tamil-text text-[11px] text-stone/45 italic">
                 {selectedSub
                   ? <span className="text-bronze font-bold not-italic">{selectedSubData?.title_tamil}</span>
-                  : t('சுவடியைத் தேர்வுசெய்து தேடலை மேற்கொள்ளவும்', 'Select a manuscript source to begin your search')}
+                  : t('சுவடியைத் தேர்வுசெய்து தேடலை மேற்கொள்ளவும்', 'Select a manuscript to begin your search')}
               </p>
               {selectedSub && (
                 <button
@@ -350,7 +635,7 @@ const ManuscriptSearch = () => {
           </form>
         </motion.div>
 
-        {/* ── Empty-state (manuscript selected, nothing searched yet) ── */}
+        {/* ── Empty state (manuscript selected but nothing searched) ── */}
         <AnimatePresence>
           {selectedManuscript && !results && !browseResults && !loading && !browsing && (
             <motion.div
@@ -408,13 +693,19 @@ const ManuscriptSearch = () => {
               </div>
 
               {results.count === 0 ? (
-                <div className="text-center py-16 bg-white border border-maroon/8 rounded-sm text-stone/30 italic tamil-body text-xs">
-                  {t('இந்தத் தேடலுக்கு சுவடி ஏடுகள் எதுவும் கிடைக்கவில்லை.', 'No archival fragments matched your query.')}
+                <div className="text-center py-16 bg-white border border-maroon/8 rounded-sm">
+                  <div className="text-4xl mb-3">📜</div>
+                  <p className="tamil-body text-stone/40 text-sm">
+                    {t('இந்தத் தேடலுக்கு சுவடி ஏடுகள் எதுவும் கிடைக்கவில்லை.', 'No archival fragments matched your query.')}
+                  </p>
+                  <p className="font-cinzel text-[9px] text-stone/25 mt-2 uppercase tracking-widest">
+                    {t('வேறொரு எண் அல்லது சொல்லில் முயற்சிக்கவும்', 'Try a different number or word')}
+                  </p>
                 </div>
               ) : (
                 <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 gap-6">
                   {results.results.map((res, i) => (
-                    <SongCard key={i} res={res} i={i} t={t} onOpen={setActiveView} />
+                    <SongCard key={i} res={res} i={i} t={t} query={query} onOpen={setActiveView} />
                   ))}
                 </motion.div>
               )}
@@ -458,7 +749,6 @@ const ManuscriptSearch = () => {
                   <ChevronLeft className="w-3.5 h-3.5" /> {t('முந்தைய', 'Prev')}
                 </button>
 
-                {/* Page numbers */}
                 <div className="flex items-center gap-1">
                   {Array.from({ length: Math.min(totalBrowsePages, 5) }, (_, i) => {
                     const p = i + 1;
@@ -490,7 +780,7 @@ const ManuscriptSearch = () => {
           )}
         </AnimatePresence>
 
-        {/* ── Collapsible Archival Holdings Inventory Section ── */}
+        {/* ── Collapsible Archival Holdings ────────────────── */}
         <div className="mt-12 border-t border-maroon/8 pt-8">
           <div className="flex justify-center">
             <button
@@ -500,8 +790,8 @@ const ManuscriptSearch = () => {
             >
               <Database className="w-4 h-4 text-gold" />
               <span className="tamil-label text-xs uppercase tracking-wider font-black">
-                {showInventory 
-                  ? t('காப்பக விவரங்களை மறை (14 நூல்கள்)', 'Hide Archival Holdings') 
+                {showInventory
+                  ? t('காப்பக விவரங்களை மறை', 'Hide Archival Holdings')
                   : t('பதிவேற்றப்பட்டுள்ள காப்பக விவரங்கள் (14 நூல்கள்)', 'View Archival Holdings')}
               </span>
               {showInventory ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
@@ -511,10 +801,8 @@ const ManuscriptSearch = () => {
           <AnimatePresence>
             {showInventory && (
               <motion.section
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.4, ease: 'easeInOut' }}
+                initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.4, ease: 'easeInOut' }}
                 className="overflow-hidden mt-6"
               >
                 <div className="pb-8">
@@ -545,8 +833,10 @@ const ManuscriptSearch = () => {
   );
 };
 
-/* ─── Song / Folio Card ──────────────────────────────── */
-const SongCard = ({ res, i, t, compact, onOpen }) => {
+/* ═══════════════════════════════════════════════════════
+   Song / Folio Card
+   ═══════════════════════════════════════════════════════ */
+const SongCard = ({ res, i, t, compact, query, onOpen }) => {
   const [imgError, setImgError] = useState(false);
 
   return (
@@ -610,16 +900,26 @@ const SongCard = ({ res, i, t, compact, onOpen }) => {
             </div>
           </div>
 
-          {/* Text content */}
+          {/* Text content — highlight if query provided */}
           {res.text_content ? (
-            <div
-              className={`tamil-heading text-maroon/85 font-serif leading-[2] group-hover:text-maroon transition-colors
-                ${compact ? 'text-xs line-clamp-4' : 'text-lg'}`}
-              style={{ fontStyle: 'normal' }}
-              dangerouslySetInnerHTML={{
-                __html: res.text_content.replace(/<br\/>/g, '<br/>').replace(/\\r\\n/g, ' ')
-              }}
-            />
+            query ? (
+              <div
+                className={`tamil-heading text-maroon/85 font-serif leading-[2] group-hover:text-maroon transition-colors
+                  ${compact ? 'text-xs line-clamp-4' : 'text-lg'}`}
+                style={{ fontStyle: 'normal' }}
+              >
+                <HighlightText text={res.text_content} query={query} />
+              </div>
+            ) : (
+              <div
+                className={`tamil-heading text-maroon/85 font-serif leading-[2] group-hover:text-maroon transition-colors
+                  ${compact ? 'text-xs line-clamp-4' : 'text-lg'}`}
+                style={{ fontStyle: 'normal' }}
+                dangerouslySetInnerHTML={{
+                  __html: res.text_content.replace(/<br\/>/g, '<br/>').replace(/\\r\\n/g, ' ')
+                }}
+              />
+            )
           ) : (
             <p className="text-stone/30 italic text-sm">{t('படியெடுக்கப்படவில்லை', 'Transcription pending')}</p>
           )}
@@ -650,7 +950,9 @@ const SongCard = ({ res, i, t, compact, onOpen }) => {
   );
 };
 
-/* ─── Archival Holdings Table ────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   Archival Holdings Table
+   ═══════════════════════════════════════════════════════ */
 const ManuscriptsInfoTable = ({ t }) => {
   const info = [
     { bk: { ta: 'பதினெண் கீழ்க்கணக்கு', en: 'Patinenkilkanakku' }, ms: { ta: 'நாலடியார்',          en: 'Naladiyar' },           cd: '313',           pg: 400  },
@@ -724,7 +1026,9 @@ const ManuscriptsInfoTable = ({ t }) => {
   );
 };
 
-/* ─── Manuscript Viewer Modal ────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   Manuscript Viewer Modal
+   ═══════════════════════════════════════════════════════ */
 const ManuscriptViewer = ({ folio, onClose, t }) => {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -818,7 +1122,7 @@ const ManuscriptViewer = ({ folio, onClose, t }) => {
             {showText && (
               <motion.div
                 initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-                className="w-full md:w-72 bg-white border-l border-maroon/10 flex flex-col overflow-hidden"
+                className="w-full md:w-96 bg-white border-l border-maroon/10 flex flex-col shrink-0"
               >
                 <div className="flex items-center gap-2 px-5 py-3.5 border-b border-maroon/8 bg-maroon/[0.02]">
                   <div className="w-1.5 h-1.5 rounded-full bg-gold" />
@@ -827,8 +1131,28 @@ const ManuscriptViewer = ({ folio, onClose, t }) => {
                   </h4>
                 </div>
                 <div className="flex-1 overflow-y-auto p-5">
-                  <div className="tamil-body text-stone leading-[2.1] text-sm">
-                    {folio.text_content || t('இந்த ஏட்டிற்கு எழுத்துப் பிரதி இல்லை.', 'No transcription available for this folio.')}
+                  <div
+                    className="text-stone"
+                    style={{
+                      fontFamily: '"Noto Sans Tamil", "Noto Sans", sans-serif',
+                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      lineHeight: 2.1,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                      letterSpacing: '0.01em',
+                    }}
+                  >
+                    {folio.text_content
+                      ? folio.text_content
+                          .replace(/<br\s*\/?>/gi, '\n')
+                          .replace(/\\r\\n|\\n/g, '')
+                          .replace(/\r\n|\r|\n/g, '\n')
+                          .replace(/\t+/g, '')
+                          .replace(/\n{3,}/g, '\n\n')
+                          .trim()
+                      : t('இந்த ஏட்டிற்கு எழுத்துப் பிரதி இல்லை.', 'No transcription available for this folio.')}
                   </div>
                 </div>
                 <div className="px-5 py-3 border-t border-maroon/8 bg-maroon/[0.02]">

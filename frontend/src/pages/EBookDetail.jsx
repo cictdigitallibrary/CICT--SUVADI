@@ -127,10 +127,10 @@ const EBookDetail = () => {
                         <div className="book-3d-container relative w-[150px] h-[220px]">
                           {/* Front Cover */}
                           <div className="book-3d-cover absolute inset-0 z-20 bg-white shadow-[2px_2px_10px_rgba(0,0,0,0.3)] border border-black/5">
-                            <img 
-                              src={edition.image_folder ? `https://suvadi.cict.in/asp/ebooks/${edition.image_folder}/files/mobile/1.jpg` : `${API}${book.cover_image}`} 
-                              alt={edition.title_english} 
-                              className="w-full h-full object-fill" 
+                            <img
+                              src={`${API}${book.cover_image}`}
+                              alt={edition.title_tamil}
+                              className="w-full h-full object-fill"
                             />
                             {/* Lighting overlay on hover */}
                             <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-overlay" />
