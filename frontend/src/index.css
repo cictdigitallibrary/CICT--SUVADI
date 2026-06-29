@@ -4,11 +4,11 @@
   --color-maroon: #5C0A0A;
   --color-maroon-dark: #3D0707;
   --color-maroon-light: #7A0D0D;
-  
+
   --color-gold: #C9973B;
   --color-gold-dark: #A67B2E;
   --color-gold-light: #E8B86D;
-  
+
   --color-bronze: #8B5E3C;
   --color-ivory: #F5F0E8;
   --color-parchment: #E8D5B0;
@@ -33,7 +33,7 @@
 
 body {
   @apply font-inter bg-ivory text-stone overflow-x-hidden;
-  background-image: url('https://www.transparenttextures.com/patterns/paper.png');
+  background-color: #FAF8F3;
 }
 
 h1, h2, h3, h4, .font-playfair {
@@ -47,7 +47,6 @@ a {
 
 /* ── TAMIL FONT CLASSES ─────────────────────────────── */
 
-/* Default Tamil text - clean Noto */
 .tamil-text {
   font-family: "Noto Sans Tamil", sans-serif;
   font-weight: 500;
@@ -55,7 +54,6 @@ a {
   letter-spacing: 0.01em;
 }
 
-/* Bold & stylish Tamil headings - Baloo Thambi 2 */
 .tamil-heading {
   font-family: "Baloo Thambi 2", "Noto Sans Tamil", sans-serif;
   font-weight: 900;
@@ -63,14 +61,12 @@ a {
   letter-spacing: -0.02em;
 }
 
-/* Medium weight for labels and buttons */
 .tamil-label {
   font-family: "Baloo Thambi 2", "Noto Sans Tamil", sans-serif;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
-/* Elegant / literary Tamil - Tiro Tamil */
 .tamil-elegant {
   font-family: "Tiro Tamil", "Noto Sans Tamil", serif;
   font-weight: 400;
@@ -78,7 +74,6 @@ a {
   line-height: 2;
 }
 
-/* Body Tamil prose */
 .tamil-body {
   font-family: "Baloo Thambi 2", "Noto Sans Tamil", sans-serif;
   font-weight: 500;
@@ -87,7 +82,6 @@ a {
 }
 
 /* ── NAV ─────────────────────────────────────────────── */
-/* (Navbar now uses inline Tailwind styles for scroll state theming) */
 .nav-link {
   @apply relative text-[11px] uppercase tracking-[0.12em] font-bold transition-all duration-300 hover:text-gold;
   font-family: "Baloo Thambi 2", "Cinzel", sans-serif;
@@ -104,38 +98,39 @@ a {
 
 /* ── BUTTONS ─────────────────────────────────────────── */
 .btn-primary {
-  @apply bg-maroon text-white px-8 py-3 font-bold tracking-wider transition-all duration-300 hover:bg-maroon-light shadow-lg hover:shadow-maroon/25 hover:-translate-y-0.5;
+  @apply bg-maroon text-white px-8 py-3 font-bold tracking-wider transition-all duration-300 hover:bg-maroon-light shadow-lg hover:shadow-maroon/20 hover:-translate-y-0.5 rounded-lg;
   font-family: "Baloo Thambi 2", "Cinzel", sans-serif;
 }
 
 .btn-outline {
-  @apply border border-maroon text-maroon px-8 py-3 font-bold tracking-wider transition-all duration-300 hover:bg-maroon hover:text-white hover:-translate-y-0.5;
+  @apply border-2 border-maroon/60 text-maroon px-8 py-3 font-bold tracking-wider transition-all duration-300 hover:bg-maroon hover:text-white hover:-translate-y-0.5 rounded-lg;
   font-family: "Baloo Thambi 2", "Cinzel", sans-serif;
 }
 
 /* ── GLASS ────────────────────────────────────────────── */
 .glass-morphism {
-  background: rgba(26, 5, 5, 0.92);
+  background: rgba(253, 247, 234, 0.93);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(201, 151, 59, 0.15);
+  border-bottom: 1px solid rgba(107, 15, 15, 0.18);
 }
 
 /* ── SCROLLBAR ────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-ivory;
+  background: #FAF8F3;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gold/40 rounded-full;
+  background: rgba(201,151,59,0.35);
+  border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gold/70;
+  background: rgba(201,151,59,0.65);
 }
 
 /* ── CANVAS ───────────────────────────────────────────── */
@@ -155,7 +150,7 @@ a {
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(to right, transparent, #C9973B, transparent);
+  background: linear-gradient(to right, transparent, rgba(201,151,59,0.5), transparent);
 }
 
 /* ── PULSE GLOW ANIMATION ─────────────────────────────── */
@@ -259,4 +254,583 @@ a {
 }
 .group:hover .book-3d-cover {
   transform: rotateY(-35deg);
+}
+
+/* ── HERITAGE SECTION DIVIDER ─────────────────────────── */
+.section-gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(201,151,59,0.4) 30%, rgba(201,151,59,0.6) 50%, rgba(201,151,59,0.4) 70%, transparent 100%);
+}
+
+/* ════════════════════════════════════════════════════════
+   HOME PAGE — MUSEUM-QUALITY HERITAGE REDESIGN
+   Reference Image Faithful Reproduction
+   National Archive · Museum Quality · Premium Heritage
+════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════
+   SECTION 1: HERO
+   Background: Wide-format generated artwork — palm-leaf manuscripts + Tamil writing
+   Warm amber-orange palette matching reference
+════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   HERO — parchment background (1024×434 px, ratio 2.36:1)
+   Height tracks the image's natural display height so the
+   full image fills the hero with zero blank area below.
+═══════════════════════════════════════════════════════ */
+.home-hero {
+  position: relative;
+  /* clamp: matches image height (vw / 2.36) at all breakpoints */
+  height: clamp(520px, calc(100vw / 2.36), 760px) !important;
+  min-height: unset !important;     /* override Tailwind min-h-screen */
+  background-color: #EDD9AE;        /* warm parchment fallback */
+  overflow: visible !important;     /* let stat cards bleed below boundary */
+}
+.home-hero-artwork {
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/bg/hero-wide-bg.png');
+  background-size: 100% auto;
+  background-position: center center;  /* vertically centre within clip */
+  background-repeat: no-repeat;
+}
+.home-hero-overlay {
+  position: absolute;
+  inset: 0;
+  /* Brighten center for readability; keep edges honest */
+  background:
+    radial-gradient(ellipse 52% 65% at 50% 44%, rgba(255,252,242,0.52) 0%, transparent 58%),
+    linear-gradient(to bottom, rgba(15,5,0,0.06) 0%, transparent 16%, transparent 82%, rgba(15,5,0,0.07) 100%);
+}
+
+/* ── Reduce the giant py-40 padding (10rem each side → 2rem) ── */
+.home-hero .py-40 {
+  padding-top: 2rem !important;
+  padding-bottom: 1.5rem !important;
+}
+
+/* ── Tighten space-y-10 vertical gaps (2.5rem → 1rem) ── */
+.home-hero .space-y-10 > * + * {
+  margin-top: 1rem !important;
+}
+
+/* ── HERO TEXT & ELEMENT OVERRIDES (light parchment bg) ── */
+.home-hero h1.tamil-heading {
+  color: #FFFFFF !important;
+  text-shadow: 0 2px 18px rgba(25,8,0,0.70), 0 1px 6px rgba(25,8,0,0.55) !important;
+}
+.home-hero p.font-cinzel {
+  color: #4A2C12 !important;
+}
+.home-hero .space-y-3 > p.tamil-label {
+  color: #6B0F0F !important;
+}
+.home-hero p.tamil-body {
+  color: #3D2010 !important;
+}
+
+/* ── Stat pills: overlap bottom edge of hero ── */
+.home-hero .border-t {
+  position: relative;
+  z-index: 30;
+  padding-top: 0.75rem !important;  /* tighten pt-10 */
+  margin-bottom: -54px;             /* bleed into next section */
+}
+
+/* ── PRIMARY HERO BUTTON (deep maroon → gold hover) ── */
+#hero-search-btn > div:first-child {
+  background: #6B0F0F !important;
+}
+#hero-search-btn > div:nth-child(3) {
+  color: #FFFFFF !important;
+}
+#hero-search-btn:hover > div:nth-child(3) {
+  color: #3D0707 !important;
+}
+
+/* ── SECONDARY HERO BUTTON (warm cream, maroon border) ── */
+#hero-ebooks-btn {
+  background-color: rgba(253,247,236,0.88) !important;
+  border-color: #6B0F0F !important;
+  color: #6B0F0F !important;
+}
+#hero-ebooks-btn:hover {
+  background-color: rgba(253,247,236,0.96) !important;
+  border-color: #4A0808 !important;
+}
+
+/* ── STAT PILLS ─────────────────────────────────────── */
+.home-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 1.3rem;
+  background: rgba(255,252,244,0.93);
+  border: 1px solid rgba(107,15,15,0.30);
+  border-radius: 10px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.35s ease;
+  box-shadow: 0 4px 20px rgba(60,20,5,0.12);
+}
+.home-stat-pill:hover {
+  background: rgba(255,252,244,0.98);
+  border-color: rgba(107,15,15,0.55);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(107,15,15,0.15);
+}
+.home-stat-pill .tabular-nums {
+  color: #6B0F0F !important;
+}
+.home-stat-pill .tamil-label {
+  color: rgba(74,44,18,0.80) !important;
+}
+.home-stat-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: rgba(107,15,15,0.10);
+  border: 1px solid rgba(107,15,15,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════════
+   SECTION 2: FACULTY / INSTITUTIONAL
+   Background: Premium archival parchment texture
+════════════════════════════════════════════════════════ */
+.home-faculty-section {
+  position: relative;
+  background-color: #FEFCF5;
+  overflow: hidden;
+  padding-top: 4rem; /* offset for stat-pill overlap from hero */
+}
+.home-faculty-artwork {
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/bg/faculty-bg.png');
+  background-size: cover;
+  background-position: center center;
+  /* More visible — show the parchment texture clearly */
+  opacity: 0.30;
+}
+.home-faculty-overlay {
+  position: absolute;
+  inset: 0;
+  /* Very light — just a warm tint, not hiding the texture */
+  background: linear-gradient(180deg, rgba(255,253,247,0.42) 0%, rgba(248,243,235,0.38) 100%);
+}
+.home-faculty-section::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, transparent 0%, rgba(201,151,59,0.55) 30%, rgba(92,10,10,0.38) 70%, transparent 100%);
+  z-index: 3;
+}
+.home-faculty-section::after {
+  content: 'சு';
+  position: absolute;
+  right: -0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: "Baloo Thambi 2", sans-serif;
+  font-size: 22rem;
+  font-weight: 900;
+  color: rgba(92,10,10,0.032);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.home-mission-card {
+  background: rgba(255,255,255,0.94);
+  border-left: 4px solid #C9973B;
+  padding: 2.2rem 2.5rem 2.2rem 2.8rem;
+  border-radius: 0 14px 14px 0;
+  box-shadow: 0 8px 40px rgba(92,10,10,0.08), 0 2px 8px rgba(201,151,59,0.08);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.5s ease;
+  backdrop-filter: blur(6px);
+}
+.home-mission-card:hover {
+  box-shadow: 0 18px 65px rgba(201,151,59,0.16), 0 4px 18px rgba(92,10,10,0.07);
+}
+.home-mission-card::before {
+  content: '"';
+  position: absolute;
+  top: 0.5rem; left: 1rem;
+  font-size: 5rem;
+  font-family: Georgia, "Times New Roman", serif;
+  color: rgba(201,151,59,0.18);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.home-timeline-dot {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.94);
+  border: 2px solid rgba(201,151,59,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(201,151,59,0.1);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.group:hover .home-timeline-dot {
+  border-color: #C9973B;
+  box-shadow: 0 6px 24px rgba(201,151,59,0.22);
+}
+
+/* ════════════════════════════════════════════════════════
+   SECTION 3: RESEARCH TOOLS
+   Background: Generated deep maroon + Tamil manuscript texture
+   Card 01: gold/amber | Card 02: forest green | Card 03: purple/plum
+════════════════════════════════════════════════════════ */
+.home-research-section {
+  position: relative;
+  /* Rich vivid maroon matching reference — not dull dark */
+  background-color: #6B0A0A;
+  overflow: hidden;
+}
+.home-research-artwork {
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/bg/research-bg.png');
+  background-size: cover;
+  background-position: center center;
+}
+.home-research-overlay {
+  position: absolute;
+  inset: 0;
+  /* Lighter overlay — let the maroon texture artwork show through clearly */
+  background: linear-gradient(145deg, rgba(55,5,5,0.52) 0%, rgba(80,8,8,0.35) 50%, rgba(55,5,5,0.52) 100%);
+}
+
+/* Reference image: 3 distinctly colored tool cards */
+.home-tool-card {
+  border-radius: 14px;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  padding: 2.5rem;
+}
+.home-tool-card:hover {
+  transform: translateY(-7px);
+  box-shadow: 0 22px 65px rgba(0,0,0,0.45);
+}
+/* Card 01 — Manuscript Search — Vivid warm amber/gold matching reference */
+.home-tool-card-1 {
+  background: linear-gradient(145deg, #D4A520 0%, #F0C035 35%, #D4A520 70%, #B88A10 100%);
+}
+/* Card 02 — Digital Library — Vivid forest green matching reference */
+.home-tool-card-2 {
+  background: linear-gradient(145deg, #2A6645 0%, #3D8A5C 35%, #2A7048 70%, #1A4D32 100%);
+}
+/* Card 03 — Critical Editions — Vivid purple/plum matching reference */
+.home-tool-card-3 {
+  background: linear-gradient(145deg, #6A2A9A 0%, #8A40C0 35%, #7030B0 70%, #4A1878 100%);
+}
+.home-tool-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.35s;
+  border-radius: 14px;
+  pointer-events: none;
+}
+.home-tool-card:hover::after {
+  background: rgba(255,255,255,0.06);
+}
+/* Number watermark inside each card */
+.tool-card-number {
+  position: absolute;
+  top: 0; right: 0;
+  padding: 1.2rem 1.5rem;
+  font-size: 4.5rem;
+  font-weight: 900;
+  font-family: "Cinzel", serif;
+  color: rgba(255,255,255,0.14);
+  line-height: 1;
+  user-select: none;
+  transition: color 0.4s;
+}
+.group:hover .tool-card-number {
+  color: rgba(255,255,255,0.22);
+}
+
+/* ════════════════════════════════════════════════════════
+   SECTION 4: PUBLISHED CRITICAL EDITIONS
+   Background: Generated archival paper with mandala decorations
+════════════════════════════════════════════════════════ */
+.home-editions-section {
+  position: relative;
+  /* Bright warm cream matching reference */
+  background-color: #FDFAF3;
+  overflow: hidden;
+}
+.home-editions-artwork {
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/bg/editions-bg.png');
+  background-size: cover;
+  background-position: center center;
+  /* More visible — show the archival paper mandala artwork */
+  opacity: 0.35;
+}
+.home-editions-overlay {
+  position: absolute;
+  inset: 0;
+  /* Very light — just a gentle cream tint */
+  background: linear-gradient(180deg, rgba(255,253,248,0.42) 0%, rgba(252,248,240,0.38) 100%);
+}
+
+.home-book-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(201,151,59,0.22);
+  border-radius: 4px;
+  padding: 0.4rem;
+  box-shadow: 0 4px 18px rgba(92,10,10,0.07);
+  transition: all 0.45s ease;
+  position: relative;
+}
+.home-book-card:hover {
+  box-shadow: 0 14px 45px rgba(201,151,59,0.2);
+  border-color: rgba(201,151,59,0.55);
+  transform: translateY(-5px);
+}
+
+.edition-year-badge {
+  position: absolute;
+  top: 0; right: 0;
+  background: #C9973B;
+  color: #3D0707;
+  font-size: 0.48rem;
+  font-weight: 900;
+  padding: 0.2rem 0.45rem;
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.04em;
+  z-index: 2;
+}
+
+/* ════════════════════════════════════════════════════════
+   SECTION 5: DIGITAL REPOSITORY / EBOOKS
+   Background: Deep heritage GREEN (matching reference image)
+   Generated artwork with palm-leaf border decorations
+════════════════════════════════════════════════════════ */
+.home-ebooks-section {
+  position: relative;
+  /* Rich vivid heritage green matching reference — not dark/muted */
+  background-color: #0D5535;
+  overflow: hidden;
+}
+.home-ebooks-artwork {
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/bg/ebooks-bg.png');
+  background-size: cover;
+  background-position: center center;
+}
+.home-ebooks-overlay {
+  position: absolute;
+  inset: 0;
+  /* Lighter overlay — rich green must show clearly */
+  background: linear-gradient(135deg, rgba(8,35,18,0.45) 0%, rgba(12,55,28,0.28) 50%, rgba(8,35,18,0.45) 100%);
+}
+
+.home-ebook-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(201,151,59,0.22);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.45s ease;
+  backdrop-filter: blur(8px);
+}
+.home-ebook-card:hover {
+  background: rgba(255,255,255,0.13);
+  border-color: rgba(201,151,59,0.55);
+  box-shadow: 0 14px 45px rgba(0,0,0,0.3);
+  transform: translateY(-5px);
+}
+.home-ebook-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 3px;
+  background: linear-gradient(90deg, #C9973B, #E8B86D);
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 2;
+}
+.home-ebook-card:hover::before {
+  opacity: 1;
+}
+
+/* Browse Library gold button (matching reference) */
+.btn-browse-library {
+  background: linear-gradient(135deg, #D4A843 0%, #F0C860 50%, #C9973B 100%);
+  color: #1A0505;
+  font-family: "Baloo Thambi 2", "Cinzel", sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  padding: 0.85rem 2.2rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 24px rgba(201,151,59,0.35);
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+.btn-browse-library:hover {
+  box-shadow: 0 12px 40px rgba(201,151,59,0.52);
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+/* ════════════════════════════════════════════════════════
+   SECTION 6: ADDITIONAL RESOURCES
+   Background: Warm parchment, matches reference light section
+════════════════════════════════════════════════════════ */
+.home-resources-section {
+  position: relative;
+  background-color: #FAF8F0;
+  overflow: hidden;
+}
+.home-resources-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(201,151,59,0.45) 30%, rgba(201,151,59,0.65) 50%, rgba(201,151,59,0.45) 70%, transparent);
+  z-index: 2;
+}
+.home-resources-section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('https://www.transparenttextures.com/patterns/paper.png');
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.home-resource-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.45s ease;
+  box-shadow: 0 4px 20px rgba(201,151,59,0.07);
+}
+.home-resource-card:hover {
+  box-shadow: 0 18px 58px rgba(201,151,59,0.16);
+  transform: translateY(-5px);
+}
+.home-resource-card-gold {
+  border-bottom: 4px solid #C9973B;
+}
+.home-resource-card-maroon {
+  border-bottom: 4px solid #5C0A0A;
+}
+.home-resource-icon {
+  width: 3.8rem;
+  height: 3.8rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  transition: all 0.45s ease;
+}
+.home-resource-icon-gold { background: rgba(201,151,59,0.10); }
+.home-resource-icon-maroon { background: rgba(92,10,10,0.05); }
+.home-resource-card:hover .home-resource-icon-gold { background: #C9973B; }
+.home-resource-card:hover .home-resource-icon-maroon { background: #5C0A0A; }
+
+/* ════════════════════════════════════════════════════════
+   SHARED UTILITIES
+════════════════════════════════════════════════════════ */
+.home-section-label {
+  font-family: "Cinzel", serif;
+  font-size: 0.63rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5em;
+  font-weight: 700;
+}
+.section-wave-top {
+  position: absolute;
+  top: -1px; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(201,151,59,0.5) 28%, rgba(201,151,59,0.78) 50%, rgba(201,151,59,0.5) 72%, transparent 100%);
+  z-index: 5;
+}
+.section-wave-bottom {
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(201,151,59,0.38) 28%, rgba(201,151,59,0.58) 50%, rgba(201,151,59,0.38) 72%, transparent 100%);
+  z-index: 5;
+}
+.drag-strip {
+  cursor: grab;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.drag-strip::-webkit-scrollbar { display: none; }
+.drag-strip:active { cursor: grabbing; }
+.catalogue-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  color: #8B5E3C;
+  border-bottom: 2px solid rgba(201,151,59,0.32);
+  padding-bottom: 0.45rem;
+  font-family: "Baloo Thambi 2", sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  transition: all 0.3s ease;
+}
+.catalogue-link:hover {
+  color: #5C0A0A;
+  border-color: #5C0A0A;
+}
+.catalogue-link:hover span:last-child {
+  transform: translateX(6px);
+}
+.catalogue-link span:last-child {
+  transition: transform 0.3s ease;
+}
+/* Palm-leaf side decoration */
+.palm-leaf-side-deco {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100px;
+  height: 55%;
+  opacity: 0.055;
+  pointer-events: none;
+  user-select: none;
+  font-family: "Noto Sans Tamil", sans-serif;
+  font-size: 0.65rem;
+  color: #C9973B;
+  letter-spacing: 0.18em;
+  line-height: 2.2;
+  overflow: hidden;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
 }

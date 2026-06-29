@@ -38,9 +38,9 @@ const Navbar = () => {
     ? 'bg-[#1A0505]/95 backdrop-blur-lg shadow-2xl'
     : 'bg-transparent';
 
-  const logoTextColor  = 'text-white';
-  const subTextColor   = shouldBeSolid ? 'text-gold/80' : 'text-gold/60';
-  const linkColor      = shouldBeSolid ? 'text-white/85 hover:text-gold' : 'text-white/85 hover:text-gold';
+  const logoTextColor  = shouldBeSolid ? 'text-white'       : 'text-[#5C0A0A]';
+  const subTextColor   = shouldBeSolid ? 'text-gold/80'     : 'text-[#5C0A0A]/75';
+  const linkColor      = shouldBeSolid ? 'text-white/85 hover:text-gold' : 'text-[#5C0A0A] hover:text-gold';
   const activeColor    = 'text-gold';
 
   return (
@@ -60,7 +60,7 @@ const Navbar = () => {
 
         {/* ── Logo ── */}
         <Link to="/" className="flex items-center gap-4 group flex-shrink-0">
-          <div className={`w-11 h-11 flex items-center justify-center p-1 border transition-all duration-500 shadow-xl flex-shrink-0 ${shouldBeSolid ? 'bg-maroon border-gold/50 group-hover:border-gold group-hover:rotate-6' : 'bg-white/10 border-white/20 group-hover:border-gold/60'}`}>
+          <div className={`w-11 h-11 flex items-center justify-center p-1 border transition-all duration-500 shadow-xl flex-shrink-0 ${shouldBeSolid ? 'bg-maroon border-gold/50 group-hover:border-gold group-hover:rotate-6' : 'bg-[#5C0A0A]/8 border-[#5C0A0A]/30 group-hover:border-gold/60'}`}>
             <img src="/images/logo_cict.png" alt="CICT"
               className="w-full h-full object-contain"
               onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-white text-xs font-bold">CICT</span>'; }}
@@ -113,7 +113,7 @@ const Navbar = () => {
             className={`flex items-center gap-2 px-5 py-2 text-[11px] font-black uppercase tracking-[0.2em] border-2 transition-all duration-300 shadow-lg ${
               shouldBeSolid
                 ? 'border-gold/30 text-gold hover:bg-gold hover:text-maroon'
-                : 'border-white/20 text-white/90 hover:border-gold hover:text-gold hover:bg-white/5'
+                : 'border-[#5C0A0A]/35 text-[#5C0A0A] hover:border-gold hover:text-gold hover:bg-[#5C0A0A]/5'
             }`}
             style={{ fontFamily: '"Cinzel", serif' }}
           >
@@ -129,9 +129,9 @@ const Navbar = () => {
           aria-label="Menu"
         >
           <div className="flex flex-col gap-[6px]">
-            <span className={`block w-6 h-[2.5px] bg-white transition-all duration-500 ease-out ${mobileMenuOpen ? 'rotate-45 translate-y-[8.5px] bg-gold' : ''}`} />
-            <span className={`block w-5 h-[2.5px] bg-white transition-all duration-300 ${mobileMenuOpen ? 'opacity-0 -translate-x-4' : ''}`} />
-            <span className={`block w-6 h-[2.5px] bg-white transition-all duration-500 ease-out ${mobileMenuOpen ? '-rotate-45 -translate-y-[8.5px] bg-gold' : ''}`} />
+            <span className={`block w-6 h-[2.5px] transition-all duration-500 ease-out ${shouldBeSolid ? 'bg-white' : 'bg-[#5C0A0A]'} ${mobileMenuOpen ? 'rotate-45 translate-y-[8.5px] bg-gold' : ''}`} />
+            <span className={`block w-5 h-[2.5px] transition-all duration-300 ${shouldBeSolid ? 'bg-white' : 'bg-[#5C0A0A]'} ${mobileMenuOpen ? 'opacity-0 -translate-x-4' : ''}`} />
+            <span className={`block w-6 h-[2.5px] transition-all duration-500 ease-out ${shouldBeSolid ? 'bg-white' : 'bg-[#5C0A0A]'} ${mobileMenuOpen ? '-rotate-45 -translate-y-[8.5px] bg-gold' : ''}`} />
           </div>
         </button>
       </div>

@@ -46,12 +46,9 @@ const FEATURES = [
     desc_ta: 'CICT வெளியிட்ட அதிகாரபூர்வ நூல் பதிப்புகள்.',
     desc_en: 'Authoritative critical editions published by CICT scholars.',
     link: '/classical-texts',
-    accent: '#7A3010',
+    accent: '#D4A853',
   },
 ];
-
-/* ── Floating Tamil glyphs for hero decoration ── */
-const FLOATING_GLYPHS = ['ஓம்', 'தமிழ்', 'சுவடி', 'அ', 'ம்', 'ல்', 'ர்', 'ழ்'];
 
 /* ── Animation variants ── */
 const fadeUp = {
@@ -94,10 +91,10 @@ function StatItem({ val, label }) {
   const { count, ref } = useAnimatedCount(val);
   return (
     <div ref={ref} className="group text-center">
-      <div className="text-3xl md:text-5xl font-cinzel font-black text-white group-hover:text-gold transition-colors duration-500 tabular-nums">
+      <div className="text-3xl md:text-5xl font-cinzel font-black text-gold-light group-hover:text-white transition-colors duration-500 tabular-nums">
         {count || val}
       </div>
-      <div className="tamil-label text-[10px] uppercase tracking-[0.2em] text-gold/40 font-black mt-1">{label}</div>
+      <div className="tamil-label text-[10px] uppercase tracking-[0.2em] text-gold/60 font-black mt-1">{label}</div>
     </div>
   );
 }
@@ -169,59 +166,20 @@ const Home = () => {
   };
 
   return (
-    <div className="bg-ivory selection:bg-maroon selection:text-white overflow-x-hidden">
+    <div className="bg-ivory selection:bg-maroon selection:text-white overflow-x-hidden" style={{ background: '#FAF8F2' }}>
 
       {/* ══════════════════════════════════════════
           SECTION 1 ▸ HERO
       ══════════════════════════════════════════ */}
-      <section className="relative w-full flex flex-col items-center justify-center overflow-hidden min-h-screen">
+      <section className="home-hero relative w-full flex flex-col items-center justify-center overflow-hidden min-h-screen">
 
-        {/* Background gradient */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #1A0303 0%, #3D0707 35%, #6B2010 70%, #1A0303 100%)' }} />
+        {/* Generated manuscript artwork background */}
+        <div className="home-hero-artwork" />
+        {/* Warm amber overlay */}
+        <div className="home-hero-overlay" />
 
-        {/* Subtle leather texture */}
-        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/dark-leather.png')" }} />
-
-        {/* Radial glow orbs */}
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full opacity-[0.07]"
-          style={{ background: 'radial-gradient(circle, #C9973B 0%, transparent 70%)', filter: 'blur(60px)' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full opacity-[0.05]"
-          style={{ background: 'radial-gradient(circle, #E8B86D 0%, transparent 70%)', filter: 'blur(80px)' }} />
-
-        {/* Animated floating Tamil glyphs */}
-        {FLOATING_GLYPHS.map((g, i) => (
-          <motion.div
-            key={i}
-            className="absolute select-none pointer-events-none font-black text-gold/[0.04]"
-            style={{
-              left: `${8 + (i * 12) % 88}%`,
-              top: `${10 + (i * 17) % 75}%`,
-              fontSize: `${3 + (i % 4)}rem`,
-              fontFamily: '"Baloo Thambi 2", sans-serif',
-            }}
-            animate={{ y: [0, -20, 0], rotate: [0, i % 2 === 0 ? 5 : -5, 0] }}
-            transition={{ duration: 6 + i * 1.2, repeat: Infinity, ease: 'easeInOut', delay: i * 0.4 }}
-          >
-            {g}
-          </motion.div>
-        ))}
-
-        {/* Decorative ring */}
-        <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/10"
-          style={{ width: '600px', height: '600px' }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/5"
-          style={{ width: '900px', height: '900px' }}
-          animate={{ rotate: -360 }}
-          transition={{ duration: 100, repeat: Infinity, ease: 'linear' }}
-        />
-
-        {/* Bottom divider */}
-        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+        {/* Bottom gold divider */}
+        <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
 
         {/* Hero content */}
         <div className="relative z-10 container mx-auto px-6 text-center max-w-5xl py-40">
@@ -229,16 +187,16 @@ const Home = () => {
 
             {/* Institutional label */}
             <motion.div className="flex items-center justify-center gap-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }}>
-              <div className="h-px w-20 bg-gradient-to-r from-transparent to-gold/60" />
+              <div className="h-px w-20 bg-gradient-to-r from-transparent to-gold/70" />
               <p className="font-cinzel text-[10px] md:text-xs uppercase tracking-[0.6em] text-gold/80 font-bold">
                 {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
               </p>
-              <div className="h-px w-20 bg-gradient-to-l from-transparent to-gold/60" />
+              <div className="h-px w-20 bg-gradient-to-l from-transparent to-gold/70" />
             </motion.div>
 
             {/* Main title */}
             <motion.div className="space-y-3" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}>
-              <h1 className="tamil-heading text-white italic" style={{ fontSize: 'clamp(4rem, 12vw, 8.5rem)', textShadow: '0 0 80px rgba(201,151,59,0.15)' }}>
+              <h1 className="tamil-heading text-white italic" style={{ fontSize: 'clamp(4rem, 12vw, 8.5rem)', textShadow: '0 4px 80px rgba(201,151,59,0.30), 0 0 160px rgba(201,151,59,0.12)' }}>
                 {t('சுவடி', 'Suvadi')}
               </h1>
               <p className="tamil-label text-gold/90 text-xl md:text-3xl tracking-widest font-black uppercase">
@@ -248,11 +206,11 @@ const Home = () => {
 
             {/* Ornamental separator */}
             <motion.div className="flex items-center justify-center gap-4" initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }} transition={{ delay: 0.7, duration: 0.8 }}>
-              <div className="w-1.5 h-1.5 rounded-full border border-gold/40" />
-              <div className="h-px w-24 bg-gold/20" />
-              <div className="w-2 h-2 rounded-full bg-gold/30" />
-              <div className="h-px w-24 bg-gold/20" />
-              <div className="w-1.5 h-1.5 rounded-full border border-gold/40" />
+              <div className="w-1.5 h-1.5 rounded-full border border-gold/50" />
+              <div className="h-px w-24 bg-gold/30" />
+              <div className="w-2 h-2 rounded-full bg-gold/40" />
+              <div className="h-px w-24 bg-gold/30" />
+              <div className="w-1.5 h-1.5 rounded-full border border-gold/50" />
             </motion.div>
 
             {/* Tagline */}
@@ -267,9 +225,9 @@ const Home = () => {
             {/* CTA buttons */}
             <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6"
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.8 }}>
-              <Link to="/search" id="hero-search-btn" className="group relative px-12 py-5 overflow-hidden shadow-xl shadow-gold/10">
-                <div className="absolute inset-0 bg-gold transition-all duration-500 group-hover:bg-gold-light" />
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              <Link to="/search" id="hero-search-btn" className="group relative px-12 py-5 overflow-hidden shadow-xl shadow-gold/20 rounded-lg">
+                <div className="absolute inset-0 bg-gold transition-all duration-500 group-hover:bg-gold-light rounded-lg" />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg"
                   style={{ background: 'linear-gradient(135deg, #E8B86D, #C9973B)' }} />
                 <div className="relative flex items-center gap-3 text-maroon font-black uppercase tracking-widest text-sm transition-transform group-hover:translate-x-1">
                   <span className="tamil-label">{t('சுவடிகளை தேடுக', 'Explore Archives')}</span>
@@ -279,21 +237,24 @@ const Home = () => {
                 </div>
               </Link>
               <Link to="/ebooks" id="hero-ebooks-btn"
-                className="group px-12 py-5 border-2 border-gold/40 text-gold font-cinzel font-black uppercase tracking-widest text-sm hover:bg-gold/10 hover:border-gold transition-all duration-300 relative overflow-hidden">
+                className="group px-12 py-5 border-2 border-gold/50 text-gold font-cinzel font-black uppercase tracking-widest text-sm hover:bg-gold/12 hover:border-gold transition-all duration-300 relative overflow-hidden rounded-lg">
                 <span className="relative z-10">{t('மின் நூலகம்', 'Digital Library')}</span>
               </Link>
             </motion.div>
 
             {/* Stats */}
             {stats && (
-              <motion.div className="flex items-center justify-center gap-12 md:gap-24 pt-10 border-t border-white/10"
+              <motion.div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 pt-10 border-t border-gold/20"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4, duration: 0.8 }}>
                 {[
-                  { val: stats.texts,      label: t('செவ்வியல் நூல்கள்', 'Works') },
-                  { val: stats.manuscripts, label: t('சுவடி வகைகள்', 'Archives') },
-                  { val: stats.songs > 999 ? Math.round(stats.songs / 1000) + 'k+' : stats.songs, label: t('சுவடி ஏடுகள்', 'Folios') },
+                  { val: stats.texts,      label: t('செவ்வியல் நூல்கள்', 'Works'),    icon: '📜' },
+                  { val: stats.manuscripts, label: t('சுவடி வகைகள்', 'Archives'),     icon: '🗂️' },
+                  { val: stats.songs > 999 ? Math.round(stats.songs / 1000) + 'k+' : stats.songs, label: t('சுவடி ஏடுகள்', 'Folios'), icon: '📚' },
                 ].map((s, i) => (
-                  <StatItem key={i} val={s.val} label={s.label} />
+                  <div key={i} className="home-stat-pill">
+                    <div className="home-stat-icon">{s.icon}</div>
+                    <StatItem val={s.val} label={s.label} />
+                  </div>
                 ))}
               </motion.div>
             )}
@@ -303,8 +264,8 @@ const Home = () => {
         {/* Scroll indicator */}
         <div className="absolute bottom-10 left-0 w-full flex justify-center">
           <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 2.5 }} className="flex flex-col items-center gap-2">
-            <span className="font-cinzel text-[8px] tracking-[0.6em] uppercase font-bold text-gold/30">Scroll</span>
-            <motion.div className="w-[1px] h-10 bg-gradient-to-b from-gold/50 to-transparent" />
+            <span className="font-cinzel text-[8px] tracking-[0.6em] uppercase font-bold text-gold/40">Scroll</span>
+            <motion.div className="w-[1px] h-10 bg-gradient-to-b from-gold/60 to-transparent" />
           </motion.div>
         </div>
       </section>
@@ -312,12 +273,16 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 2 ▸ INSTITUTIONAL INTRODUCTION
       ══════════════════════════════════════════ */}
-      <section className="py-32 bg-ivory relative overflow-hidden">
-        {/* Decorative large Tamil character watermark */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 text-[20rem] font-black text-maroon/[0.02] select-none pointer-events-none leading-none"
-          style={{ fontFamily: '"Baloo Thambi 2", sans-serif' }}>சு</div>
+      <section className="home-faculty-section py-32">
+        {/* Generated parchment artwork background */}
+        <div className="home-faculty-artwork" />
+        <div className="home-faculty-overlay" />
+        {/* Decorative vertical Tamil text strip */}
+        <div className="palm-leaf-side-deco" style={{ left: '1.5rem', zIndex: 2 }}>
+          {'அகர முதல எழுத்தெல்லாம் ஆதி பகவன் முதற்றே உலகு கற்க கசடறக் கற்பவை கற்றபின் நிற்க அதற்குத் தக யாதும் ஊரே யாவரும் கேளிர்'}
+        </div>
 
-        <div className="container mx-auto px-6 max-w-6xl">
+        <div className="container mx-auto px-6 max-w-6xl relative" style={{ zIndex: 3 }}>
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }}
             className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-start">
 
@@ -325,7 +290,7 @@ const Home = () => {
             <div className="space-y-12">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 bg-maroon rounded-full" />
+                  <div className="w-1.5 h-1.5 bg-gold rounded-full" />
                   <span className="tamil-label text-xs text-bronze uppercase tracking-[0.3em] font-black">
                     {t('நிறுவன அறிமுகம்', 'Institutional Charter')}
                   </span>
@@ -333,14 +298,13 @@ const Home = () => {
                 <h2 className="tamil-heading text-5xl md:text-6xl text-maroon font-black italic">
                   {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
                 </h2>
-                <div className="w-24 h-1.5 bg-gradient-to-r from-maroon to-gold/50" />
+                <div className="w-24 h-1.5 bg-gradient-to-r from-maroon to-gold/60" />
               </div>
 
               {/* Mission quote */}
-              <div className="bg-white border-l-4 border-gold p-10 shadow-2xl relative overflow-hidden group hover:shadow-gold/10 transition-shadow duration-500">
+              <div className="home-mission-card group">
                 <div className="absolute -bottom-10 -right-10 text-9xl text-gold/5 italic opacity-[0.03] select-none group-hover:opacity-[0.08] transition-opacity">CICT</div>
-                <div className="absolute top-4 left-4 text-4xl text-gold/10 font-serif select-none">"</div>
-                <p className="tamil-body text-maroon/70 text-lg leading-loose font-bold italic">
+                <p className="tamil-body text-maroon/75 text-lg leading-loose font-bold italic pt-6">
                   {t('உலகெங்கிலுமிருந்து கிடைக்கப் பெற்ற எல்லாச் சுவடிகளை ஆய்ந்து பாடங்களை உறுதிசெய்து செம்பதிப்பாகக் கொண்டு வருவதே எமது பணியாகும்.',
                     'We are mandated to survey global collections, authenticate variants, and publish definitive Critical Editions of Classical Tamil literature.')}
                 </p>
@@ -350,7 +314,7 @@ const Home = () => {
                 <Link to="/search" className="btn-primary flex-1 py-5 shadow-maroon/20 text-center">
                   <span className="tamil-label font-black uppercase tracking-widest">{t('தேடல் பக்கம்', 'Access Search')}</span>
                 </Link>
-                <Link to="/team" className="btn-outline flex-1 py-5 border-maroon/20 text-maroon text-center">
+                <Link to="/team" className="btn-outline flex-1 py-5 text-center">
                   <span className="tamil-label font-black uppercase tracking-widest">{t('அறிஞர் குழு', 'Meet Faculty')}</span>
                 </Link>
               </div>
@@ -359,7 +323,7 @@ const Home = () => {
             {/* Right column — timeline narrative */}
             <div className="space-y-0 pt-4">
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-px flex-1 bg-maroon/10" />
+                <div className="h-px flex-1 bg-gold/20" />
                 <span className="tamil-text text-bronze text-sm font-bold italic">{t('சுருக்கக் குறிப்பு', 'Preservation Brief')}</span>
               </div>
 
@@ -388,10 +352,10 @@ const Home = () => {
                   className="flex gap-6 group pb-8 last:pb-0">
                   {/* Timeline line */}
                   <div className="flex flex-col items-center flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-ivory border-2 border-maroon/20 flex items-center justify-center text-lg group-hover:border-gold transition-colors duration-300 shadow-sm">
+                    <div className="home-timeline-dot">
                       {item.icon}
                     </div>
-                    {i < 2 && <div className="w-px flex-1 bg-gradient-to-b from-maroon/20 to-transparent mt-2 min-h-[2rem]" />}
+                    {i < 2 && <div className="w-px flex-1 bg-gradient-to-b from-gold/25 to-transparent mt-2 min-h-[2rem]" />}
                   </div>
                   {/* Content */}
                   <div className="pb-2">
@@ -408,20 +372,18 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 3 ▸ STRATEGIC PILLARS
       ══════════════════════════════════════════ */}
-      <section className="py-24 bg-maroon relative overflow-hidden">
-        {/* Background textures */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/dark-leather.png')" }} />
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
-        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
-
-        {/* Decorative grid lines */}
-        <div className="absolute inset-0 opacity-[0.03]"
-          style={{ backgroundImage: 'linear-gradient(#C9973B 1px, transparent 1px), linear-gradient(90deg, #C9973B 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+      <section className="home-research-section relative py-24 overflow-hidden">
+        {/* Generated maroon manuscript artwork background */}
+        <div className="home-research-artwork" />
+        <div className="home-research-overlay" />
+        {/* Gold wave dividers */}
+        <div className="section-wave-top" />
+        <div className="section-wave-bottom" />
 
         <div className="container mx-auto px-6 max-w-6xl relative z-10">
           {/* Section header */}
           <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <span className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-gold/50 font-bold block mb-3">
+            <span className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-gold/55 font-bold block mb-3">
               {t('நமது சேவைகள்', 'Our Services')}
             </span>
             <h2 className="tamil-heading text-3xl md:text-4xl text-white font-black italic">
@@ -433,38 +395,27 @@ const Home = () => {
             {FEATURES.map((f, i) => (
               <motion.div key={i} variants={fadeUp}>
                 <Link to={f.link} className="group block relative h-full">
-                  {/* Card */}
-                  <div className="relative bg-white/[0.03] border border-gold/10 p-10 hover:bg-white/[0.08] hover:border-gold/40 transition-all duration-500 h-full overflow-hidden">
-                    {/* Hover accent glow */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                      style={{ background: `radial-gradient(ellipse at top left, ${f.accent}15 0%, transparent 60%)` }} />
-
-                    {/* Top accent line that fills on hover */}
-                    <div className="absolute top-0 left-0 h-[3px] w-0 group-hover:w-full transition-all duration-700 bg-gradient-to-r from-gold to-gold-light" />
-
+                  {/* Card — each gets its own accent color matching reference image */}
+                  <div className={`home-tool-card home-tool-card-${i + 1}`}>
                     {/* Number watermark */}
-                    <div className="absolute top-0 right-0 p-6 text-[5rem] font-black font-cinzel text-gold/[0.07] leading-none group-hover:text-gold/[0.15] transition-colors select-none">
-                      {f.num}
-                    </div>
+                    <div className="tool-card-number">{f.num}</div>
 
-                    {/* Icon with glow */}
-                    <div className="relative mb-8">
+                    {/* Icon */}
+                    <div className="relative mb-6">
                       <div className="text-5xl transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-1 inline-block">
                         {f.icon}
                       </div>
-                      <div className="absolute -bottom-2 left-2 w-8 h-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm"
-                        style={{ background: f.accent }} />
                     </div>
 
-                    <h3 className="tamil-label text-2xl text-gold mb-4 font-black">{t(f.ta, f.en)}</h3>
-                    <p className="tamil-text text-white/60 text-sm leading-loose font-bold group-hover:text-white/80 transition-colors duration-300">
+                    <h3 className="tamil-label text-2xl text-white mb-4 font-black" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>{t(f.ta, f.en)}</h3>
+                    <p className="tamil-text text-white/80 text-sm leading-loose font-bold group-hover:text-white transition-colors duration-300">
                       {t(f.desc_ta, f.desc_en)}
                     </p>
 
                     {/* Arrow CTA */}
-                    <div className="mt-10 flex items-center gap-3 text-gold text-[10px] font-black uppercase tracking-[0.3em]">
-                      <span className="group-hover:text-gold-light transition-colors">{t('தொடர்க', 'LAUNCH')}</span>
-                      <div className="h-px bg-gold/50 transition-all duration-500 w-6 group-hover:w-16" />
+                    <div className="mt-8 flex items-center gap-3 text-white/90 text-[10px] font-black uppercase tracking-[0.3em]">
+                      <span className="group-hover:text-white transition-colors">{t('தொடர்க', 'LAUNCH')}</span>
+                      <div className="h-px bg-white/50 transition-all duration-500 w-6 group-hover:w-14" />
                       <svg className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M14 5l7 7-7 7" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none"/>
                       </svg>
@@ -480,11 +431,12 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 4 ▸ CRITICAL EDITIONS GALLERY
       ══════════════════════════════════════════ */}
-      <section className="py-32 bg-white relative overflow-hidden">
-        {/* Subtle paper texture */}
-        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/paper.png')" }} />
+      <section className="home-editions-section py-32 overflow-hidden">
+        {/* Generated archival paper artwork background with mandala decorations */}
+        <div className="home-editions-artwork" />
+        <div className="home-editions-overlay" />
 
-        <div className="container mx-auto px-6 max-w-6xl relative">
+        <div className="container mx-auto px-6 max-w-6xl relative" style={{ zIndex: 2 }}>
           {/* Header */}
           <motion.div className="text-center mb-20" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <p className="tamil-label text-bronze text-xs uppercase tracking-[0.4em] mb-4 font-black">
@@ -494,9 +446,9 @@ const Home = () => {
               {t('வெளியிடப்பட்ட செம்பதிப்புகள்', 'Published Critical Editions')}
             </h2>
             <div className="flex items-center justify-center gap-3 mt-6">
-              <div className="h-px w-16 bg-gold/30" />
-              <div className="w-2 h-2 bg-gold/40 rounded-full" />
-              <div className="h-px w-16 bg-gold/30" />
+              <div className="h-px w-16 bg-gold/35" />
+              <div className="w-2 h-2 bg-gold/50 rounded-full" />
+              <div className="h-px w-16 bg-gold/35" />
             </div>
           </motion.div>
 
@@ -510,7 +462,6 @@ const Home = () => {
             onMouseUp={stopDrag}
             onMouseLeave={stopDrag}
           >
-            <style>{`.scroll-hide::-webkit-scrollbar{display:none}`}</style>
             {CRITICAL_EDITIONS.map((ed, i) => (
               <TiltCard key={i} className="flex-shrink-0 w-40 md:w-44">
                 <motion.div
@@ -518,7 +469,7 @@ const Home = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.07 }}
-                  className="group bg-[#FAF9F6] border border-maroon/5 p-2 shadow-md hover:shadow-2xl hover:shadow-maroon/10 transition-all duration-500 hover:border-gold/30 relative"
+                  className="group home-book-card"
                 >
                   <div className="relative aspect-[3/4] bg-stone/5 flex items-center justify-center overflow-hidden">
                     <img
@@ -528,11 +479,11 @@ const Home = () => {
                       onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📚</span>'; }}
                     />
                     {/* Year badge */}
-                    <div className="absolute top-0 right-0 bg-maroon text-gold text-[8px] font-black px-2 py-1 shadow-lg">{ed.year}</div>
-                    {/* Shimmer overlay on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-maroon/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="edition-year-badge">{ed.year}</div>
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-maroon/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </div>
-                  <div className="mt-4 pb-2 px-1">
+                  <div className="mt-3 pb-2 px-1">
                     <p className="tamil-label text-[11px] text-maroon text-center group-hover:text-gold transition-colors font-black line-clamp-2 leading-snug">{ed.ta}</p>
                   </div>
                 </motion.div>
@@ -546,10 +497,9 @@ const Home = () => {
           </p>
 
           <div className="mt-12 text-center">
-            <Link to="/classical-texts"
-              className="tamil-label inline-flex items-center gap-4 text-bronze border-b-2 border-gold/20 pb-2 font-black uppercase tracking-widest hover:text-maroon hover:border-maroon transition-all group">
+            <Link to="/classical-texts" className="catalogue-link">
               <span>{t('அனைத்து வெளியீடுகளையும் காண்க', 'EXPLORE THE FULL CATALOGUE')}</span>
-              <span className="transition-transform group-hover:translate-x-2 duration-300">→</span>
+              <span>→</span>
             </Link>
           </div>
         </div>
@@ -559,22 +509,27 @@ const Home = () => {
           SECTION 5 ▸ DIGITAL EBOOK PREVIEW
       ══════════════════════════════════════════ */}
       {ebooks.length > 0 && (
-        <section className="py-24 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #F5F0E8 0%, #EDE5D8 100%)' }}>
+        <section className="home-ebooks-section relative py-24 overflow-hidden">
+          {/* Generated heritage green artwork background */}
+          <div className="home-ebooks-artwork" />
+          <div className="home-ebooks-overlay" />
+          {/* Gold wave top divider */}
+          <div className="section-wave-top" />
           {/* Side accent bars */}
-          <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-transparent via-maroon/20 to-transparent" />
-          <div className="absolute right-0 top-0 h-full w-1 bg-gradient-to-b from-transparent via-gold/20 to-transparent" />
+          <div className="absolute left-0 top-0 h-full w-[3px] bg-gradient-to-b from-transparent via-gold/40 to-transparent" style={{ zIndex: 3 }} />
+          <div className="absolute right-0 top-0 h-full w-[3px] bg-gradient-to-b from-transparent via-gold/25 to-transparent" style={{ zIndex: 3 }} />
 
-          <div className="container mx-auto px-6 max-w-6xl">
+          <div className="container mx-auto px-6 max-w-6xl" style={{ position: 'relative', zIndex: 4 }}>
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-14 gap-6">
               <div>
-                <span className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-bronze font-bold block mb-2">
+                <span className="home-section-label text-gold/60 block mb-2">
                   {t('மின் நூலகம்', 'Digital Repository')}
                 </span>
-                <h2 className="tamil-heading text-3xl md:text-4xl text-maroon">
+                <h2 className="tamil-heading text-3xl md:text-4xl text-white">
                   {t('முதல் அச்சுப் பதிப்புகள்', 'First Printed Editions Online')}
                 </h2>
               </div>
-              <Link to="/ebooks" className="btn-primary px-10 py-4 shadow-maroon/10 flex-shrink-0">
+              <Link to="/ebooks" className="btn-browse-library">
                 <span className="tamil-label font-black uppercase tracking-widest">{t('மின் நூல்கள் காண்க', 'Browse Library')}</span>
               </Link>
             </div>
@@ -582,17 +537,16 @@ const Home = () => {
             <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
               {ebooks.slice(0, 6).map((book, idx) => (
                 <motion.div key={book.id} variants={fadeUp}
-                  className="group bg-white shadow-md hover:shadow-xl transition-all duration-500 border border-transparent hover:border-gold/20 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-maroon to-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  className="group home-ebook-card">
                   <div className="p-4">
-                    <div className="aspect-[3/4] bg-stone/5 flex items-center justify-center mb-3 overflow-hidden">
+                    <div className="aspect-[3/4] bg-white/5 flex items-center justify-center mb-3 overflow-hidden rounded-sm">
                       <img
                         src={`${API}${book.cover_image}`}
                         alt={book.title_tamil}
                         className="h-full w-full object-contain p-2 group-hover:scale-110 transition-transform duration-700"
                       />
                     </div>
-                    <p className="tamil-label text-xs text-maroon text-center font-black group-hover:text-gold transition-colors line-clamp-2 leading-snug">
+                    <p className="tamil-label text-xs text-gold/90 text-center font-black group-hover:text-white transition-colors line-clamp-2 leading-snug">
                       {book.title_tamil}
                     </p>
                   </div>
@@ -606,15 +560,14 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 6 ▸ RESOURCES & FEEDBACK
       ══════════════════════════════════════════ */}
-      <section className="py-24 bg-ivory relative overflow-hidden">
-        {/* Decorative divider top */}
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-maroon/15 to-transparent" />
+      <section className="home-resources-section relative py-24">
 
-        <div className="container mx-auto px-6 max-w-5xl">
+        <div className="container mx-auto px-6 max-w-5xl" style={{ position: 'relative', zIndex: 2 }}>
           <motion.div className="text-center mb-14" initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <p className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-bronze font-bold">
+            <p className="home-section-label text-bronze">
               {t('கூடுதல் வளங்கள்', 'Additional Resources')}
             </p>
+            <div className="ornamental-divider mt-4 max-w-xs mx-auto" />
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -626,10 +579,10 @@ const Home = () => {
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="group flex items-center gap-6 bg-white border-b-4 border-gold p-8 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden"
+              className="group home-resource-card home-resource-card-gold flex items-center gap-6 p-8"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-gold/0 to-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-gold/10 text-4xl group-hover:bg-gold group-hover:scale-110 transition-all duration-500 shadow-sm">📅</div>
+              <div className="absolute inset-0 bg-gradient-to-br from-gold/0 to-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
+              <div className="home-resource-icon home-resource-icon-gold relative">📅</div>
               <div className="flex-1 relative">
                 <h3 className="tamil-heading text-xl text-maroon mb-1 group-hover:text-gold transition-colors">
                   {t('தமிழ் அறுபதாண்டுச் சுழற்சி அட்டவணை', 'Tamil 60-Year Cycle Chart')}
@@ -649,10 +602,10 @@ const Home = () => {
             >
               <Link
                 to="/feedback"
-                className="group flex items-center gap-6 bg-white border-b-4 border-maroon p-8 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden block h-full"
+                className="group home-resource-card home-resource-card-maroon flex items-center gap-6 block h-full p-8"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-maroon/0 to-maroon/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-maroon/5 text-4xl group-hover:bg-maroon group-hover:scale-110 transition-all duration-500 shadow-sm">💬</div>
+                <div className="absolute inset-0 bg-gradient-to-br from-maroon/0 to-maroon/4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
+                <div className="home-resource-icon home-resource-icon-maroon relative">💬</div>
                 <div className="flex-1 relative">
                   <h3 className="tamil-heading text-xl text-maroon mb-1 group-hover:text-gold transition-colors">
                     {t('கருத்துக்கள் - பதிவு', 'Feedback / Remarks')}

@@ -1,22 +1,33 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Edit, Trash2, Save, X, Book, Layers, FileText, Users,
-  ChevronRight, LayoutDashboard, Search, Upload, Mail, UserCheck,
-  BookOpen, Library, MessageSquare, Eye, EyeOff, RefreshCw,
-  TrendingUp, Database, Scroll, Shield, ChevronDown,
+  ChevronRight, LayoutDashboard, Search, Mail, UserCheck,
+  BookOpen, MessageSquare, Eye, RefreshCw, TrendingUp, Database,
+  Scroll, Shield, ChevronDown, ChevronUp, RotateCcw, AlertTriangle,
+  ExternalLink, Image, FileIcon, Info,
 } from 'lucide-react';
 
 const API = 'http://localhost:3001/api/admin';
 const BASE = 'http://localhost:3001';
+const LIMIT = 50;
 
-/* ─── helpers ─── */
+/* ─── tiny helpers ─── */
 const fmt = n => Number(n || 0).toLocaleString();
+const stripTags = s => (s || '').replace(/<[^>]+>/g, '').replace(/\r?\n/g, ' ');
 
-/* ─── sub-components ─── */
+/* ─── debounce hook ─── */
+function useDebounce(value, delay = 400) {
+  const [dv, setDv] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDv(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return dv;
+}
 
-// Stat card for the dashboard
+/* ─── reusable UI atoms ─── */
 const StatCard = ({ label, value, icon: Icon, color = 'maroon', sub }) => (
   <div className="bg-white rounded-2xl shadow-sm border border-stone/5 p-6 flex items-center justify-between group hover:border-gold/30 hover:shadow-md transition-all">
     <div>
@@ -25,274 +36,351 @@ const StatCard = ({ label, value, icon: Icon, color = 'maroon', sub }) => (
       {sub && <div className="text-[10px] text-stone/30 mt-1">{sub}</div>}
     </div>
     <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all
-      ${color === 'gold' ? 'bg-gold/10 text-gold group-hover:bg-gold group-hover:text-maroon'
-        : color === 'green' ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'
-        : color === 'blue' ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'
-        : color === 'orange' ? 'bg-orange-50 text-orange-500 group-hover:bg-orange-500 group-hover:text-white'
-        : 'bg-maroon/5 text-maroon group-hover:bg-maroon group-hover:text-white'}`}>
+      ${color === 'gold'   ? 'bg-gold/10 text-gold group-hover:bg-gold group-hover:text-maroon'
+      : color === 'green'  ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'
+      : color === 'blue'   ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'
+      : color === 'orange' ? 'bg-orange-50 text-orange-500 group-hover:bg-orange-500 group-hover:text-white'
+      : color === 'purple' ? 'bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white'
+      : 'bg-maroon/5 text-maroon group-hover:bg-maroon group-hover:text-white'}`}>
       <Icon className="w-5 h-5" />
     </div>
   </div>
 );
 
-// Cascade dropdown: Book → Category
+const Field = ({ label, children, hint }) => (
+  <div>
+    <label className="block text-[10px] font-black text-stone/40 uppercase tracking-widest mb-2">{label}</label>
+    {children}
+    {hint && <p className="text-[9px] text-stone/30 mt-1">{hint}</p>}
+  </div>
+);
+
+const InputCls = "w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 text-sm text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none";
+const TamilInputCls = "w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 tamil-body font-bold text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none";
+
+const StatusPill = ({ value }) => (
+  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black uppercase
+    ${value ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+    : 'bg-red-50 text-red-500 border border-red-200'}`}>
+    <span className={`w-1.5 h-1.5 rounded-full ${value ? 'bg-emerald-500' : 'bg-red-400'}`} />
+    {value ? 'Active' : 'Off'}
+  </span>
+);
+
+const StatusToggle = ({ value, onChange }) => (
+  <button type="button" onClick={() => onChange(value ? 0 : 1)}
+    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase transition-all border
+      ${value ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200'}`}>
+    <span className={`w-2 h-2 rounded-full ${value ? 'bg-emerald-500' : 'bg-red-500'}`} />
+    {value ? 'Active' : 'Disabled'}
+  </button>
+);
+
+const Th = ({ children, className = '' }) => (
+  <th className={`px-5 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5 whitespace-nowrap ${className}`}>
+    {children}
+  </th>
+);
+
+const Td = ({ children, className = '' }) => (
+  <td className={`px-5 py-3.5 ${className}`}>{children}</td>
+);
+
+/* ─── BookSelect / CategorySelect / SubCatSelect ─── */
 const BookSelect = ({ value, onChange, books, placeholder = '— Select Book —', required }) => (
-  <select
-    required={required}
-    value={value || ''}
-    onChange={e => onChange(e.target.value)}
-    className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 text-sm text-maroon font-bold focus:ring-2 focus:ring-maroon/20 focus:outline-none"
-  >
+  <select required={required} value={value || ''} onChange={e => onChange(e.target.value)}
+    className={InputCls + ' font-bold'}>
     <option value="">{placeholder}</option>
     {books.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
   </select>
 );
-
-const CategorySelect = ({ value, onChange, categories, placeholder = '— Select Category —', required }) => (
-  <select
-    required={required}
-    value={value || ''}
-    onChange={e => onChange(e.target.value)}
-    className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 text-sm text-maroon font-bold focus:ring-2 focus:ring-maroon/20 focus:outline-none"
-  >
+const CatSelect = ({ value, onChange, cats, placeholder = '— Select Category —', required }) => (
+  <select required={required} value={value || ''} onChange={e => onChange(e.target.value)}
+    className={InputCls + ' font-bold'}>
     <option value="">{placeholder}</option>
-    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+    {cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
   </select>
 );
-
 const SubCatSelect = ({ value, onChange, subcats, placeholder = '— Select Sub-Category —', required }) => (
-  <select
-    required={required}
-    value={value || ''}
-    onChange={e => onChange(e.target.value)}
-    className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 text-sm text-maroon font-bold focus:ring-2 focus:ring-maroon/20 focus:outline-none"
-  >
+  <select required={required} value={value || ''} onChange={e => onChange(e.target.value)}
+    className={InputCls + ' font-bold'}>
     <option value="">{placeholder}</option>
     {subcats.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
   </select>
 );
 
-// Status toggle pill
-const StatusToggle = ({ value, onChange }) => (
-  <button
-    type="button"
-    onClick={() => onChange(value ? 0 : 1)}
-    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase transition-all
-      ${value ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-500 border border-red-200'}`}
-  >
-    <div className={`w-2 h-2 rounded-full ${value ? 'bg-emerald-500' : 'bg-red-500'}`} />
-    {value ? 'Active' : 'Disabled'}
-  </button>
-);
+/* ─── Pagination bar ─── */
+const Pager = ({ page, totalPages, onPage, total, limit }) => {
+  if (totalPages <= 1) return null;
+  const from = (page - 1) * limit + 1;
+  const to = Math.min(page * limit, total);
+  return (
+    <div className="px-6 py-4 border-t border-stone/8 flex items-center justify-between bg-stone/[0.015]">
+      <span className="text-[10px] text-stone/40 font-bold">
+        Showing <span className="text-maroon">{from}–{to}</span> of <span className="text-maroon">{fmt(total)}</span>
+      </span>
+      <div className="flex items-center gap-2">
+        <button onClick={() => onPage(1)} disabled={page === 1}
+          className="px-3 py-1.5 rounded-lg border border-stone/10 text-[10px] font-black text-stone/40 hover:text-maroon hover:border-maroon/20 disabled:opacity-30 transition-all">«</button>
+        <button onClick={() => onPage(page - 1)} disabled={page === 1}
+          className="px-4 py-1.5 rounded-lg border border-stone/10 text-[10px] font-black text-stone/50 hover:text-maroon hover:border-maroon/20 disabled:opacity-30 transition-all">Prev</button>
+        <span className="px-3 py-1.5 bg-maroon text-white rounded-lg text-[10px] font-black tabular-nums">
+          {page} / {totalPages}
+        </span>
+        <button onClick={() => onPage(page + 1)} disabled={page === totalPages}
+          className="px-4 py-1.5 rounded-lg border border-stone/10 text-[10px] font-black text-stone/50 hover:text-maroon hover:border-maroon/20 disabled:opacity-30 transition-all">Next</button>
+        <button onClick={() => onPage(totalPages)} disabled={page === totalPages}
+          className="px-3 py-1.5 rounded-lg border border-stone/10 text-[10px] font-black text-stone/40 hover:text-maroon hover:border-maroon/20 disabled:opacity-30 transition-all">»</button>
+      </div>
+    </div>
+  );
+};
 
-// Form field wrapper
-const Field = ({ label, children }) => (
-  <div>
-    <label className="block text-[10px] font-black text-stone/40 uppercase tracking-widest mb-2">{label}</label>
+/* ─── Search bar ─── */
+const SearchBar = ({ value, onChange, placeholder = 'Search…', children }) => (
+  <div className="p-5 border-b border-stone/8 bg-stone/[0.015] flex items-center gap-3">
+    <div className="relative flex-1 max-w-sm">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone/30" />
+      <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        className="w-full pl-9 pr-4 py-2.5 bg-white border border-stone/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-maroon/10" />
+    </div>
     {children}
   </div>
 );
 
-/* ═══════════════════════════════════════════════════════
-   Main Admin Portal
-   ═══════════════════════════════════════════════════════ */
+/* ─── Empty / Loading row ─── */
+const EmptyRow = ({ cols, loading, msg = 'No records found.' }) => (
+  <tr>
+    <td colSpan={cols} className="p-20 text-center">
+      {loading
+        ? <span className="text-stone/30 font-cinzel italic text-sm animate-pulse">Loading…</span>
+        : <span className="text-stone/30 italic text-sm">{msg}</span>}
+    </td>
+  </tr>
+);
+
+/* ─── Inline action buttons ─── */
+const ActionBtns = ({ onEdit, onDelete, extraBtns }) => (
+  <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+    {extraBtns}
+    {onEdit && (
+      <button onClick={onEdit}
+        className="p-2 bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all" title="Edit">
+        <Edit className="w-3.5 h-3.5" />
+      </button>
+    )}
+    {onDelete && (
+      <button onClick={onDelete}
+        className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all" title="Delete">
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
+    )}
+  </div>
+);
+
+/* ════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ════════════════════════════════════════════════════════════════ */
 const AdminPortal = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [formData, setFormData] = useState({ status: 1 });
-  const [dashStats, setDashStats] = useState(null);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [filterText, setFilterText] = useState('');
 
-  // Dropdown option lists
-  const [books, setBooks] = useState([]);
-  const [categories, setCategories] = useState([]);
+  /* Per-module table state */
+  const [data, setData]         = useState([]);
+  const [loading, setLoading]   = useState(false);
+  const [page, setPage]         = useState(1);
+  const [total, setTotal]       = useState(0);
+  const [search, setSearch]     = useState('');
+  const dSearch = useDebounce(search);
+
+  /* Dashboard */
+  const [dashStats, setDashStats] = useState(null);
+
+  /* Dropdown option lists for forms */
+  const [books, setBooks]     = useState([]);
+  const [cats, setCats]       = useState([]);
   const [subcats, setSubcats] = useState([]);
 
-  // Cascade state for forms
-  const [formBookId, setFormBookId] = useState('');
-  const [formCatId, setFormCatId] = useState('');
+  /* Cascade state inside the form */
+  const [fmBookId, setFmBookId] = useState('');
+  const [fmCatId,  setFmCatId]  = useState('');
+
+  /* Modal / form */
+  const [modalOpen, setModalOpen]     = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [fd, setFd]                   = useState({ status: 1 }); // form data
+
+  /* Manuscripts trash toggle */
+  const [showTrash, setShowTrash] = useState(false);
+
+  /* Contact detail modal */
+  const [contactDetail, setContactDetail] = useState(null);
 
   const tabs = [
-    { id: 'dashboard',       name: 'Dashboard',       icon: LayoutDashboard, label: 'கட்டுப்பாடு' },
-    { id: 'books',           name: 'Books',           icon: Book,            label: 'நூல்கள்' },
-    { id: 'categories',      name: 'Categories',      icon: Layers,          label: 'முதல் பிரிவு' },
-    { id: 'subcategories',   name: 'Sub-Categories',  icon: Scroll,          label: 'துணைப் பிரிவு' },
-    { id: 'songs',           name: 'Manuscripts',     icon: FileText,        label: 'பாடல்கள்' },
-    { id: 'ebook-editions',  name: 'Ebook Editions',  icon: BookOpen,        label: 'மின்நூல்' },
-    { id: 'contacts',        name: 'Contacts',        icon: MessageSquare,   label: 'தொடர்பு' },
-    { id: 'team',            name: 'Team Members',    icon: UserCheck,       label: 'குழுவினர்' },
-    { id: 'users',           name: 'Users',           icon: Shield,          label: 'பயனர்கள்' },
+    { id: 'dashboard',     name: 'Dashboard',     icon: LayoutDashboard, label: 'கட்டுப்பாடு' },
+    { id: 'books',         name: 'Books',          icon: Book,            label: 'நூல்கள்' },
+    { id: 'categories',    name: 'Main Category',  icon: Layers,          label: 'முதல் பிரிவு' },
+    { id: 'subcategories', name: 'Sub-Category',   icon: Scroll,          label: 'துணை பிரிவு' },
+    { id: 'songs',         name: 'Manuscripts',    icon: FileText,        label: 'பாடல்கள்' },
+    { id: 'users',         name: 'Users',          icon: Shield,          label: 'உள்நுழைவு விவரங்கள்' },
   ];
 
-  // ── fetch selects ───────────────────────────────────────
-  const fetchBooks = useCallback(async () => {
+  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+
+  /* ── dropdown loaders ── */
+  const loadBooks = useCallback(async () => {
     try { const r = await axios.get(`${API}/books/select`); setBooks(r.data); } catch {}
   }, []);
 
-  const fetchCategories = useCallback(async (bookId) => {
+  const loadCats = useCallback(async (bookId) => {
     try {
       const url = bookId ? `${API}/categories/select?book_id=${bookId}` : `${API}/categories/select`;
-      const r = await axios.get(url); setCategories(r.data);
+      const r = await axios.get(url); setCats(r.data);
     } catch {}
   }, []);
 
-  const fetchSubcats = useCallback(async (catId) => {
+  const loadSubcats = useCallback(async (catId) => {
     try {
       const url = catId ? `${API}/subcategories/select?category_id=${catId}` : `${API}/subcategories/select`;
       const r = await axios.get(url); setSubcats(r.data);
     } catch {}
   }, []);
 
-  useEffect(() => { fetchBooks(); }, [fetchBooks]);
+  useEffect(() => { loadBooks(); }, [loadBooks]);
 
-  // Cascade: when formBookId changes → refresh categories
+  /* cascade: book → cats */
   useEffect(() => {
-    if (formBookId) { fetchCategories(formBookId); setFormCatId(''); setSubcats([]); }
-    else { setCategories([]); setFormCatId(''); setSubcats([]); }
-  }, [formBookId, fetchCategories]);
+    if (fmBookId) { loadCats(fmBookId); setFmCatId(''); setSubcats([]); }
+    else { setCats([]); setFmCatId(''); setSubcats([]); }
+  }, [fmBookId, loadCats]);
 
-  // Cascade: when formCatId changes → refresh subcats
+  /* cascade: cat → subcats */
   useEffect(() => {
-    if (formCatId) fetchSubcats(formCatId);
+    if (fmCatId) loadSubcats(fmCatId);
     else setSubcats([]);
-  }, [formCatId, fetchSubcats]);
+  }, [fmCatId, loadSubcats]);
 
-  // ── data fetching ───────────────────────────────────────
-  useEffect(() => { setPage(1); setFilterText(''); }, [activeTab]);
-
+  /* reset page+search on tab change */
   useEffect(() => {
-    if (activeTab !== 'dashboard') fetchData();
-    else fetchDashStats();
-  }, [activeTab, page]);
+    setPage(1); setSearch(''); setShowTrash(false);
+  }, [activeTab]);
+
+  /* main data fetch */
+  useEffect(() => {
+    if (activeTab === 'dashboard') { fetchDashStats(); return; }
+    fetchData();
+  }, [activeTab, page, dSearch, showTrash]);
 
   const fetchDashStats = async () => {
-    try {
-      const r = await axios.get(`${API}/dashboard-stats`);
-      setDashStats(r.data);
-    } catch (e) { console.error(e); }
+    try { const r = await axios.get(`${API}/dashboard-stats`); setDashStats(r.data); } catch {}
   };
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const endpoint = activeTab === 'ebook-editions' ? 'ebook-editions'
-        : activeTab === 'team' ? 'team'
-        : activeTab;
-      const r = await axios.get(`${API}/${endpoint}?page=${page}&limit=50`);
-      if (r.data.rows) {
+      const ep = activeTab === 'ebook-editions' ? 'ebook-editions'
+        : activeTab === 'team' ? 'team' : activeTab;
+      const params = { page, limit: LIMIT, search: dSearch };
+      if (activeTab === 'songs') params.trash = showTrash ? '1' : '0';
+      const r = await axios.get(`${API}/${ep}`, { params });
+      if (r.data.rows !== undefined) {
         setData(r.data.rows);
-        setTotalPages(Math.ceil(r.data.total / 50));
+        setTotal(r.data.total);
       } else {
         setData(Array.isArray(r.data) ? r.data : []);
-        setTotalPages(1);
+        setTotal(Array.isArray(r.data) ? r.data.length : 0);
       }
-    } catch { setData([]); }
+    } catch { setData([]); setTotal(0); }
     finally { setLoading(false); }
   };
 
-  // ── client-side filter ──────────────────────────────────
-  const filteredData = useMemo(() => {
-    if (!filterText.trim()) return data;
-    const q = filterText.toLowerCase();
-    return data.filter(item =>
-      Object.values(item).some(v => String(v).toLowerCase().includes(q))
-    );
-  }, [data, filterText]);
+  const refresh = () => { fetchData(); fetchDashStats(); };
 
-  // ── form helpers ────────────────────────────────────────
+  /* ── form helpers ── */
+  const set = (k, v) => setFd(p => ({ ...p, [k]: v }));
+
   const openCreate = () => {
     setEditingItem(null);
-    setFormData({ status: 1 });
-    setFormBookId('');
-    setFormCatId('');
+    setFd({ status: 1 });
+    setFmBookId(''); setFmCatId('');
     setModalOpen(true);
   };
 
-  const openEdit = (item) => {
+  const openEdit = item => {
     setEditingItem(item);
-    const fd = { ...item };
-    setFormData(fd);
-    // Pre-populate cascade for forms that need it
+    setFd({ ...item });
     if (activeTab === 'categories') {
-      setFormBookId(String(item.book_id || ''));
+      setFmBookId(String(item.book_id || ''));
     }
     if (activeTab === 'subcategories') {
-      setFormBookId(String(item.book_id || ''));
-      setTimeout(() => setFormCatId(String(item.main_category_id || '')), 100);
+      setFmBookId(String(item.book_id || ''));
+      setTimeout(() => setFmCatId(String(item.main_category_id || '')), 120);
     }
     if (activeTab === 'songs') {
-      setFormBookId(String(item.book_id || ''));
-      setTimeout(() => setFormCatId(String(item.main_category_id || '')), 100);
+      setFmBookId(String(item.book_id || ''));
+      setTimeout(() => setFmCatId(String(item.main_category_id || '')), 120);
+    }
+    if (activeTab === 'ebook-editions') {
+      setFmBookId(String(item.book_id || ''));
     }
     setModalOpen(true);
   };
 
-  const handleSubmit = async (e) => {
+  const rowId = item =>
+    activeTab === 'books'      ? item.book_id
+    : activeTab === 'categories' ? item.cid
+    : item.id;
+
+  const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const endpoint = activeTab === 'ebook-editions' ? 'ebook-editions'
-        : activeTab === 'team' ? 'team'
-        : activeTab;
+      const ep = activeTab === 'ebook-editions' ? 'ebook-editions'
+        : activeTab === 'team' ? 'team' : activeTab;
 
       let payload;
-      if (activeTab === 'songs' && formData.imageFile) {
+      if (activeTab === 'songs' && fd.imageFile) {
         payload = new FormData();
-        Object.entries(formData).forEach(([k, v]) => {
-          if (k !== 'imageFile') payload.append(k, v ?? '');
-        });
-        payload.append('image', formData.imageFile);
+        Object.entries(fd).forEach(([k, v]) => { if (k !== 'imageFile') payload.append(k, v ?? ''); });
+        payload.append('image', fd.imageFile);
       } else {
-        payload = { ...formData };
+        payload = { ...fd };
         delete payload.imageFile;
       }
 
-      const isForm = payload instanceof FormData;
-      const config = isForm ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
-
+      const cfg = payload instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
       if (editingItem) {
-        const id = activeTab === 'books' ? editingItem.book_id
-          : activeTab === 'categories' ? editingItem.cid
-          : editingItem.id;
-        await axios.put(`${API}/${endpoint}/${id}`, payload, config);
+        await axios.put(`${API}/${ep}/${rowId(editingItem)}`, payload, cfg);
       } else {
-        await axios.post(`${API}/${endpoint}`, payload, config);
+        await axios.post(`${API}/${ep}`, payload, cfg);
       }
-      setModalOpen(false);
-      setEditingItem(null);
-      setFormData({ status: 1 });
-      fetchData();
-      fetchDashStats();
-    } catch (e) { console.error('Submit error:', e); }
+      setModalOpen(false); setEditingItem(null); setFd({ status: 1 });
+      refresh();
+    } catch (err) { console.error('Submit error:', err); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this record?')) return;
-    try {
-      const endpoint = activeTab === 'ebook-editions' ? 'ebook-editions'
-        : activeTab === 'team' ? 'team'
-        : activeTab;
-      await axios.delete(`${API}/${endpoint}/${id}`);
-      fetchData();
-      fetchDashStats();
-    } catch (e) { console.error(e); }
+  const handleDelete = async (id, label = 'Delete this record?') => {
+    if (!window.confirm(label)) return;
+    const ep = activeTab === 'ebook-editions' ? 'ebook-editions'
+      : activeTab === 'team' ? 'team' : activeTab;
+    try { await axios.delete(`${API}/${ep}/${id}`); refresh(); } catch {}
   };
 
-  const markContactRead = async (id) => {
-    try {
-      await axios.put(`${API}/contacts/${id}/read`);
-      fetchData();
-      fetchDashStats();
-    } catch (e) { console.error(e); }
+  const handleTrashSong  = id => handleDelete(id, 'Move this folio to trash?');
+  const handleRestoreSong = async id => {
+    try { await axios.put(`${API}/songs/${id}/restore`); refresh(); } catch {}
+  };
+  const handlePurgeSong = async id => {
+    if (!window.confirm('Permanently delete this record? This cannot be undone.')) return;
+    try { await axios.delete(`${API}/songs/${id}/purge`); refresh(); } catch {}
   };
 
-  const set = (key, val) => setFormData(p => ({ ...p, [key]: val }));
+  const markContactRead = async id => {
+    try { await axios.put(`${API}/contacts/${id}/read`); refresh(); } catch {}
+  };
 
-  // ── render ──────────────────────────────────────────────
+  /* ── active tab meta ── */
+  const activeMeta = tabs.find(t => t.id === activeTab) || tabs[0];
+
+  /* ═══════════════════════════════ RENDER ═══════════════════════════════ */
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex">
 
@@ -308,17 +396,12 @@ const AdminPortal = () => {
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          <div className="px-3 py-2 text-[9px] text-white/25 uppercase tracking-[0.3em] font-bold">Management</div>
+        <nav className="flex-1 p-4 space-y-0.5 overflow-y-auto">
+          <p className="px-3 py-2 text-[9px] text-white/25 uppercase tracking-[0.3em] font-bold">Management</p>
           {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all group
-                ${activeTab === tab.id
-                  ? 'bg-white/12 text-gold shadow-inner'
-                  : 'text-white/50 hover:bg-white/6 hover:text-white'}`}
-            >
+                ${activeTab === tab.id ? 'bg-white/12 text-gold' : 'text-white/50 hover:bg-white/6 hover:text-white'}`}>
               <div className="flex items-center gap-3">
                 <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-gold' : 'text-white/30 group-hover:text-gold/50'}`} />
                 <div className="text-left">
@@ -326,13 +409,9 @@ const AdminPortal = () => {
                   <div className="text-[9px] tamil-text opacity-35">{tab.label}</div>
                 </div>
               </div>
-              {activeTab === tab.id && <ChevronRight className="w-3.5 h-3.5 text-gold/60" />}
-              {/* Unread badge for contacts */}
-              {tab.id === 'contacts' && dashStats?.unread_contacts > 0 && (
-                <span className="w-5 h-5 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center ml-auto mr-1">
-                  {dashStats.unread_contacts > 9 ? '9+' : dashStats.unread_contacts}
-                </span>
-              )}
+              <div className="flex items-center gap-1">
+                {activeTab === tab.id && <ChevronRight className="w-3.5 h-3.5 text-gold/60" />}
+              </div>
             </button>
           ))}
         </nav>
@@ -348,104 +427,98 @@ const AdminPortal = () => {
         </div>
       </aside>
 
-      {/* ── Main Content ── */}
+      {/* ── Main ── */}
       <main className="flex-1 overflow-y-auto min-w-0">
 
         {/* Header */}
-        <header className="bg-white/90 backdrop-blur-md border-b border-stone/8 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+        <header className="bg-white/90 backdrop-blur-md border-b border-stone/8 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
           <h2 className="text-xl font-cinzel font-black text-maroon flex items-center gap-3">
-            {React.createElement(tabs.find(t => t.id === activeTab)?.icon || LayoutDashboard, { className: 'w-5 h-5 text-gold' })}
-            {tabs.find(t => t.id === activeTab)?.name}
-            <span className="text-stone/30 mx-1 font-light">/</span>
-            <span className="text-stone/35 text-sm uppercase tracking-widest font-sans">
-              {tabs.find(t => t.id === activeTab)?.label}
-            </span>
+            <activeMeta.icon className="w-5 h-5 text-gold" />
+            {activeMeta.name}
+            <span className="text-stone/25 font-light mx-1">/</span>
+            <span className="text-stone/35 text-sm uppercase tracking-widest font-sans">{activeMeta.label}</span>
           </h2>
-          {activeTab !== 'dashboard' && activeTab !== 'contacts' && (
-            <button
-              onClick={openCreate}
-              className="flex items-center gap-2 bg-maroon text-white px-6 py-2.5 rounded-xl
-                hover:bg-maroon-dark transition-all shadow-lg shadow-maroon/20 hover:scale-105 active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="font-bold text-[11px] uppercase tracking-widest">Add New</span>
+          <div className="flex items-center gap-3">
+            {activeTab === 'songs' && (
+              <button onClick={() => { setShowTrash(v => !v); setPage(1); }}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-[10px] font-bold uppercase transition-all
+                  ${showTrash ? 'bg-red-500 text-white border-red-500' : 'border-stone/15 text-stone/40 hover:text-maroon hover:border-maroon/20'}`}>
+                <Trash2 className="w-3.5 h-3.5" />
+                {showTrash ? 'Trash View' : 'View Trash'}
+                {!showTrash && dashStats?.trashed_songs > 0 && (
+                  <span className="ml-1 bg-red-500 text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center">{dashStats.trashed_songs}</span>
+                )}
+              </button>
+            )}
+            {activeTab !== 'dashboard' && !showTrash && (
+              <button onClick={openCreate}
+                className="flex items-center gap-2 bg-maroon text-white px-5 py-2.5 rounded-xl hover:bg-maroon-dark transition-all shadow-md shadow-maroon/15 hover:scale-105 active:scale-95">
+                <Plus className="w-4 h-4" />
+                <span className="font-bold text-[11px] uppercase tracking-widest">Add New</span>
+              </button>
+            )}
+            <button onClick={activeTab === 'dashboard' ? fetchDashStats : refresh}
+              className="p-2.5 border border-stone/10 rounded-xl text-stone/40 hover:text-maroon hover:border-maroon/20 transition-all">
+              <RefreshCw className="w-4 h-4" />
             </button>
-          )}
-          {activeTab === 'dashboard' && (
-            <button onClick={fetchDashStats}
-              className="flex items-center gap-2 border border-maroon/20 text-maroon px-4 py-2 rounded-xl hover:bg-maroon/5 transition-all text-[11px] font-bold">
-              <RefreshCw className="w-3.5 h-3.5" /> Refresh
-            </button>
-          )}
+          </div>
         </header>
 
-        <div className="p-8 max-w-[1400px] mx-auto">
+        <div className="p-8 max-w-[1500px] mx-auto space-y-6">
 
-          {/* ════════════════════ DASHBOARD ════════════════════ */}
+          {/* ══ DASHBOARD ══ */}
           {activeTab === 'dashboard' && (
-            <div>
-              {/* Stat grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8">
-                <StatCard label="Books" value={dashStats?.books} icon={Book} color="maroon" />
-                <StatCard label="Main Categories" value={dashStats?.main_categories} icon={Layers} color="gold" />
-                <StatCard label="Sub-Categories" value={dashStats?.sub_categories} icon={Scroll} color="blue" />
-                <StatCard label="Active Folios" value={dashStats?.songs} icon={FileText} color="maroon"
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <StatCard label="Books / நூல்கள்"            value={dashStats?.books}           icon={Book}     color="maroon" />
+                <StatCard label="Main Cat / முதல் பிரிவு"   value={dashStats?.main_categories}  icon={Layers}   color="gold" />
+                <StatCard label="Sub-Cat / துணை பிரிவு"      value={dashStats?.sub_categories}   icon={Scroll}   color="blue" />
+                <StatCard label="Manuscripts / பாடல்கள்"     value={dashStats?.songs}            icon={FileText} color="maroon"
                   sub={dashStats?.trashed_songs ? `${dashStats.trashed_songs} in trash` : null} />
-                <StatCard label="Ebook Editions" value={dashStats?.ebook_editions} icon={BookOpen} color="orange" />
-                <StatCard label="Contact Messages" value={dashStats?.contacts} icon={MessageSquare} color="green"
-                  sub={dashStats?.unread_contacts ? `${dashStats.unread_contacts} unread` : 'All read'} />
-                <StatCard label="Team Members" value={dashStats?.team_members} icon={UserCheck} color="blue" />
-                <StatCard label="Admin Users" value={1} icon={Shield} color="maroon" />
+                <StatCard label="Users / உள்நுழைவு"          value={dashStats?.users}            icon={Shield}   color="green" />
               </div>
 
-              {/* Database overview */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                {/* Recent contacts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Module summary */}
                 <div className="bg-white rounded-2xl shadow-sm border border-stone/5 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-stone/8 flex items-center justify-between">
+                  <div className="px-6 py-4 border-b border-stone/8">
                     <h3 className="font-cinzel font-black text-sm text-maroon flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-gold" /> Recent Messages
+                      <Database className="w-4 h-4 text-gold" /> Data Summary
                     </h3>
-                    <button onClick={() => setActiveTab('contacts')}
-                      className="text-[10px] text-gold font-bold uppercase tracking-wider hover:underline">
-                      View All →
-                    </button>
                   </div>
                   <div className="divide-y divide-stone/5">
-                    {dashStats?.recent_contacts?.length === 0 ? (
-                      <p className="p-6 text-center text-stone/30 italic text-xs">No messages yet</p>
-                    ) : (
-                      dashStats?.recent_contacts?.map(c => (
-                        <div key={c.id} className={`px-6 py-3.5 flex items-center gap-3 ${!c.is_read ? 'bg-gold/3' : ''}`}>
-                          {!c.is_read && <div className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />}
-                          {c.is_read && <div className="w-1.5 h-1.5 rounded-full bg-stone/20 shrink-0" />}
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-maroon truncate">{c.name}</p>
-                            <p className="text-[10px] text-stone/40 truncate">{c.subject || '(no subject)'} · {c.email}</p>
-                          </div>
-                          <p className="text-[9px] text-stone/30 ml-auto shrink-0">
-                            {new Date(c.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))
-                    )}
+                    {[
+                      { label: 'Books / நூல்கள்',           value: dashStats?.books,           icon: Book,     tab: 'books' },
+                      { label: 'Main Categories / முதல் பிரிவு', value: dashStats?.main_categories, icon: Layers, tab: 'categories' },
+                      { label: 'Sub-Categories / துணை பிரிவு',value: dashStats?.sub_categories,  icon: Scroll,  tab: 'subcategories' },
+                      { label: 'Manuscripts / பாடல்கள்',    value: dashStats?.songs,           icon: FileText, tab: 'songs' },
+                      { label: 'Users / உள்நுழைவு விவரங்கள்', value: dashStats?.users,          icon: Shield,  tab: 'users' },
+                    ].map(({ label, value, icon: Icon, tab }) => (
+                      <button key={tab} onClick={() => setActiveTab(tab)}
+                        className="w-full px-6 py-3.5 flex items-center gap-3 hover:bg-gold/[0.025] transition-colors text-left">
+                        <Icon className="w-4 h-4 text-maroon/30 shrink-0" />
+                        <span className="text-xs text-maroon flex-1">{label}</span>
+                        <span className="font-black text-sm text-maroon tabular-nums">{fmt(value)}</span>
+                        <ChevronRight className="w-3 h-3 text-stone/20" />
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* Quick links */}
+                {/* Quick nav */}
                 <div className="bg-white rounded-2xl shadow-sm border border-stone/5 overflow-hidden">
                   <div className="px-6 py-4 border-b border-stone/8">
                     <h3 className="font-cinzel font-black text-sm text-maroon flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-gold" /> Quick Navigation
                     </h3>
                   </div>
-                  <div className="p-4 grid grid-cols-2 gap-3">
+                  <div className="p-4 grid grid-cols-2 gap-2.5">
                     {tabs.filter(t => t.id !== 'dashboard').map(t => (
                       <button key={t.id} onClick={() => setActiveTab(t.id)}
-                        className="flex items-center gap-2 p-3 rounded-xl border border-stone/8 hover:border-gold/30 hover:bg-gold/3 transition-all group text-left">
-                        <t.icon className="w-4 h-4 text-maroon/40 group-hover:text-gold transition-colors" />
+                        className="flex items-center gap-2.5 p-3 rounded-xl border border-stone/8 hover:border-gold/30 hover:bg-gold/[0.025] transition-all group text-left">
+                        <t.icon className="w-4 h-4 text-maroon/30 group-hover:text-gold transition-colors shrink-0" />
                         <div>
-                          <div className="text-[11px] font-bold text-maroon">{t.name}</div>
+                          <div className="text-[11px] font-bold text-maroon leading-tight">{t.name}</div>
                           <div className="text-[9px] tamil-text text-stone/35">{t.label}</div>
                         </div>
                       </button>
@@ -454,501 +527,548 @@ const AdminPortal = () => {
                 </div>
               </div>
 
-              {/* DB status */}
               <div className="bg-white rounded-2xl shadow-sm border border-stone/5 px-6 py-4 flex items-center gap-3">
-                <Database className="w-4 h-4 text-gold" />
+                <Database className="w-4 h-4 text-gold shrink-0" />
                 <span className="text-[11px] font-bold text-maroon">PostgreSQL</span>
-                <span className="text-[10px] text-stone/40">·</span>
-                <span className="text-[10px] text-stone/40">suvadi database · connected</span>
+                <span className="text-[10px] text-stone/30">·</span>
+                <span className="text-[10px] text-stone/40">suvadi database · 5 modules · 6,026 manuscripts</span>
                 <div className="ml-auto flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">Live</span>
+                  <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">Connected</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ════════════════════ CONTACTS ════════════════════ */}
+          {/* ══ CONTACTS ══ */}
           {activeTab === 'contacts' && (
             <div className="bg-white rounded-2xl shadow-sm border border-stone/5 overflow-hidden">
-              <div className="p-6 border-b border-stone/8 flex items-center justify-between bg-stone/[0.02]">
-                <div className="relative w-80">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone/30" />
-                  <input value={filterText} onChange={e => setFilterText(e.target.value)}
-                    type="text" placeholder="Filter messages…"
-                    className="w-full bg-white border border-stone/10 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/10" />
-                </div>
-                <button onClick={fetchData} className="flex items-center gap-1.5 text-stone/40 hover:text-maroon text-[10px] font-bold uppercase tracking-widest transition-colors">
-                  <RefreshCw className="w-3.5 h-3.5" /> Refresh
-                </button>
-              </div>
+              <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder="Search by name, email, subject…" />
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-stone/[0.03]">
+                  <thead className="bg-stone/[0.025]">
                     <tr>
-                      {['', 'Name', 'Email', 'Subject', 'Date', 'Actions'].map(h => (
-                        <th key={h} className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">{h}</th>
-                      ))}
+                      <Th />
+                      <Th>Name</Th>
+                      <Th>Email</Th>
+                      <Th>Subject</Th>
+                      <Th>Date</Th>
+                      <Th className="text-right">Actions</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone/5">
-                    {loading ? (
-                      <tr><td colSpan={6} className="p-16 text-center text-stone/30 italic font-cinzel">Loading…</td></tr>
-                    ) : filteredData.length === 0 ? (
-                      <tr><td colSpan={6} className="p-16 text-center text-stone/30 italic">No messages found.</td></tr>
-                    ) : filteredData.map(item => (
-                      <tr key={item.id} className={`group hover:bg-ivory transition-colors ${!item.is_read ? 'bg-gold/[0.02]' : ''}`}>
-                        <td className="px-6 py-4">
-                          <div className={`w-2 h-2 rounded-full ${!item.is_read ? 'bg-gold' : 'bg-stone/15'}`} />
-                        </td>
-                        <td className="px-6 py-4 font-bold text-xs text-maroon">{item.name}</td>
-                        <td className="px-6 py-4 text-xs text-stone/50">{item.email}</td>
-                        <td className="px-6 py-4 text-xs text-stone/60 max-w-xs truncate">{item.subject || '—'}</td>
-                        <td className="px-6 py-4 text-[10px] text-stone/35">{new Date(item.created_at).toLocaleString()}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            {!item.is_read && (
-                              <button onClick={() => markContactRead(item.id)}
-                                className="p-2 bg-gold/10 text-gold rounded-lg hover:bg-gold hover:text-maroon transition-all" title="Mark as read">
+                    {loading || !data.length
+                      ? <EmptyRow cols={6} loading={loading} msg="No contact messages found." />
+                      : data.map(item => (
+                        <tr key={item.id} className={`group hover:bg-ivory transition-colors ${!item.is_read ? 'bg-gold/[0.015]' : ''}`}>
+                          <Td><div className={`w-2 h-2 rounded-full ${!item.is_read ? 'bg-gold' : 'bg-stone/15'}`} /></Td>
+                          <Td><span className="font-bold text-xs text-maroon">{item.name}</span></Td>
+                          <Td><span className="text-xs text-stone/50">{item.email}</span></Td>
+                          <Td><span className="text-xs text-stone/60 max-w-xs truncate block">{item.subject || '—'}</span></Td>
+                          <Td><span className="text-[10px] text-stone/35">{new Date(item.created_at).toLocaleString()}</span></Td>
+                          <Td className="text-right">
+                            <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                              <button onClick={() => setContactDetail(item)}
+                                className="p-2 bg-stone/5 text-stone/50 rounded-lg hover:bg-maroon hover:text-white transition-all" title="View message">
                                 <Eye className="w-3.5 h-3.5" />
                               </button>
-                            )}
-                            <button onClick={() => handleDelete(item.id)}
-                              className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* ════════════════════ ALL OTHER TABS ════════════════════ */}
-          {activeTab !== 'dashboard' && activeTab !== 'contacts' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-stone/5 overflow-hidden">
-              {/* Table toolbar */}
-              <div className="p-6 border-b border-stone/8 flex items-center justify-between bg-stone/[0.02]">
-                <div className="relative w-80">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone/30" />
-                  <input value={filterText} onChange={e => setFilterText(e.target.value)}
-                    type="text" placeholder="Filter current records…"
-                    className="w-full bg-white border border-stone/10 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-maroon/10" />
-                </div>
-                <div className="flex items-center gap-2 text-stone/35 text-[10px] font-bold uppercase">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500" /> Active System ·{' '}
-                  <span className="text-maroon">{filteredData.length}</span> records
-                </div>
-              </div>
-
-              {/* Table */}
-              <div className="overflow-x-auto overflow-y-auto max-h-[70vh] min-h-[400px]">
-                <table className="w-full text-left">
-                  <thead className="bg-stone/[0.03]">
-                    <tr>
-                      <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">ID</th>
-                      {/* Dynamic columns per tab */}
-                      {activeTab === 'books' && <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Book Title (Tamil)</th>}
-                      {activeTab === 'categories' && <>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Category Name</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Parent Book</th>
-                      </>}
-                      {activeTab === 'subcategories' && <>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Sub-Category Name</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Category</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Book</th>
-                      </>}
-                      {activeTab === 'songs' && <>
-                        <th className="px-4 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Image</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Folio #</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Transcription</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Image File</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Author</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Category</th>
-                      </>}
-                      {activeTab === 'ebook-editions' && <>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Edition Title</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Book</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Local File</th>
-                      </>}
-                      {activeTab === 'team' && <>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Name</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Role</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Order</th>
-                      </>}
-                      {activeTab === 'users' && <>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Username</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Email</th>
-                        <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Role</th>
-                      </>}
-                      <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5">Status</th>
-                      <th className="px-6 py-4 text-[10px] font-black text-stone/40 uppercase tracking-widest border-b border-stone/5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone/5">
-                    {loading ? (
-                      <tr><td colSpan={8} className="p-20 text-center text-stone/30 italic font-cinzel">Loading archival data…</td></tr>
-                    ) : filteredData.length === 0 ? (
-                      <tr><td colSpan={8} className="p-20 text-center text-stone/30 italic">No records found.</td></tr>
-                    ) : filteredData.map(item => {
-                      const id = activeTab === 'books' ? item.book_id
-                        : activeTab === 'categories' ? item.cid
-                        : item.id;
-                      return (
-                        <tr key={id} className="group hover:bg-ivory transition-colors">
-                          <td className="px-6 py-4 text-[10px] font-mono text-bronze">#{id}</td>
-
-                          {activeTab === 'books' && (
-                            <td className="px-6 py-4 tamil-text font-bold text-maroon">{item.name}</td>
-                          )}
-
-                          {activeTab === 'categories' && <>
-                            <td className="px-6 py-4 tamil-text font-bold text-maroon">{item.cname}</td>
-                            <td className="px-6 py-4 text-[11px] text-stone/40 font-bold italic">{item.book_name}</td>
-                          </>}
-
-                          {activeTab === 'subcategories' && <>
-                            <td className="px-6 py-4 tamil-text text-sm font-bold text-maroon max-w-xs">{item.sub_cat_name}</td>
-                            <td className="px-6 py-4 text-[11px] text-stone/50">{item.category_name}</td>
-                            <td className="px-6 py-4 text-[11px] text-stone/40 italic">{item.book_name}</td>
-                          </>}
-
-                          {activeTab === 'songs' && <>
-                            <td className="px-4 py-2">
-                              {item.mapped_url ? (
-                                <a href={BASE + item.mapped_url} target="_blank" rel="noopener noreferrer" title={item.fname}>
-                                  <img
-                                    src={BASE + item.mapped_url}
-                                    alt={`Folio ${item.fid}`}
-                                    style={{ width: 52, height: 68, objectFit: 'cover' }}
-                                    className="rounded border border-stone/15 hover:scale-150 transition-transform cursor-zoom-in shadow-sm"
-                                    onError={e => {
-                                      e.currentTarget.style.display = 'none';
-                                      const fb = e.currentTarget.nextSibling;
-                                      if (fb) fb.style.display = 'flex';
-                                    }}
-                                  />
-                                  <div style={{ display: 'none', width: 52, height: 68 }} className="rounded border border-stone/10 bg-stone/5 items-center justify-center">
-                                    <span className="text-[8px] text-stone/30 text-center px-1">No img</span>
-                                  </div>
-                                </a>
-                              ) : (
-                                <div style={{ width: 52, height: 68 }} className="rounded border border-red-200 bg-red-50/30 flex items-center justify-center">
-                                  <span className="text-[8px] text-red-300 text-center px-1">Missing</span>
-                                </div>
+                              {!item.is_read && (
+                                <button onClick={() => markContactRead(item.id)}
+                                  className="p-2 bg-gold/10 text-gold rounded-lg hover:bg-gold hover:text-maroon transition-all" title="Mark read">
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
                               )}
-                            </td>
-                            <td className="px-6 py-4 font-cinzel font-black text-maroon">F{item.fid}</td>
-                            <td className="px-6 py-4 tamil-text text-[11px] text-stone/50 max-w-[180px] truncate" title={item.description?.replace(/<[^>]+>/g, '').replace(/\r?\n/g, ' ')}>
-                              {item.description?.replace(/<[^>]+>/g, '').replace(/\r?\n/g, ' ') || '—'}
-                            </td>
-                            <td className="px-6 py-4 text-[10px] font-mono">
-                              {item.mapped_url ? (
-                                <a href={BASE + item.mapped_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                                  {item.fname}
-                                </a>
-                              ) : (
-                                <span className="text-stone/40">{item.fname}</span>
-                              )}
-                              {item.is_missing && <div className="text-red-400 mt-1 flex items-center gap-1 font-bold uppercase tracking-widest text-[9px]"><div className="w-1.5 h-1.5 rounded-full bg-red-400"/> Missing</div>}
-                            </td>
-                            <td className="px-6 py-4 text-[10px] text-stone/40">{item.author || '—'}</td>
-                            <td className="px-6 py-4 text-[10px] text-stone/40 max-w-[140px]">
-                              <div className="font-semibold text-maroon/60 truncate">{item.book_name || '—'}</div>
-                              <div className="truncate opacity-70 mt-0.5">{item.sub_cat_name || '—'}</div>
-                            </td>
-                          </>}
-
-                          {activeTab === 'ebook-editions' && <>
-                            <td className="px-6 py-4 tamil-text text-sm font-bold text-maroon max-w-xs truncate">{item.title_tamil}</td>
-                            <td className="px-6 py-4 text-[11px] text-stone/40 font-bold">{item.book_name}</td>
-                            <td className="px-6 py-4 text-[10px] text-stone/50">
-                              <a href={`${BASE}/api/proxy/pdf?url=${encodeURIComponent(item.pdf_url)}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                                {item.local_pdf_url || 'N/A'}
-                              </a>
-                              {item.is_missing && <div className="text-red-400 mt-1 flex items-center gap-1 font-bold uppercase tracking-widest text-[9px]"><div className="w-1.5 h-1.5 rounded-full bg-red-400"/> Missing</div>}
-                            </td>
-                          </>}
-
-                          {activeTab === 'team' && <>
-                            <td className="px-6 py-4 font-bold text-maroon text-sm">{item.name}</td>
-                            <td className="px-6 py-4 text-[11px] text-stone/50">
-                              <div>{item.role_english}</div>
-                              <div className="tamil-text text-[10px]">{item.role_tamil}</div>
-                            </td>
-                            <td className="px-6 py-4 font-cinzel text-[11px] text-bronze">{item.display_order}</td>
-                          </>}
-
-                          {activeTab === 'users' && <>
-                            <td className="px-6 py-4 font-bold text-maroon">{item.username}</td>
-                            <td className="px-6 py-4 text-xs text-stone/50">{item.email}</td>
-                            <td className="px-6 py-4">
-                              <span className="px-2.5 py-1 bg-maroon/5 text-maroon text-[9px] font-black uppercase rounded-full">{item.role}</span>
-                            </td>
-                          </>}
-
-                          <td className="px-6 py-4">
-                            <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase
-                              ${item.status ? 'text-emerald-600' : 'text-red-400'}`}>
-                              <div className={`w-1.5 h-1.5 rounded-full ${item.status ? 'bg-emerald-500' : 'bg-red-400'}`} />
-                              {item.status ? 'Active' : 'Off'}
-                            </div>
-                          </td>
-
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                              <button onClick={() => openEdit(item)}
-                                className="p-2.5 bg-blue-50 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all">
-                                <Edit className="w-3.5 h-3.5" />
-                              </button>
-                              <button onClick={() => handleDelete(id)}
-                                className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all">
+                              <button onClick={() => handleDelete(item.id, 'Delete this message?')}
+                                className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all">
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
-                          </td>
+                          </Td>
                         </tr>
-                      );
-                    })}
+                      ))}
                   </tbody>
                 </table>
               </div>
+              <Pager page={page} totalPages={totalPages} onPage={setPage} total={total} limit={LIMIT} />
+            </div>
+          )}
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="p-5 border-t border-stone/8 flex items-center justify-between bg-stone/[0.02]">
-                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                    className="px-5 py-2 bg-white border border-stone/15 rounded-xl text-[10px] font-black text-maroon
-                      hover:bg-maroon hover:text-white disabled:opacity-30 transition-all uppercase tracking-widest">
-                    ← Previous
-                  </button>
-                  <span className="text-[10px] font-black text-stone/40 uppercase tracking-widest">
-                    Page <span className="text-maroon">{page}</span> of {totalPages}
-                  </span>
-                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                    className="px-5 py-2 bg-maroon text-white rounded-xl text-[10px] font-black
-                      hover:bg-maroon-dark disabled:opacity-30 transition-all uppercase tracking-widest">
-                    Next →
-                  </button>
+          {/* ══ ALL OTHER TABS ══ */}
+          {activeTab !== 'dashboard' && activeTab !== 'contacts' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-stone/5 overflow-hidden">
+              <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder={`Search ${activeMeta.name.toLowerCase()}…`}>
+                <div className="ml-auto text-[10px] text-stone/35 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  {fmt(total)} records
+                  {showTrash && <span className="ml-2 text-red-400 flex items-center gap-1"><Trash2 className="w-3 h-3"/>Trash View</span>}
                 </div>
-              )}
+              </SearchBar>
+
+              <div className="overflow-x-auto overflow-y-auto" style={{ maxHeight: '65vh' }}>
+                <table className="w-full text-left">
+                  <thead className="bg-stone/[0.025] sticky top-0">
+                    <tr>
+                      <Th>ID</Th>
+                      {/* Books */}
+                      {activeTab === 'books' && <Th>Book Title (Tamil) / நூல் தலைப்பு</Th>}
+                      {/* Categories */}
+                      {activeTab === 'categories' && <>
+                        <Th>Category Name / முதல் பிரிவு பெயர்</Th>
+                        <Th>Parent Book</Th>
+                      </>}
+                      {/* Sub-Categories */}
+                      {activeTab === 'subcategories' && <>
+                        <Th>Sub-Category Name / துணைப் பிரிவு பெயர்</Th>
+                        <Th>Category</Th>
+                        <Th>Book</Th>
+                      </>}
+                      {/* Manuscripts */}
+                      {activeTab === 'songs' && <>
+                        <Th>Image</Th>
+                        <Th>Folio</Th>
+                        <Th>Image File</Th>
+                        <Th>Transcription / சுவடி வரி</Th>
+                        <Th>Author</Th>
+                        <Th>Sub-Category</Th>
+                        <Th>Views</Th>
+                      </>}
+                      {/* Ebook Editions */}
+                      {activeTab === 'ebook-editions' && <>
+                        <Th>Edition Title / மின்நூல் தலைப்பு</Th>
+                        <Th>Book</Th>
+                        <Th>Local PDF</Th>
+                        <Th>External PDF</Th>
+                      </>}
+                      {/* Team */}
+                      {activeTab === 'team' && <>
+                        <Th>Name</Th>
+                        <Th>Role</Th>
+                        <Th>Order</Th>
+                      </>}
+                      {/* Users */}
+                      {activeTab === 'users' && <>
+                        <Th>Username</Th>
+                        <Th>Email</Th>
+                        <Th>Role</Th>
+                        <Th>Joined</Th>
+                      </>}
+                      <Th>Status</Th>
+                      <Th className="text-right">Actions</Th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone/5">
+                    {loading || !data.length
+                      ? <EmptyRow cols={12} loading={loading} />
+                      : data.map(item => {
+                          const id = rowId(item);
+                          return (
+                            <tr key={id} className="group hover:bg-ivory transition-colors">
+                              <Td><span className="text-[10px] font-mono text-bronze/70">#{id}</span></Td>
+
+                              {/* Books */}
+                              {activeTab === 'books' && (
+                                <Td><span className="tamil-text font-bold text-maroon">{item.name}</span></Td>
+                              )}
+
+                              {/* Categories */}
+                              {activeTab === 'categories' && <>
+                                <Td><span className="tamil-text font-bold text-maroon">{item.cname}</span></Td>
+                                <Td><span className="text-[11px] text-stone/40 font-bold italic">{item.book_name}</span></Td>
+                              </>}
+
+                              {/* Sub-Categories */}
+                              {activeTab === 'subcategories' && <>
+                                <Td><span className="tamil-text font-semibold text-maroon">{item.sub_cat_name}</span></Td>
+                                <Td><span className="text-[11px] text-stone/50">{item.category_name}</span></Td>
+                                <Td><span className="text-[11px] text-stone/40 italic">{item.book_name}</span></Td>
+                              </>}
+
+                              {/* Manuscripts */}
+                              {activeTab === 'songs' && <>
+                                <Td>
+                                  {item.is_missing ? (
+                                    <div style={{ width: 48, height: 64 }}
+                                      className="rounded border border-red-200 bg-red-50/40 flex flex-col items-center justify-center gap-0.5">
+                                      <AlertTriangle className="w-3 h-3 text-red-400" />
+                                      <span className="text-[6px] text-red-400 font-bold text-center px-0.5 leading-tight">Missing</span>
+                                    </div>
+                                  ) : (
+                                    <a href={BASE + item.image_url} target="_blank" rel="noopener noreferrer">
+                                      <img src={BASE + item.image_url} alt={`F${item.fid}`}
+                                        style={{ width: 48, height: 64, objectFit: 'cover' }}
+                                        className="rounded border border-stone/15 hover:scale-150 transition-transform cursor-zoom-in shadow-sm"
+                                      />
+                                    </a>
+                                  )}
+                                </Td>
+                                <Td>
+                                  <span className="font-cinzel font-black text-maroon">F{item.fid}</span>
+                                </Td>
+                                <Td>
+                                  <div>
+                                    {item.is_missing ? (
+                                      <div>
+                                        <span className="text-[10px] font-mono text-stone/40">{item.actual_filename || item.fname || '—'}</span>
+                                        <div className="text-[8px] text-red-400 flex items-center gap-1 mt-0.5 font-bold">
+                                          <div className="w-1 h-1 rounded-full bg-red-400" /> Missing local file
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <a href={BASE + item.image_url} target="_blank" rel="noopener noreferrer"
+                                        className="text-[10px] font-mono text-blue-500 hover:underline break-all">
+                                        {item.actual_filename}
+                                      </a>
+                                    )}
+                                  </div>
+                                </Td>
+                                <Td>
+                                  <span className="tamil-text text-[11px] text-stone/50 max-w-[200px] truncate block"
+                                    title={stripTags(item.description)}>
+                                    {stripTags(item.description) || '—'}
+                                  </span>
+                                </Td>
+                                <Td><span className="text-[10px] text-stone/40">{item.author || '—'}</span></Td>
+                                <Td>
+                                  <div className="text-[10px]">
+                                    <div className="font-semibold text-maroon/60 truncate max-w-[120px]">{item.book_name || '—'}</div>
+                                    <div className="text-stone/40 truncate max-w-[120px] mt-0.5">{item.sub_cat_name || '—'}</div>
+                                  </div>
+                                </Td>
+                                <Td><span className="text-[10px] text-stone/35 tabular-nums">{fmt(item.view_counts)}</span></Td>
+                              </>}
+
+                              {/* Ebook Editions */}
+                              {activeTab === 'ebook-editions' && <>
+                                <Td>
+                                  <span className="tamil-text font-bold text-maroon text-sm max-w-xs truncate block">{item.title_tamil}</span>
+                                </Td>
+                                <Td><span className="text-[11px] text-stone/40 font-bold italic">{item.book_name}</span></Td>
+                                <Td>
+                                  {item.local_pdf_url
+                                    ? <a href={`${BASE}/${item.local_pdf_url.replace(/^\//, '')}`} target="_blank" rel="noopener noreferrer"
+                                        className="text-[10px] font-mono text-blue-500 hover:underline flex items-center gap-1">
+                                        <FileIcon className="w-3 h-3" />
+                                        {item.local_pdf_url.split('/').pop()}
+                                      </a>
+                                    : <span className="text-[10px] text-stone/30">—</span>
+                                  }
+                                  {item.is_missing && (
+                                    <div className="text-[8px] text-red-400 flex items-center gap-1 mt-0.5 font-bold">
+                                      <div className="w-1 h-1 rounded-full bg-red-400" /> File missing
+                                    </div>
+                                  )}
+                                </Td>
+                                <Td>
+                                  {item.pdf_url
+                                    ? <a href={item.pdf_url} target="_blank" rel="noopener noreferrer"
+                                        className="text-[10px] text-stone/40 hover:text-blue-500 flex items-center gap-1">
+                                        <ExternalLink className="w-3 h-3" /> External
+                                      </a>
+                                    : <span className="text-[10px] text-stone/25">—</span>
+                                  }
+                                </Td>
+                              </>}
+
+                              {/* Team */}
+                              {activeTab === 'team' && <>
+                                <Td><span className="font-bold text-maroon">{item.name}</span></Td>
+                                <Td>
+                                  <div className="text-[11px]">
+                                    <div className="text-stone/60">{item.role_english}</div>
+                                    <div className="tamil-text text-[10px] text-stone/40">{item.role_tamil}</div>
+                                  </div>
+                                </Td>
+                                <Td><span className="font-cinzel text-[11px] text-bronze">{item.display_order}</span></Td>
+                              </>}
+
+                              {/* Users */}
+                              {activeTab === 'users' && <>
+                                <Td><span className="font-bold text-maroon">{item.username}</span></Td>
+                                <Td><span className="text-xs text-stone/50">{item.email}</span></Td>
+                                <Td>
+                                  <span className="px-2.5 py-1 bg-maroon/5 text-maroon text-[9px] font-black uppercase rounded-full">{item.role}</span>
+                                </Td>
+                                <Td><span className="text-[10px] text-stone/35">{new Date(item.created_at).toLocaleDateString()}</span></Td>
+                              </>}
+
+                              <Td><StatusPill value={item.status} /></Td>
+
+                              <Td className="text-right">
+                                {showTrash && activeTab === 'songs' ? (
+                                  <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                                    <button onClick={() => handleRestoreSong(item.id)}
+                                      className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all" title="Restore">
+                                      <RotateCcw className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button onClick={() => handlePurgeSong(item.id)}
+                                      className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all" title="Permanently delete">
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <ActionBtns
+                                    onEdit={() => openEdit(item)}
+                                    onDelete={() => activeTab === 'songs' ? handleTrashSong(item.id) : handleDelete(id)}
+                                  />
+                                )}
+                              </Td>
+                            </tr>
+                          );
+                        })
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <Pager page={page} totalPages={totalPages} onPage={setPage} total={total} limit={LIMIT} />
             </div>
           )}
 
         </div>
       </main>
 
-      {/* ════════════════════ MODAL ════════════════════ */}
+      {/* ══ CONTACT DETAIL MODAL ══ */}
+      <AnimatePresence>
+        {contactDetail && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setContactDetail(null)} className="absolute inset-0 bg-ink/75 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.94, opacity: 0 }}
+              className="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative z-10 overflow-hidden">
+              <div className="bg-maroon px-7 py-5 text-white flex items-center justify-between">
+                <div>
+                  <p className="font-cinzel font-bold text-lg">{contactDetail.name}</p>
+                  <p className="text-[10px] opacity-40">{contactDetail.email} · {new Date(contactDetail.created_at).toLocaleString()}</p>
+                </div>
+                <button onClick={() => setContactDetail(null)} className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-7 space-y-4">
+                {contactDetail.subject && (
+                  <div>
+                    <p className="text-[10px] font-black text-stone/35 uppercase tracking-widest mb-1">Subject</p>
+                    <p className="text-sm font-bold text-maroon">{contactDetail.subject}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[10px] font-black text-stone/35 uppercase tracking-widest mb-2">Message</p>
+                  <p className="text-sm text-stone/70 leading-relaxed whitespace-pre-wrap">{contactDetail.message}</p>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  {!contactDetail.is_read && (
+                    <button onClick={() => { markContactRead(contactDetail.id); setContactDetail(p => ({ ...p, is_read: true })); }}
+                      className="flex-1 bg-gold text-maroon py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-gold/80 transition-all">
+                      Mark as Read
+                    </button>
+                  )}
+                  <button onClick={() => setContactDetail(null)}
+                    className="flex-1 bg-stone/5 text-stone/40 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-stone/10 transition-all">
+                    Close
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ══ EDIT / CREATE MODAL ══ */}
       <AnimatePresence>
         {modalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setModalOpen(false)}
-              className="absolute inset-0 bg-ink/75 backdrop-blur-sm"
-            />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setModalOpen(false)} className="absolute inset-0 bg-ink/75 backdrop-blur-sm" />
             <motion.div
               initial={{ scale: 0.92, opacity: 0, y: 16 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.92, opacity: 0, y: 16 }}
-              className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl relative z-10 overflow-hidden max-h-[90vh] flex flex-col"
-            >
-              {/* Modal header */}
+              className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl relative z-10 overflow-hidden max-h-[90vh] flex flex-col">
               <div className="bg-maroon px-8 py-5 text-white flex items-center justify-between shrink-0">
                 <div>
                   <h3 className="text-lg font-cinzel font-bold tracking-widest">
                     {editingItem ? 'Edit Record' : 'Create New Entry'}
                   </h3>
                   <p className="text-[10px] opacity-35 uppercase tracking-widest mt-0.5">
-                    Table: {activeTab}
+                    {activeMeta.name} · {activeMeta.label}
                   </p>
                 </div>
-                <button onClick={() => setModalOpen(false)}
-                  className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
+                <button onClick={() => setModalOpen(false)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Modal body */}
               <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto">
 
-                {/* ── BOOKS ── */}
+                {/* ─ BOOKS ─ */}
                 {activeTab === 'books' && (
-                  <Field label="Book Title (Tamil)">
-                    <input required type="text" value={formData.name || ''} onChange={e => set('name', e.target.value)}
-                      className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 tamil-body font-bold text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none"
-                      placeholder="நூல் தலைப்பு…" />
+                  <Field label="Book Title / நூல் தலைப்பு">
+                    <input required type="text" value={fd.name || ''} onChange={e => set('name', e.target.value)}
+                      className={TamilInputCls} placeholder="நூல் தலைப்பு உள்ளிடவும்…" />
                   </Field>
                 )}
 
-                {/* ── CATEGORIES ── */}
+                {/* ─ CATEGORIES ─ */}
                 {activeTab === 'categories' && (
                   <div className="space-y-5">
-                    <Field label="Parent Book">
-                      <BookSelect
-                        required books={books}
-                        value={formBookId || formData.book_id}
-                        onChange={v => { setFormBookId(v); set('book_id', v); }}
-                      />
+                    <Field label="Parent Book / நூல்">
+                      <BookSelect required books={books}
+                        value={fmBookId || fd.book_id}
+                        onChange={v => { setFmBookId(v); set('book_id', v); }} />
                     </Field>
-                    <Field label="Category Name (Tamil)">
-                      <input required type="text" value={formData.cname || ''} onChange={e => set('cname', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 tamil-body font-bold text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none"
-                        placeholder="பிரிவு பெயர்…" />
+                    <Field label="Category Name / முதல் பிரிவு பெயர்">
+                      <input required type="text" value={fd.cname || ''} onChange={e => set('cname', e.target.value)}
+                        className={TamilInputCls} placeholder="பிரிவு பெயர்…" />
                     </Field>
                   </div>
                 )}
 
-                {/* ── SUB-CATEGORIES ── */}
+                {/* ─ SUB-CATEGORIES ─ */}
                 {activeTab === 'subcategories' && (
                   <div className="space-y-5">
-                    <Field label="Parent Book">
+                    <Field label="Parent Book / நூல்">
                       <BookSelect required books={books}
-                        value={formBookId || formData.book_id}
-                        onChange={v => { setFormBookId(v); set('book_id', v); }} />
+                        value={fmBookId || fd.book_id}
+                        onChange={v => { setFmBookId(v); set('book_id', v); }} />
                     </Field>
-                    <Field label="Parent Category">
-                      <CategorySelect required categories={categories}
-                        value={formCatId || formData.main_category_id}
-                        onChange={v => { setFormCatId(v); set('main_category_id', v); }}
-                        placeholder={formBookId ? '— Select Category —' : '— Select a book first —'} />
+                    <Field label="Parent Category / முதல் பிரிவு">
+                      <CatSelect required cats={cats}
+                        value={fmCatId || fd.main_category_id}
+                        onChange={v => { setFmCatId(v); set('main_category_id', v); }}
+                        placeholder={fmBookId ? '— Select Category —' : '— Select a book first —'} />
                     </Field>
-                    <Field label="Sub-Category Name (Tamil)">
-                      <input required type="text" value={formData.sub_cat_name || ''} onChange={e => set('sub_cat_name', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 tamil-body font-bold text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none"
-                        placeholder="துணைப் பிரிவு பெயர்…" />
+                    <Field label="Sub-Category Name / துணைப் பிரிவு பெயர்">
+                      <input required type="text" value={fd.sub_cat_name || ''} onChange={e => set('sub_cat_name', e.target.value)}
+                        className={TamilInputCls} placeholder="துணைப் பிரிவு பெயர்…" />
                     </Field>
                   </div>
                 )}
 
-                {/* ── SONGS / MANUSCRIPTS ── */}
+                {/* ─ MANUSCRIPTS / SONGS ─ */}
                 {activeTab === 'songs' && (
                   <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2">
-                      <Field label="Parent Book">
-                        <BookSelect books={books} value={formBookId}
-                          onChange={v => { setFormBookId(v); set('book_id', v); }} />
+                      <Field label="Parent Book / நூல்">
+                        <BookSelect books={books} value={fmBookId}
+                          onChange={v => { setFmBookId(v); set('book_id', v); }} />
                       </Field>
                     </div>
                     <div className="col-span-2">
-                      <Field label="Category">
-                        <CategorySelect categories={categories} value={formCatId}
-                          onChange={v => { setFormCatId(v); }}
-                          placeholder={formBookId ? '— Select Category —' : '— Select a book first —'} />
+                      <Field label="Category / முதல் பிரிவு">
+                        <CatSelect cats={cats} value={fmCatId} onChange={v => { setFmCatId(v); }}
+                          placeholder={fmBookId ? '— Select Category —' : '— Select a book first —'} />
                       </Field>
                     </div>
                     <div className="col-span-2">
-                      <Field label="Sub-Category">
-                        <SubCatSelect required subcats={subcats} value={formData.cid}
-                          onChange={v => set('cid', v)}
-                          placeholder={formCatId ? '— Select Sub-Category —' : '— Select a category first —'} />
+                      <Field label="Sub-Category / துணைப் பிரிவு">
+                        <SubCatSelect required subcats={subcats} value={fd.cid} onChange={v => set('cid', v)}
+                          placeholder={fmCatId ? '— Select Sub-Category —' : '— Select a category first —'} />
                       </Field>
                     </div>
-                    <Field label="Folio / Page Number">
-                      <input required type="number" value={formData.fid || ''} onChange={e => set('fid', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-maroon/20 focus:outline-none" />
+                    <Field label="Folio / பாடல் எண் (fid)">
+                      <input required type="number" min={1} value={fd.fid || ''} onChange={e => set('fid', e.target.value)}
+                        className={InputCls} />
                     </Field>
-                    <Field label="Author">
-                      <input type="text" value={formData.author || ''} onChange={e => set('author', e.target.value)}
-                        placeholder="System"
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-maroon/20 focus:outline-none" />
+                    <Field label="Author / ஆசிரியர்">
+                      <input type="text" value={fd.author || ''} onChange={e => set('author', e.target.value)}
+                        placeholder="System" className={InputCls} />
                     </Field>
                     <div className="col-span-2">
-                      <Field label="Upload Folio Image (JPG/PNG)">
+                      <Field label="Upload Folio Image / சுவடிப் படம்" hint="JPG or PNG. File is renamed to {id}_{filename} and cached automatically.">
                         <input type="file" accept="image/*" onChange={e => set('imageFile', e.target.files[0])}
                           className="w-full text-xs text-stone/40 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-maroon/5 file:text-maroon hover:file:bg-maroon/10" />
+                        {editingItem?.fname && (
+                          <p className="text-[10px] text-stone/40 mt-1">Current: <span className="font-mono">{editingItem.fname}</span> (leave blank to keep)</p>
+                        )}
                       </Field>
                     </div>
                     <div className="col-span-2">
-                      <Field label="Scholarly Transcription (Tamil)">
-                        <textarea rows={5} value={formData.description || ''} onChange={e => set('description', e.target.value)}
+                      <Field label="Scholarly Transcription / சுவடி வரி உரை (Tamil)">
+                        <textarea rows={5} value={fd.description || ''} onChange={e => set('description', e.target.value)}
                           className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 tamil-body text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none resize-none"
-                          placeholder="சுவடி வரி உரை…" />
+                          placeholder="சுவடி வரி உரை இங்கே உள்ளிடவும்…" />
                       </Field>
                     </div>
                   </div>
                 )}
 
-                {/* ── EBOOK EDITIONS ── */}
+                {/* ─ EBOOK EDITIONS ─ */}
                 {activeTab === 'ebook-editions' && (
                   <div className="space-y-5">
-                    <Field label="Parent Book">
+                    <Field label="Parent Book / நூல்">
                       <BookSelect required books={books}
-                        value={formBookId || formData.book_id}
-                        onChange={v => { setFormBookId(v); set('book_id', v); }} />
+                        value={fmBookId || fd.book_id}
+                        onChange={v => { setFmBookId(v); set('book_id', v); }} />
                     </Field>
-                    <Field label="Edition Title (Tamil)">
-                      <input required type="text" value={formData.title_tamil || ''} onChange={e => set('title_tamil', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 tamil-body font-bold text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none"
-                        placeholder="மின்நூல் தலைப்பு…" />
+                    <Field label="Edition Title / மின்நூல் தலைப்பு (Tamil)">
+                      <input required type="text" value={fd.title_tamil || ''} onChange={e => set('title_tamil', e.target.value)}
+                        className={TamilInputCls} placeholder="மின்நூல் தலைப்பு…" />
                     </Field>
-                    <Field label="PDF URL">
-                      <input required type="url" value={formData.pdf_url || ''} onChange={e => set('pdf_url', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-maroon/20 focus:outline-none"
-                        placeholder="https://suvadi.cict.in/asp/pdf/…" />
+                    <Field label="Local PDF Path" hint="Relative path from project root, e.g. storage/pdfs/book.pdf">
+                      <input type="text" value={fd.local_pdf_url || ''} onChange={e => set('local_pdf_url', e.target.value)}
+                        className={InputCls} placeholder="storage/pdfs/…" />
+                    </Field>
+                    <Field label="External PDF URL (optional)">
+                      <input type="url" value={fd.pdf_url || ''} onChange={e => set('pdf_url', e.target.value)}
+                        className={InputCls} placeholder="https://…" />
                     </Field>
                   </div>
                 )}
 
-                {/* ── TEAM MEMBERS ── */}
+                {/* ─ TEAM MEMBERS ─ */}
                 {activeTab === 'team' && (
                   <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2">
                       <Field label="Full Name">
-                        <input required type="text" value={formData.name || ''} onChange={e => set('name', e.target.value)}
-                          className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 font-bold text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none" />
+                        <input required type="text" value={fd.name || ''} onChange={e => set('name', e.target.value)}
+                          className={InputCls + ' font-bold'} />
                       </Field>
                     </div>
                     <Field label="Role (English)">
-                      <input type="text" value={formData.role_english || ''} onChange={e => set('role_english', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-maroon/20 focus:outline-none" />
+                      <input type="text" value={fd.role_english || ''} onChange={e => set('role_english', e.target.value)}
+                        className={InputCls} />
                     </Field>
-                    <Field label="Role (Tamil)">
-                      <input type="text" value={formData.role_tamil || ''} onChange={e => set('role_tamil', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 tamil-body text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none" />
+                    <Field label="பொறுப்பு (Tamil)">
+                      <input type="text" value={fd.role_tamil || ''} onChange={e => set('role_tamil', e.target.value)}
+                        className={TamilInputCls} />
                     </Field>
                     <Field label="Photo URL">
-                      <input type="text" value={formData.photo_url || ''} onChange={e => set('photo_url', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-maroon/20 focus:outline-none"
-                        placeholder="/images/team/name.jpg" />
+                      <input type="text" value={fd.photo_url || ''} onChange={e => set('photo_url', e.target.value)}
+                        className={InputCls} placeholder="/images/team/name.jpg" />
                     </Field>
                     <Field label="Display Order">
-                      <input type="number" min={0} value={formData.display_order ?? 0} onChange={e => set('display_order', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-maroon/20 focus:outline-none" />
+                      <input type="number" min={0} value={fd.display_order ?? 0} onChange={e => set('display_order', e.target.value)}
+                        className={InputCls} />
                     </Field>
                     <div className="col-span-2">
                       <Field label="Bio / Description">
-                        <textarea rows={3} value={formData.bio || ''} onChange={e => set('bio', e.target.value)}
+                        <textarea rows={3} value={fd.bio || ''} onChange={e => set('bio', e.target.value)}
                           className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-maroon/20 focus:outline-none resize-none" />
                       </Field>
                     </div>
                   </div>
                 )}
 
-                {/* ── USERS ── */}
+                {/* ─ USERS ─ */}
                 {activeTab === 'users' && (
                   <div className="space-y-5">
                     <div className="grid grid-cols-2 gap-5">
-                      <Field label="Username">
-                        <input required type="text" value={formData.username || ''} onChange={e => set('username', e.target.value)}
-                          className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 font-bold focus:ring-2 focus:ring-maroon/20 focus:outline-none" />
+                      <Field label="Username / பயனர் பெயர்">
+                        <input required type="text" value={fd.username || ''} onChange={e => set('username', e.target.value)}
+                          className={InputCls + ' font-bold'} />
                       </Field>
-                      <Field label="Password">
-                        <input type="password" value={formData.password || ''} onChange={e => set('password', e.target.value)}
-                          className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-maroon/20 focus:outline-none"
+                      <Field label="Password / கடவுச்சொல்">
+                        <input type="password" value={fd.password || ''} onChange={e => set('password', e.target.value)}
+                          className={InputCls}
                           placeholder={editingItem ? '(leave blank to keep current)' : ''} />
                       </Field>
                     </div>
-                    <Field label="Email Address">
-                      <input type="email" value={formData.email || ''} onChange={e => set('email', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-maroon/20 focus:outline-none" />
+                    <Field label="Email Address / மின்னஞ்சல்">
+                      <input type="email" value={fd.email || ''} onChange={e => set('email', e.target.value)}
+                        className={InputCls} />
                     </Field>
-                    <Field label="Role">
-                      <select value={formData.role || 'admin'} onChange={e => set('role', e.target.value)}
-                        className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 font-bold text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none">
+                    <Field label="Role / பதவி">
+                      <select value={fd.role || 'admin'} onChange={e => set('role', e.target.value)}
+                        className={InputCls + ' font-bold'}>
                         <option value="admin">Admin</option>
                         <option value="editor">Editor</option>
                         <option value="viewer">Viewer</option>
@@ -958,21 +1078,19 @@ const AdminPortal = () => {
                 )}
 
                 {/* Status + submit */}
-                <div className="flex items-center gap-3 pt-2">
-                  <StatusToggle value={formData.status} onChange={v => set('status', v)} />
-                </div>
-
-                <div className="flex gap-4 pt-2">
-                  <button type="submit"
-                    className="flex-1 bg-maroon text-white py-3.5 rounded-xl font-black uppercase tracking-widest
-                      hover:bg-maroon-dark transition-all shadow-lg shadow-maroon/20 flex items-center justify-center gap-2">
-                    <Save className="w-4 h-4" />
-                    {editingItem ? 'Save Updates' : 'Sync to Archive'}
-                  </button>
-                  <button type="button" onClick={() => setModalOpen(false)}
-                    className="flex-1 bg-stone/5 text-stone/40 py-3.5 rounded-xl font-black uppercase tracking-widest hover:bg-stone/10 transition-all">
-                    Cancel
-                  </button>
+                <div className="pt-2 border-t border-stone/8 flex items-center gap-4">
+                  <StatusToggle value={fd.status} onChange={v => set('status', v)} />
+                  <div className="flex gap-3 flex-1">
+                    <button type="submit"
+                      className="flex-1 bg-maroon text-white py-3.5 rounded-xl font-black uppercase tracking-widest hover:bg-maroon-dark transition-all shadow-lg shadow-maroon/20 flex items-center justify-center gap-2">
+                      <Save className="w-4 h-4" />
+                      {editingItem ? 'Save Updates' : 'Create Record'}
+                    </button>
+                    <button type="button" onClick={() => setModalOpen(false)}
+                      className="flex-1 bg-stone/5 text-stone/40 py-3.5 rounded-xl font-black uppercase tracking-widest hover:bg-stone/10 transition-all">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </form>
             </motion.div>

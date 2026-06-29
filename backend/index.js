@@ -40,18 +40,20 @@ pool.query('SELECT NOW()')
   .catch(e => console.error('❌ PostgreSQL connection failed:', e.message));
 
 // ── Static paths ─────────────────────────────────────────────────────────────
-const IMAGES_PATH = path.join(__dirname, '..', 'images');
-const SONGS_PATH  = path.join(__dirname, '..', 'songs');
-const WEBINC_PATH = path.join(__dirname, '..', 'webinc');
+const IMAGES_PATH  = path.join(__dirname, '..', 'images');
+const SONGS_PATH   = path.join(__dirname, '..', 'songs');
+const WEBINC_PATH  = path.join(__dirname, '..', 'webinc');
+const STORAGE_PATH = path.join(__dirname, '..', 'storage');
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
-app.use('/images', express.static(IMAGES_PATH));
-app.use('/songs',  express.static(SONGS_PATH));
-app.use('/webinc', express.static(WEBINC_PATH));
+app.use('/images',  express.static(IMAGES_PATH));
+app.use('/songs',   express.static(SONGS_PATH));
+app.use('/webinc',  express.static(WEBINC_PATH));
+app.use('/storage', express.static(STORAGE_PATH));
 
 const multer = require('multer');
 const fs = require('fs');
@@ -71,9 +73,9 @@ const songStorage = multer.diskStorage({
 const uploadSong = multer({ storage: songStorage });
 
 // ── Image file cache ─────────────────────────────────────────────────────────
-// Multiple songs share the same folio image (fname). The physical file exists
-// only once, named {first_id}_{fname}. This cache maps `${cid}/${fname}` to
-// the actual URL so every song finds its image regardless of its own ID.
+// IMAGE_CACHE: used only by public-facing song browse/search endpoints.
+// Maps `${cid}/${fname}` → first physical file found, so browse pages can
+// display scan thumbnails without knowing the owning song's id.
 const IMAGE_CACHE = {};
 function buildImageCache() {
   if (!fs.existsSync(SONGS_PATH)) return;
@@ -94,21 +96,69 @@ function buildImageCache() {
 }
 function getImageUrl(cid, id, fname) {
   if (!fname) return null;
-  
   const exactKey = `${cid}/${fname}`;
   if (IMAGE_CACHE[exactKey]) return IMAGE_CACHE[exactKey];
-  
   const spaceKey = `${cid}/${fname.replace(/\+/g, ' ')}`;
   if (IMAGE_CACHE[spaceKey]) return IMAGE_CACHE[spaceKey];
-  
   try {
     const decodedKey = `${cid}/${decodeURIComponent(fname)}`;
     if (IMAGE_CACHE[decodedKey]) return IMAGE_CACHE[decodedKey];
   } catch (e) {}
-
   return `/songs/${cid}/${id}_${fname}`;
 }
 buildImageCache();
+
+// Reads the first 4 bytes of a file and returns false if it is a PNG.
+// The original PHP server returns the Indian emblem (a PNG) as a placeholder
+// when a real scan is unavailable. Such files must be treated as missing.
+function isRealScan(filePath) {
+  try {
+    const buf = Buffer.alloc(4);
+    const fd2 = fs.openSync(filePath, 'r');
+    fs.readSync(fd2, buf, 0, 4, 0);
+    fs.closeSync(fd2);
+    // PNG magic: 89 50 4E 47
+    return !(buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47);
+  } catch { return false; }
+}
+
+// resolveAdminImage: strict 1:1 mapping for admin panel only.
+// Uses group_id from sv_songs to identify the physical file owner deterministically.
+//   group_id = 0  → this record owns the scan page; file = {id}_{fname}
+//   group_id > 0  → scan page owned by that song; file = {group_id}_{fname}
+// Handles + ↔ space encoding: some fnames were stored as "c+2.jpg" when the
+// actual file on disk is "c 2.jpg" (URL-encoded space from the original import).
+// Never uses IMAGE_CACHE — no random file selection, no mismatched images.
+function resolveAdminImage(cid, id, fname, group_id) {
+  if (!fname) return { url: null, actual_filename: null, is_missing: true };
+  const ownerId = (group_id > 0) ? group_id : id;
+  const cidStr  = String(cid);
+  // Candidate fnames: exact DB value, + decoded to space, and URL decoded
+  const fnameCandidates = [...new Set([
+    fname,
+    fname.replace(/\+/g, ' '),
+    (() => { try { return decodeURIComponent(fname); } catch { return null; } })(),
+  ].filter(Boolean))];
+
+  for (const fn of fnameCandidates) {
+    const ownerFile = `${ownerId}_${fn}`;
+    const ownerPath = path.join(SONGS_PATH, cidStr, ownerFile);
+    if (fs.existsSync(ownerPath) && isRealScan(ownerPath)) {
+      return { url: `/songs/${cidStr}/${ownerFile}`, actual_filename: ownerFile, is_missing: false };
+    }
+    // Fallback: own file when ownerId differs (some records have individual files)
+    if (ownerId !== id) {
+      const ownFile = `${id}_${fn}`;
+      const ownPath = path.join(SONGS_PATH, cidStr, ownFile);
+      if (fs.existsSync(ownPath) && isRealScan(ownPath)) {
+        return { url: `/songs/${cidStr}/${ownFile}`, actual_filename: ownFile, is_missing: false };
+      }
+    }
+  }
+  // No file found — report canonical expected filename (space-decoded for readability)
+  const displayFname = fname.replace(/\+/g, ' ');
+  return { url: null, actual_filename: `${ownerId}_${displayFname}`, is_missing: true };
+}
 
 // ── Book image / English name maps ───────────────────────────────────────────
 const BOOK_COVER_MAP = {
@@ -644,7 +694,7 @@ ensureTables();
 // ── DASHBOARD STATS ──────────────────────────────────────────────────────────
 app.get('/api/admin/dashboard-stats', async (req, res) => {
   try {
-    const [books, mainCats, subCats, songs, trashedSongs, editions, contacts, unreadContacts, teamMembers] = await Promise.all([
+    const [books, mainCats, subCats, songs, trashedSongs, editions, contacts, unreadContacts, teamMembers, users] = await Promise.all([
       db.query('SELECT COUNT(*) as c FROM sv_book'),
       db.query('SELECT COUNT(*) as c FROM sv_main_category'),
       db.query('SELECT COUNT(*) as c FROM sv_sub_category'),
@@ -654,6 +704,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       db.query('SELECT COUNT(*) as c FROM contacts').catch(() => ({ rows: [{ c: 0 }] })),
       db.query('SELECT COUNT(*) as c FROM contacts WHERE is_read=false').catch(() => ({ rows: [{ c: 0 }] })),
       db.query('SELECT COUNT(*) as c FROM team_members WHERE status=1').catch(() => ({ rows: [{ c: 0 }] })),
+      db.query('SELECT COUNT(*) as c FROM sv_users').catch(() => ({ rows: [{ c: 0 }] })),
     ]);
     const recentContacts = await db.query(
       'SELECT id, name, email, subject, is_read, created_at FROM contacts ORDER BY created_at DESC LIMIT 5'
@@ -668,6 +719,7 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
       contacts:        parseInt(contacts.rows[0].c),
       unread_contacts: parseInt(unreadContacts.rows[0].c),
       team_members:    parseInt(teamMembers.rows[0].c),
+      users:           parseInt(users.rows[0].c),
       recent_contacts: recentContacts.rows,
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -680,7 +732,6 @@ app.get('/api/admin/books/select', async (req, res) => {
     res.json(rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
-
 app.get('/api/admin/categories/select', async (req, res) => {
   try {
     const { book_id } = req.query;
@@ -691,7 +742,6 @@ app.get('/api/admin/categories/select', async (req, res) => {
     res.json(rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
-
 app.get('/api/admin/subcategories/select', async (req, res) => {
   try {
     const { category_id } = req.query;
@@ -703,11 +753,20 @@ app.get('/api/admin/subcategories/select', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── BOOKS CRUD ───────────────────────────────────────────────────────────────
+// ── BOOKS CRUD ────────────────────────────────────────────────────────────────
 app.get('/api/admin/books', async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM sv_book ORDER BY book_id DESC');
-    res.json(rows);
+    const { page = 1, limit = 50, search = '' } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const params = [];
+    const conditions = [];
+    if (search) { params.push(`%${search}%`); conditions.push(`name ILIKE $${params.length}`); }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const [rows, count] = await Promise.all([
+      db.query(`SELECT * FROM sv_book ${where} ORDER BY book_id DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
+      db.query(`SELECT COUNT(*) as c FROM sv_book ${where}`, params),
+    ]);
+    res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/admin/books', async (req, res) => {
@@ -723,7 +782,7 @@ app.post('/api/admin/books', async (req, res) => {
 app.put('/api/admin/books/:id', async (req, res) => {
   try {
     const { name, status } = req.body;
-    await db.query('UPDATE sv_book SET name=$1, status=$2 WHERE book_id=$3', [name, status, req.params.id]);
+    await db.query('UPDATE sv_book SET name=$1, status=$2, updated_at=NOW() WHERE book_id=$3', [name, status, req.params.id]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -734,13 +793,21 @@ app.delete('/api/admin/books/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── MAIN CATEGORY CRUD ───────────────────────────────────────────────────────
+// ── MAIN CATEGORY CRUD ────────────────────────────────────────────────────────
 app.get('/api/admin/categories', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      'SELECT mc.*, b.name as book_name FROM sv_main_category mc JOIN sv_book b ON b.book_id = mc.book_id ORDER BY cid DESC'
-    );
-    res.json(rows);
+    const { page = 1, limit = 50, search = '', book_id } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const params = [];
+    const conditions = [];
+    if (book_id) { params.push(book_id); conditions.push(`mc.book_id = $${params.length}`); }
+    if (search) { params.push(`%${search}%`); conditions.push(`mc.cname ILIKE $${params.length}`); }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const [rows, count] = await Promise.all([
+      db.query(`SELECT mc.*, b.name as book_name FROM sv_main_category mc JOIN sv_book b ON b.book_id = mc.book_id ${where} ORDER BY mc.cid DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
+      db.query(`SELECT COUNT(*) as c FROM sv_main_category mc ${where}`, params),
+    ]);
+    res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/admin/categories', async (req, res) => {
@@ -757,7 +824,7 @@ app.put('/api/admin/categories/:id', async (req, res) => {
   try {
     const { book_id, cname, status } = req.body;
     await db.query(
-      'UPDATE sv_main_category SET book_id=$1, cname=$2, status=$3 WHERE cid=$4',
+      'UPDATE sv_main_category SET book_id=$1, cname=$2, status=$3, updated_at=NOW() WHERE cid=$4',
       [book_id, cname, status, req.params.id]
     );
     res.json({ success: true });
@@ -770,17 +837,22 @@ app.delete('/api/admin/categories/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── SUB CATEGORY CRUD ────────────────────────────────────────────────────────
+// ── SUB CATEGORY CRUD ─────────────────────────────────────────────────────────
 app.get('/api/admin/subcategories', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      `SELECT sc.*, mc.cname as category_name, b.name as book_name
-       FROM sv_sub_category sc
-       JOIN sv_main_category mc ON mc.cid = sc.main_category_id
-       JOIN sv_book b ON b.book_id = sc.book_id
-       ORDER BY sc.id DESC`
-    );
-    res.json(rows);
+    const { page = 1, limit = 50, search = '', book_id, main_category_id } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const params = [];
+    const conditions = [];
+    if (book_id) { params.push(book_id); conditions.push(`sc.book_id = $${params.length}`); }
+    if (main_category_id) { params.push(main_category_id); conditions.push(`sc.main_category_id = $${params.length}`); }
+    if (search) { params.push(`%${search}%`); conditions.push(`sc.sub_cat_name ILIKE $${params.length}`); }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const [rows, count] = await Promise.all([
+      db.query(`SELECT sc.*, mc.cname as category_name, b.name as book_name FROM sv_sub_category sc JOIN sv_main_category mc ON mc.cid = sc.main_category_id JOIN sv_book b ON b.book_id = sc.book_id ${where} ORDER BY sc.id DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
+      db.query(`SELECT COUNT(*) as c FROM sv_sub_category sc ${where}`, params),
+    ]);
+    res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/admin/subcategories', async (req, res) => {
@@ -797,7 +869,7 @@ app.put('/api/admin/subcategories/:id', async (req, res) => {
   try {
     const { book_id, main_category_id, sub_cat_name, status } = req.body;
     await db.query(
-      'UPDATE sv_sub_category SET book_id=$1, main_category_id=$2, sub_cat_name=$3, status=$4 WHERE id=$5',
+      'UPDATE sv_sub_category SET book_id=$1, main_category_id=$2, sub_cat_name=$3, status=$4, updated_at=NOW() WHERE id=$5',
       [book_id, main_category_id, sub_cat_name, status, req.params.id]
     );
     res.json({ success: true });
@@ -810,45 +882,43 @@ app.delete('/api/admin/subcategories/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── SONGS CRUD (enhanced with author, upload_date, view_counts) ───────────────
+// ── SONGS / MANUSCRIPTS CRUD ──────────────────────────────────────────────────
 app.get('/api/admin/songs', async (req, res) => {
   try {
-    const { page = 1, limit = 50, cid } = req.query;
+    const { page = 1, limit = 50, cid, search = '', trash = '0' } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
-    const conditions = ['s.trash = 0'];
+    const trashVal = trash === '1' ? 1 : 0;
+    const conditions = [`s.trash = ${trashVal}`];
     const params = [];
     if (cid) { conditions.push(`s.cid = $${params.length + 1}`); params.push(cid); }
+    if (search) {
+      params.push(`%${search}%`);
+      const sn = params.length;
+      conditions.push(`(s.fname ILIKE $${sn} OR s.description ILIKE $${sn} OR CAST(s.fid AS TEXT) ILIKE $${sn} OR s.author ILIKE $${sn})`);
+    }
     const where = conditions.join(' AND ');
-    const { rows } = await db.query(
-      `SELECT s.id, s.fid, s.fname, s.cid, s.group_id, s.description, s.author,
-              s.upload_date, s.view_counts, s.down_counts, s.status, s.trash,
-              sc.sub_cat_name, mc.cid as main_category_id, b.book_id, b.name as book_name
-       FROM sv_songs s
-       LEFT JOIN sv_sub_category sc ON sc.id = s.cid
-       LEFT JOIN sv_main_category mc ON mc.cid = sc.main_category_id
-       LEFT JOIN sv_book b ON b.book_id = mc.book_id
-       WHERE ${where}
-       ORDER BY s.id DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
-      [...params, parseInt(limit), offset]
-    );
-    
-    // Validate physical file existence
-    rows.forEach(r => {
-      const url = getImageUrl(r.cid, r.id, r.fname);
-      r.mapped_url = url;
-      if (url) {
-        // url starts with /songs/, strip it and check relative to SONGS_PATH
-        const relPath = url.replace(/^\/songs\//, '');
-        r.is_missing = !fs.existsSync(path.join(SONGS_PATH, relPath));
-      } else {
-        r.is_missing = true;
-      }
+    const [rows, count] = await Promise.all([
+      db.query(
+        `SELECT s.id, s.fid, s.fname, s.filename, s.filetype, s.cid, s.group_id, s.description, s.author,
+                s.upload_date, s.view_counts, s.down_counts, s.status, s.trash,
+                sc.sub_cat_name, mc.cid as main_category_id, b.book_id, b.name as book_name
+         FROM sv_songs s
+         LEFT JOIN sv_sub_category sc ON sc.id = s.cid
+         LEFT JOIN sv_main_category mc ON mc.cid = sc.main_category_id
+         LEFT JOIN sv_book b ON b.book_id = mc.book_id
+         WHERE ${where}
+         ORDER BY s.id DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+        [...params, parseInt(limit), offset]
+      ),
+      db.query(`SELECT COUNT(*) as c FROM sv_songs s WHERE ${where}`, params),
+    ]);
+    rows.rows.forEach(r => {
+      const { url, actual_filename, is_missing } = resolveAdminImage(r.cid, r.id, r.fname, r.group_id);
+      r.image_url       = url;
+      r.actual_filename = actual_filename;
+      r.is_missing      = is_missing;
     });
-
-    const countR = await db.query(
-      `SELECT COUNT(*) as c FROM sv_songs s WHERE ${where}`, params
-    );
-    res.json({ rows, total: parseInt(countR.rows[0].c) });
+    res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/admin/songs', uploadSong.single('image'), async (req, res) => {
@@ -862,9 +932,7 @@ app.post('/api/admin/songs', uploadSong.single('image'), async (req, res) => {
     const newId = rows[0].id;
     if (req.file) {
       const newName = `${newId}_${fname}`;
-      const oldPath = req.file.path;
-      const newPath = path.join(path.dirname(oldPath), newName);
-      fs.renameSync(oldPath, newPath);
+      fs.renameSync(req.file.path, path.join(path.dirname(req.file.path), newName));
       buildImageCache();
     }
     res.json({ id: newId });
@@ -879,8 +947,7 @@ app.put('/api/admin/songs/:id', uploadSong.single('image'), async (req, res) => 
         'UPDATE sv_songs SET cid=$1, fid=$2, fname=$3, description=$4, author=$5, status=$6 WHERE id=$7',
         [cid, fid, fname, description, author || 'System', status, req.params.id]
       );
-      const newName = `${req.params.id}_${fname}`;
-      fs.renameSync(req.file.path, path.join(path.dirname(req.file.path), newName));
+      fs.renameSync(req.file.path, path.join(path.dirname(req.file.path), `${req.params.id}_${fname}`));
       buildImageCache();
     } else {
       await db.query(
@@ -897,14 +964,33 @@ app.delete('/api/admin/songs/:id', async (req, res) => {
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
+app.put('/api/admin/songs/:id/restore', async (req, res) => {
+  try {
+    await db.query('UPDATE sv_songs SET trash=0 WHERE id=$1', [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.delete('/api/admin/songs/:id/purge', async (req, res) => {
+  try {
+    await db.query('DELETE FROM sv_songs WHERE id=$1', [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
-// ── USERS CRUD ───────────────────────────────────────────────────────────────
+// ── USERS CRUD ────────────────────────────────────────────────────────────────
 app.get('/api/admin/users', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      'SELECT id, username, email, role, status, created_at FROM sv_users ORDER BY id'
-    );
-    res.json(rows);
+    const { page = 1, limit = 50, search = '' } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const params = [];
+    const conditions = [];
+    if (search) { params.push(`%${search}%`); conditions.push(`(username ILIKE $${params.length} OR email ILIKE $${params.length})`); }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const [rows, count] = await Promise.all([
+      db.query(`SELECT id, username, email, role, status, created_at FROM sv_users ${where} ORDER BY id DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
+      db.query(`SELECT COUNT(*) as c FROM sv_users ${where}`, params),
+    ]);
+    res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/admin/users', async (req, res) => {
@@ -941,13 +1027,20 @@ app.delete('/api/admin/users/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── CONTACTS CRUD ────────────────────────────────────────────────────────────
+// ── CONTACTS CRUD ─────────────────────────────────────────────────────────────
 app.get('/api/admin/contacts', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      'SELECT * FROM contacts ORDER BY created_at DESC'
-    );
-    res.json(rows);
+    const { page = 1, limit = 50, search = '' } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const params = [];
+    const conditions = [];
+    if (search) { params.push(`%${search}%`); conditions.push(`(name ILIKE $${params.length} OR email ILIKE $${params.length} OR subject ILIKE $${params.length})`); }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const [rows, count] = await Promise.all([
+      db.query(`SELECT * FROM contacts ${where} ORDER BY created_at DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
+      db.query(`SELECT COUNT(*) as c FROM contacts ${where}`, params),
+    ]);
+    res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.put('/api/admin/contacts/:id/read', async (req, res) => {
@@ -963,13 +1056,20 @@ app.delete('/api/admin/contacts/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── TEAM MEMBERS CRUD ────────────────────────────────────────────────────────
+// ── TEAM MEMBERS CRUD ─────────────────────────────────────────────────────────
 app.get('/api/admin/team', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      'SELECT * FROM team_members ORDER BY display_order, id'
-    );
-    res.json(rows);
+    const { page = 1, limit = 50, search = '' } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const params = [];
+    const conditions = [];
+    if (search) { params.push(`%${search}%`); conditions.push(`(name ILIKE $${params.length} OR role_english ILIKE $${params.length} OR role_tamil ILIKE $${params.length})`); }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const [rows, count] = await Promise.all([
+      db.query(`SELECT * FROM team_members ${where} ORDER BY display_order, id LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
+      db.query(`SELECT COUNT(*) as c FROM team_members ${where}`, params),
+    ]);
+    res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/admin/team', async (req, res) => {
@@ -1002,42 +1102,40 @@ app.delete('/api/admin/team/:id', async (req, res) => {
 // ── EBOOK EDITIONS CRUD ───────────────────────────────────────────────────────
 app.get('/api/admin/ebook-editions', async (req, res) => {
   try {
-    const { rows } = await db.query(
-      `SELECT e.*, b.name as book_name
-       FROM sv_ebook_editions e
-       LEFT JOIN sv_book b ON b.book_id = e.book_id
-       ORDER BY e.book_id, e.id`
-    );
-    
-    // Validate physical file existence
+    const { page = 1, limit = 50, search = '', book_id } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const params = [];
+    const conditions = [];
+    if (book_id) { params.push(book_id); conditions.push(`e.book_id = $${params.length}`); }
+    if (search) { params.push(`%${search}%`); conditions.push(`(e.title_tamil ILIKE $${params.length} OR b.name ILIKE $${params.length})`); }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const [rows, count] = await Promise.all([
+      db.query(`SELECT e.*, b.name as book_name FROM sv_ebook_editions e LEFT JOIN sv_book b ON b.book_id = e.book_id ${where} ORDER BY e.book_id, e.id LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
+      db.query(`SELECT COUNT(*) as c FROM sv_ebook_editions e LEFT JOIN sv_book b ON b.book_id = e.book_id ${where}`, params),
+    ]);
     const ROOT = path.join(__dirname, '..');
-    rows.forEach(r => {
-      if (r.local_pdf_url) {
-        r.is_missing = !fs.existsSync(path.join(ROOT, r.local_pdf_url));
-      } else {
-        r.is_missing = true;
-      }
+    rows.rows.forEach(r => {
+      r.is_missing = r.local_pdf_url ? !fs.existsSync(path.join(ROOT, r.local_pdf_url)) : true;
     });
-    
-    res.json(rows);
+    res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.post('/api/admin/ebook-editions', async (req, res) => {
   try {
-    const { book_id, title_tamil, pdf_url, status } = req.body;
+    const { book_id, title_tamil, pdf_url, local_pdf_url, status } = req.body;
     const { rows } = await db.query(
-      'INSERT INTO sv_ebook_editions (book_id, title_tamil, pdf_url, status) VALUES ($1,$2,$3,$4) RETURNING id',
-      [book_id, title_tamil, pdf_url, status ?? 1]
+      'INSERT INTO sv_ebook_editions (book_id, title_tamil, pdf_url, local_pdf_url, status) VALUES ($1,$2,$3,$4,$5) RETURNING id',
+      [book_id, title_tamil, pdf_url || '', local_pdf_url || '', status ?? 1]
     );
     res.json({ id: rows[0].id });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.put('/api/admin/ebook-editions/:id', async (req, res) => {
   try {
-    const { book_id, title_tamil, pdf_url, status } = req.body;
+    const { book_id, title_tamil, pdf_url, local_pdf_url, status } = req.body;
     await db.query(
-      'UPDATE sv_ebook_editions SET book_id=$1, title_tamil=$2, pdf_url=$3, status=$4 WHERE id=$5',
-      [book_id, title_tamil, pdf_url, status, req.params.id]
+      'UPDATE sv_ebook_editions SET book_id=$1, title_tamil=$2, pdf_url=$3, local_pdf_url=$4, status=$5 WHERE id=$6',
+      [book_id, title_tamil, pdf_url || '', local_pdf_url || '', status, req.params.id]
     );
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
