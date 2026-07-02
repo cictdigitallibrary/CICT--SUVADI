@@ -509,8 +509,8 @@ const Home = () => {
           SECTION 5 ▸ DIGITAL EBOOK PREVIEW
       ══════════════════════════════════════════ */}
       {ebooks.length > 0 && (
-        <section className="home-ebooks-section relative py-24 overflow-hidden">
-          {/* Generated heritage green artwork background */}
+        <section className="home-ebooks-section relative overflow-hidden" style={{ paddingTop: '3rem', paddingBottom: '4rem' }}>
+          {/* Heritage green artwork background */}
           <div className="home-ebooks-artwork" />
           <div className="home-ebooks-overlay" />
           {/* Gold wave top divider */}
@@ -519,8 +519,14 @@ const Home = () => {
           <div className="absolute left-0 top-0 h-full w-[3px] bg-gradient-to-b from-transparent via-gold/40 to-transparent" style={{ zIndex: 3 }} />
           <div className="absolute right-0 top-0 h-full w-[3px] bg-gradient-to-b from-transparent via-gold/25 to-transparent" style={{ zIndex: 3 }} />
 
+          {/* Palm-leaf bundle — bottom left */}
+          <img src="/images/manuscript_transparent.png" alt="Decorative Manuscript" className="home-ebooks-palm-left object-contain" aria-hidden="true" style={{ width: '260px', height: '160px', opacity: 0.9 }} />
+
+          {/* Palm-leaf bundle — bottom right (mirrored) */}
+          <img src="/images/manuscript_transparent.png" alt="Decorative Manuscript" className="home-ebooks-palm-right object-contain" aria-hidden="true" style={{ width: '260px', height: '160px', opacity: 0.9 }} />
+
           <div className="container mx-auto px-6 max-w-6xl" style={{ position: 'relative', zIndex: 4 }}>
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-14 gap-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
               <div>
                 <span className="home-section-label text-gold/60 block mb-2">
                   {t('மின் நூலகம்', 'Digital Repository')}
@@ -531,46 +537,70 @@ const Home = () => {
               </div>
               <Link to="/ebooks" className="btn-browse-library">
                 <span className="tamil-label font-black uppercase tracking-widest">{t('மின் நூல்கள் காண்க', 'Browse Library')}</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
               </Link>
             </div>
 
-            <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
-              {ebooks.slice(0, 6).map((book, idx) => (
-                <motion.div key={book.id} variants={fadeUp}
-                  className="group home-ebook-card">
-                  <div className="p-4">
-                    <div className="aspect-[3/4] bg-white/5 flex items-center justify-center mb-3 overflow-hidden rounded-sm">
-                      <img
-                        src={`${API}${book.cover_image}`}
-                        alt={book.title_tamil}
-                        className="h-full w-full object-contain p-2 group-hover:scale-110 transition-transform duration-700"
-                      />
-                    </div>
-                    <p className="tamil-label text-xs text-gold/90 text-center font-black group-hover:text-white transition-colors line-clamp-2 leading-snug">
-                      {book.title_tamil}
-                    </p>
-                  </div>
+            <div className="flex items-center gap-3">
+              <button className="ebook-nav-btn">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+
+              <div className="flex-1 overflow-hidden">
+                <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="flex gap-4">
+                  {ebooks.slice(0, 6).map((book, idx) => (
+                    <motion.div key={book.id} variants={fadeUp}
+                      className="group home-ebook-card flex-1 min-w-0">
+                      <div className="p-3">
+                        <div className="aspect-[3/4] bg-white/5 flex items-center justify-center mb-3 overflow-hidden rounded-sm">
+                          <img
+                            src={`${API}${book.cover_image}`}
+                            alt={book.title_tamil}
+                            className="h-full w-full object-contain p-1 group-hover:scale-110 transition-transform duration-700"
+                          />
+                        </div>
+                        <p className="tamil-label text-[10px] text-gold/90 text-center font-black group-hover:text-white transition-colors line-clamp-2 leading-snug">
+                          {book.title_tamil}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
                 </motion.div>
-              ))}
-            </motion.div>
+              </div>
+
+              <button className="ebook-nav-btn">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
           </div>
         </section>
       )}
 
+
       {/* ══════════════════════════════════════════
           SECTION 6 ▸ RESOURCES & FEEDBACK
       ══════════════════════════════════════════ */}
-      <section className="home-resources-section relative py-24">
+      <section className="home-resources-section relative">
+        {/* Palm-leaf bundle — left edge */}
+        <img src="/images/manuscript_transparent.png" alt="Decorative Resource Manuscript" className="resources-palm-left object-contain" aria-hidden="true" style={{ width: '200px', height: '200px', zIndex: 2, opacity: 0.85 }} />
 
-        <div className="container mx-auto px-6 max-w-5xl" style={{ position: 'relative', zIndex: 2 }}>
-          <motion.div className="text-center mb-14" initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <p className="home-section-label text-bronze">
-              {t('கூடுதல் வளங்கள்', 'Additional Resources')}
+        {/* Palm-leaf bundle — right edge */}
+        <img src="/images/manuscript_transparent.png" alt="Decorative Resource Manuscript" className="resources-palm-right object-contain" aria-hidden="true" style={{ width: '200px', height: '200px', zIndex: 2, opacity: 0.85 }} />
+
+        <div className="container mx-auto px-6 max-w-5xl" style={{ position: 'relative', zIndex: 3 }}>
+          <motion.div className="flex items-center justify-center gap-3 mb-8" initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <div className="resources-divider-line" />
+            <div className="resources-divider-diamond" />
+            <p className="home-section-label font-bold" style={{ color: '#2A0E00', letterSpacing: '0.25em' }}>
+              {t('கூடுதல் வளங்கள்', 'ADDITIONAL RESOURCES')}
             </p>
-            <div className="ornamental-divider mt-4 max-w-xs mx-auto" />
+            <div className="resources-divider-diamond" />
+            <div className="resources-divider-line" />
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Calendar PDF */}
             <motion.a
               href="https://suvadi.cict.in/asp/pdf/cyclic_list_of_tamilyears.pdf"
@@ -579,19 +609,22 @@ const Home = () => {
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="group home-resource-card home-resource-card-gold flex items-center gap-6 p-8"
+              className="group home-resource-card flex items-center gap-5 p-6"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-gold/0 to-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
-              <div className="home-resource-icon home-resource-icon-gold relative">📅</div>
-              <div className="flex-1 relative">
-                <h3 className="tamil-heading text-xl text-maroon mb-1 group-hover:text-gold transition-colors">
+              <div className="home-resource-icon home-resource-icon-gold">
+                <svg className="w-7 h-7" fill="#C9973B" viewBox="0 0 24 24">
+                  <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-4 6h6v2H8v-2zm0-4h6v2H8V11z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-maroon text-lg mb-0.5" style={{ fontFamily: '"Baloo Thambi 2", sans-serif' }}>
                   {t('தமிழ் அறுபதாண்டுச் சுழற்சி அட்டவணை', 'Tamil 60-Year Cycle Chart')}
                 </h3>
-                <p className="tamil-text text-stone/40 text-xs font-bold uppercase tracking-widest">
-                  {t('பதிவிறக்கம் (PDF)', 'Download PDF Resources')}
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#7A4510' }}>
+                  {t('பதிவிறக்கம் (PDF)', 'DOWNLOAD PDF RESOURCES')}
                 </p>
               </div>
-              <span className="text-gold text-2xl flex-shrink-0 group-hover:translate-x-2 transition-transform duration-300">→</span>
+              <span className="text-maroon/60 text-xl group-hover:translate-x-1 transition-transform duration-300">→</span>
             </motion.a>
 
             {/* Feedback */}
@@ -602,19 +635,25 @@ const Home = () => {
             >
               <Link
                 to="/feedback"
-                className="group home-resource-card home-resource-card-maroon flex items-center gap-6 block h-full p-8"
+                className="group home-resource-card flex items-center gap-5 h-full p-6"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-maroon/0 to-maroon/4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
-                <div className="home-resource-icon home-resource-icon-maroon relative">💬</div>
-                <div className="flex-1 relative">
-                  <h3 className="tamil-heading text-xl text-maroon mb-1 group-hover:text-gold transition-colors">
+                <div className="home-resource-icon home-resource-icon-maroon">
+                  <svg className="w-7 h-7" fill="#6B2FA0" viewBox="0 0 24 24">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
+                    <circle cx="8" cy="10" r="1.2" fill="#6B2FA0" />
+                    <circle cx="12" cy="10" r="1.2" fill="#6B2FA0" />
+                    <circle cx="16" cy="10" r="1.2" fill="#6B2FA0" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-maroon text-lg mb-0.5" style={{ fontFamily: '"Baloo Thambi 2", sans-serif' }}>
                     {t('கருத்துக்கள் - பதிவு', 'Feedback / Remarks')}
                   </h3>
-                  <p className="tamil-text text-stone/40 text-xs font-bold uppercase tracking-widest">
-                    {t('உங்கள் கருத்துக்களைப் பகிரவும்', 'Share your scholarly feedback')}
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#7A4510' }}>
+                    {t('உங்கள் கருத்துக்களைப் பகிரவும்', 'SHARE YOUR SCHOLARLY FEEDBACK')}
                   </p>
                 </div>
-                <span className="text-maroon text-2xl flex-shrink-0 group-hover:translate-x-2 transition-transform duration-300">→</span>
+                <span className="text-maroon/60 text-xl group-hover:translate-x-1 transition-transform duration-300">→</span>
               </Link>
             </motion.div>
           </div>
@@ -622,6 +661,7 @@ const Home = () => {
       </section>
 
     </div>
+
   );
 };
 
