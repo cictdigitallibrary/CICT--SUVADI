@@ -520,10 +520,10 @@ const Home = () => {
           <div className="absolute right-0 top-0 h-full w-[3px] bg-gradient-to-b from-transparent via-gold/25 to-transparent" style={{ zIndex: 3 }} />
 
           {/* Palm-leaf bundle — bottom left */}
-          <img src="/images/manuscript_transparent.png" alt="Decorative Manuscript" className="home-ebooks-palm-left object-contain" aria-hidden="true" style={{ width: '260px', height: '160px', opacity: 0.9 }} />
+          <img src="/images/palm_manuscript.png" alt="Decorative Manuscript" className="home-ebooks-palm-left object-contain" aria-hidden="true" />
 
           {/* Palm-leaf bundle — bottom right (mirrored) */}
-          <img src="/images/manuscript_transparent.png" alt="Decorative Manuscript" className="home-ebooks-palm-right object-contain" aria-hidden="true" style={{ width: '260px', height: '160px', opacity: 0.9 }} />
+          <img src="/images/palm_manuscript.png" alt="Decorative Manuscript" className="home-ebooks-palm-right object-contain" aria-hidden="true" />
 
           <div className="container mx-auto px-6 max-w-6xl" style={{ position: 'relative', zIndex: 4 }}>
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
@@ -583,11 +583,6 @@ const Home = () => {
           SECTION 6 ▸ RESOURCES & FEEDBACK
       ══════════════════════════════════════════ */}
       <section className="home-resources-section relative">
-        {/* Palm-leaf bundle — left edge */}
-        <img src="/images/manuscript_transparent.png" alt="Decorative Resource Manuscript" className="resources-palm-left object-contain" aria-hidden="true" style={{ width: '200px', height: '200px', zIndex: 2, opacity: 0.85 }} />
-
-        {/* Palm-leaf bundle — right edge */}
-        <img src="/images/manuscript_transparent.png" alt="Decorative Resource Manuscript" className="resources-palm-right object-contain" aria-hidden="true" style={{ width: '200px', height: '200px', zIndex: 2, opacity: 0.85 }} />
 
         <div className="container mx-auto px-6 max-w-5xl" style={{ position: 'relative', zIndex: 3 }}>
           <motion.div className="flex items-center justify-center gap-3 mb-8" initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>

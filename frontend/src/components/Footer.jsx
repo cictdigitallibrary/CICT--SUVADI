@@ -11,9 +11,9 @@ const Footer = () => {
       <div className="absolute top-0 left-0 w-full h-[3px]"
         style={{ background: 'linear-gradient(90deg, transparent 0%, #C9973B 25%, #E8B86D 50%, #C9973B 75%, transparent 100%)' }} />
 
-      {/* Realistic Manuscript Bundle — right side, behind content */}
-      <div className="absolute bottom-0 right-0 pointer-events-none select-none flex items-end justify-end" style={{ zIndex: 1, padding: '1rem', right: '2rem', bottom: '1rem' }}>
-        <img src="/images/manuscript_transparent.png" alt="Decorative Footer Manuscript" aria-hidden="true" style={{ width: '300px', height: 'auto', opacity: 0.85, objectFit: 'contain' }} />
+      {/* Realistic Manuscript Bundle — right side, bottom corner */}
+      <div className="absolute bottom-[-20px] right-[-150px] pointer-events-none select-none" style={{ zIndex: 1, width: '400px' }}>
+        <img src="/images/palm_manuscript.png" alt="Decorative Footer Manuscript" aria-hidden="true" className="w-full h-auto object-contain" style={{ opacity: 0.9 }} />
       </div>
 
       <div className="footer-inner container mx-auto px-6" style={{ position: 'relative', zIndex: 2 }}>
