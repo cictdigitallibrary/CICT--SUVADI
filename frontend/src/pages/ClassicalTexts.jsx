@@ -13,30 +13,26 @@ const stagger = {
 
 const CornerOrnament = ({ position }) => {
   const styles = {
-    'top-left': { top: '6px', left: '6px' },
-    'top-right': { top: '6px', right: '6px', transform: 'scaleX(-1)' },
-    'bottom-left': { bottom: '6px', left: '6px', transform: 'scaleY(-1)' },
-    'bottom-right': { bottom: '6px', right: '6px', transform: 'scale(-1)' },
+    'top-left': { top: '8px', left: '8px' },
+    'top-right': { top: '8px', right: '8px', transform: 'scaleX(-1)' },
+    'bottom-left': { bottom: '8px', left: '8px', transform: 'scaleY(-1)' },
+    'bottom-right': { bottom: '8px', right: '8px', transform: 'scale(-1)' },
   };
   return (
-    <svg
-      className="absolute pointer-events-none select-none"
-      style={{ width: '14px', height: '14px', ...styles[position] }}
-      viewBox="0 0 14 14"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M14 1H1V14" stroke="#C9973B" strokeWidth="1.2" opacity="0.4" />
-      <rect x="2" y="2" width="2" height="2" fill="#C9973B" opacity="0.6" />
-    </svg>
+    <img
+      src="/images/gold_corner.png"
+      alt="corner ornament"
+      className="absolute pointer-events-none select-none w-16 h-16 opacity-100 contrast-125"
+      style={styles[position]}
+    />
   );
 };
 
-const MandalaBackground = ({ className, style }) => (
+const PandyaCorner = ({ className, style }) => (
   <img
-    src="/images/mandala_corner.png"
-    alt="mandala decoration"
-    className={`absolute pointer-events-none select-none w-80 h-80 opacity-[0.06] ${className}`}
+    src="/images/pandya_corner.png"
+    alt="pandya corner decoration"
+    className={`absolute pointer-events-none select-none w-[320px] h-[320px] opacity-100 drop-shadow-md ${className}`}
     style={style}
   />
 );
@@ -44,7 +40,7 @@ const MandalaBackground = ({ className, style }) => (
 const FloatingGlyphs = () => {
   const glyphs = ['a', 'i', 'u', 'e', 'ai'];
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0 opacity-[0.015]">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0 opacity-10 mix-blend-multiply">
       {glyphs.map((g, i) => (
         <img
           key={i}
@@ -66,7 +62,7 @@ const TitleFlourishLeft = () => (
   <img
     src="/images/gold_flourish_left.png"
     alt="flourish"
-    className="w-12 h-auto object-contain inline-block align-middle mr-3 opacity-80"
+    className="w-12 h-auto object-contain inline-block align-middle mr-3 opacity-100 contrast-125"
   />
 );
 
@@ -74,7 +70,7 @@ const TitleFlourishRight = () => (
   <img
     src="/images/gold_flourish_right.png"
     alt="flourish"
-    className="w-12 h-auto object-contain inline-block align-middle ml-3 opacity-80"
+    className="w-12 h-auto object-contain inline-block align-middle ml-3 opacity-100 contrast-125"
   />
 );
 
@@ -98,7 +94,7 @@ const ClassicalTexts = () => {
       <header className="relative pt-44 pb-28 overflow-hidden selection:bg-white selection:text-maroon">
         {/* Background gradient */}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #1A0303 0%, #3D0707 40%, #5C1A08 75%, #1A0303 100%)' }} />
-        
+
         {/* Glow orb */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] rounded-full opacity-[0.06]"
           style={{ background: 'radial-gradient(ellipse, #C9973B 0%, transparent 70%)', filter: 'blur(60px)' }} />
@@ -175,19 +171,23 @@ const ClassicalTexts = () => {
       </header>
 
       {/* ── Authority Archive Section ── */}
-      <section className="relative py-24 overflow-hidden border-b border-gold/20" style={{ background: 'url(/images/parchment_bg.png) repeat', backgroundSize: 'cover' }}>
-        {/* Corner Mandalas */}
-        <MandalaBackground className="top-[-120px] left-[-120px]" />
-        <MandalaBackground className="top-[-120px] right-[-120px]" style={{ transform: 'scaleX(-1)' }} />
-        <MandalaBackground className="bottom-[-120px] left-[-120px]" style={{ transform: 'scaleY(-1)' }} />
-        <MandalaBackground className="bottom-[-120px] right-[-120px]" style={{ transform: 'scale(-1)' }} />
+      <section className="relative py-16 overflow-hidden bg-[#FFF8F0]" style={{ backgroundImage: 'url(/images/parchment_bg.png)', backgroundRepeat: 'repeat' }}>
+        {/* Pandya Corner Ornaments */}
+        <PandyaCorner className="top-0 left-0" />
+        <PandyaCorner className="top-0 right-0" style={{ transform: 'scaleX(-1)' }} />
+        <PandyaCorner className="bottom-0 left-0" style={{ transform: 'scaleY(-1)' }} />
+        <PandyaCorner className="bottom-0 right-0" style={{ transform: 'scale(-1)' }} />
 
         {/* Faint Floating Glyphs */}
         <FloatingGlyphs />
 
         <div className="container mx-auto px-6 max-w-6xl relative z-10">
-          <div className="flex items-center justify-between mb-12 border-b border-gold/20 pb-4 relative z-10">
+          <div className="flex items-center justify-between mb-8 relative z-10">
             <div className="flex-1 text-center">
+              {/* Golden divider line ornament above */}
+              <div className="flex justify-center mb-4">
+                <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-100 contrast-125" />
+              </div>
               <div className="flex items-center justify-center gap-1">
                 <TitleFlourishLeft />
                 <h2 className="font-cinzel text-3xl md:text-4xl text-maroon font-bold tracking-wider">
@@ -195,17 +195,17 @@ const ClassicalTexts = () => {
                 </h2>
                 <TitleFlourishRight />
               </div>
-              
+
               {/* Golden divider line ornament */}
-              <div className="flex justify-center my-3">
-                <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-70" />
+              <div className="flex justify-center my-4">
+                <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-100 contrast-125" />
               </div>
-              
+
               <p className="tamil-body text-stone/50 text-sm italic font-medium mt-2">
                 {t('Explore the foundational works of Classical Tamil literature.', 'Explore the foundational works of Classical Tamil literature.')}
               </p>
             </div>
-            
+
             <div className="absolute right-0 bottom-4 text-[10px] font-cinzel font-bold text-gold uppercase tracking-[0.3em] flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-gold"></span>
               {t('செவ்வியல் நூல்கள்', 'PRIMARY TEXTS')}
@@ -221,16 +221,12 @@ const ClassicalTexts = () => {
             </div>
           ) : (
             <div className="relative">
-              {/* Soft radial gold glow behind the card grid */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[80%] rounded-full pointer-events-none select-none opacity-20 z-0"
-                style={{ background: 'radial-gradient(circle, rgba(201,151,59,0.2) 0%, transparent 80%)', filter: 'blur(40px)' }} />
-
               <motion.div
                 variants={stagger}
                 initial="hidden"
                 whileInView="show"
                 viewport={{ once: true, amount: 0.1 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 relative z-10"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10"
               >
                 {texts.map((book, idx) => {
                   return (
@@ -249,7 +245,7 @@ const ClassicalTexts = () => {
                           }
                         })
                       }}
-                      className="group bg-[#FCFAF7] border border-[#D4B26F]/30 hover:border-gold/60 shadow-[0_8px_30px_rgba(26,3,3,0.03)] hover:shadow-[0_16px_40px_rgba(201,151,59,0.12)] transition-all duration-300 rounded-[18px] overflow-hidden flex flex-col h-full hover:-translate-y-2 relative"
+                      className="group bg-[#FFF8F0] border border-[#C9973B]/40 shadow-[0_4px_12px_-2px_rgba(60,20,5,0.08),_0_12px_32px_-4px_rgba(201,151,59,0.2)] hover:shadow-[0_8px_20px_-4px_rgba(60,20,5,0.12),_0_20px_45px_-8px_rgba(201,151,59,0.35)] transition-all duration-300 rounded-xl flex flex-col h-full hover:-translate-y-2 relative overflow-hidden"
                     >
                       {/* Corner Ornaments */}
                       <CornerOrnament position="top-left" />
@@ -259,7 +255,7 @@ const ClassicalTexts = () => {
 
                       {/* Book Cover */}
                       <div className="relative bg-transparent flex items-center justify-center p-8 overflow-hidden"
-                           style={{ height: 260 }}>
+                        style={{ height: 260 }}>
                         {book.cover_image ? (
                           <div className="h-full aspect-[3/4] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-transform duration-300 group-hover:scale-[1.04]">
                             <img
@@ -285,7 +281,7 @@ const ClassicalTexts = () => {
                               {book.title_english}
                             </p>
                           </div>
-                          
+
                           {/* Circular gold chevron button */}
                           <a href={`/search?book_id=${book.id}`} className="w-10 h-10 rounded-full border border-gold/45 group-hover:border-gold bg-transparent flex items-center justify-center text-gold transition-all duration-300 flex-shrink-0 group-hover:bg-gold/15 group-hover:scale-105">
                             <span className="text-[14px] font-bold transform transition-transform duration-300 group-hover:translate-x-0.5">❯</span>
