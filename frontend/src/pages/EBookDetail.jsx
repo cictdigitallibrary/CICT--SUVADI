@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen, FileText } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
+import { getBookCover } from '../utils/bookCovers';
 
 const API = 'http://localhost:3001';
 
@@ -128,7 +129,7 @@ const EBookDetail = () => {
                           {/* Front Cover */}
                           <div className="book-3d-cover absolute inset-0 z-20 bg-white shadow-[2px_2px_10px_rgba(0,0,0,0.3)] border border-black/5">
                             <img
-                              src={`${API}${book.cover_image}`}
+                              src={getBookCover(book)}
                               alt={edition.title_tamil}
                               className="w-full h-full object-fill"
                             />

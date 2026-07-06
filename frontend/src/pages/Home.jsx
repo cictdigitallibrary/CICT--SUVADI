@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useLanguage } from '../context/LanguageContext';
+import { getBookCover } from '../utils/bookCovers';
 
 const API = 'http://localhost:3001';
 
@@ -173,8 +174,13 @@ const Home = () => {
       ══════════════════════════════════════════ */}
       <section className="home-hero relative w-full flex flex-col items-center justify-center overflow-hidden min-h-screen">
 
-        {/* Generated manuscript artwork background */}
-        <div className="home-hero-artwork" />
+        {/* Manuscript artwork background — full-width img drives section height */}
+        <img
+          src="/images/bg/hero-wide-bg.png"
+          alt=""
+          aria-hidden="true"
+          className="home-hero-artwork"
+        />
         {/* Warm amber overlay */}
         <div className="home-hero-overlay" />
 
@@ -242,24 +248,28 @@ const Home = () => {
               </Link>
             </motion.div>
 
-            {/* Stats */}
-            {stats && (
-              <motion.div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 pt-10 border-t border-gold/20"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4, duration: 0.8 }}>
-                {[
-                  { val: stats.texts,      label: t('செவ்வியல் நூல்கள்', 'Works'),    icon: '📜' },
-                  { val: stats.manuscripts, label: t('சுவடி வகைகள்', 'Archives'),     icon: '🗂️' },
-                  { val: stats.songs > 999 ? Math.round(stats.songs / 1000) + 'k+' : stats.songs, label: t('சுவடி ஏடுகள்', 'Folios'), icon: '📚' },
-                ].map((s, i) => (
-                  <div key={i} className="home-stat-pill">
-                    <div className="home-stat-icon">{s.icon}</div>
-                    <StatItem val={s.val} label={s.label} />
-                  </div>
-                ))}
-              </motion.div>
-            )}
           </motion.div>
         </div>
+
+        {/* Stat cards — absolutely anchored to the hero bottom edge so they
+            straddle the hero / next-section boundary at any hero height */}
+        {stats && (
+          <motion.div
+            className="home-hero-stats"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4, duration: 0.8 }}>
+            {[
+              { val: stats.texts,       label: t('செவ்வியல் நூல்கள்', 'Works'),   icon: '📜' },
+              { val: stats.manuscripts, label: t('சுவடி வகைகள்', 'Archives'),     icon: '🗂️' },
+              { val: stats.songs > 999 ? Math.round(stats.songs / 1000) + 'k+' : stats.songs,
+                label: t('சுவடி ஏடுகள்', 'Folios'), icon: '📚' },
+            ].map((s, i) => (
+              <div key={i} className="home-stat-pill">
+                <div className="home-stat-icon">{s.icon}</div>
+                <StatItem val={s.val} label={s.label} />
+              </div>
+            ))}
+          </motion.div>
+        )}
 
         {/* Scroll indicator */}
         <div className="absolute bottom-10 left-0 w-full flex justify-center">
@@ -556,7 +566,7 @@ const Home = () => {
                       <div className="p-3">
                         <div className="aspect-[3/4] bg-white/5 flex items-center justify-center mb-3 overflow-hidden rounded-sm">
                           <img
-                            src={`${API}${book.cover_image}`}
+                            src={getBookCover(book)}
                             alt={book.title_tamil}
                             className="h-full w-full object-contain p-1 group-hover:scale-110 transition-transform duration-700"
                           />

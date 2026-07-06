@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
+import { getBookCover } from '../utils/bookCovers';
 
 const API = 'http://localhost:3001';
 
@@ -45,6 +46,10 @@ const EBooks = () => {
         )}
         badge={ebooks.length > 0 ? `${ebooks.length} ${t('நூல்கள்', 'Volumes Available')}` : undefined}
         glyphs={['முதல்', 'அச்சு', 'நூல்', 'பத்து', 'திரு', 'கலி']}
+        heroClass="ebooks-hero-bg"
+        headingStyle={{
+          fontSize: 'clamp(1.7rem, 4.8vw, 3.5rem)',
+        }}
       />
 
       <div className="container mx-auto px-6 max-w-6xl py-20">
@@ -151,9 +156,9 @@ const EBooks = () => {
                     {/* Cover */}
                     <div className="relative bg-maroon/[0.02] flex items-center justify-center overflow-hidden border-b border-maroon/5 group-hover:bg-ivory transition-colors duration-500"
                          style={{ height: 220 }}>
-                      {book.cover_image ? (
+                      {book.cover_image || getBookCover(book) ? (
                         <img
-                          src={`${API}${book.cover_image}`}
+                          src={getBookCover(book)}
                           alt={book.title_tamil}
                           className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-700 ease-out"
                         />

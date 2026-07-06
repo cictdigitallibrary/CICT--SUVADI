@@ -14,7 +14,7 @@ import { motion } from 'framer-motion';
  */
 const DEFAULT_GLYPHS = ['அ', 'ம்', 'ழ்', 'ல்', 'ர்', 'ஓம்'];
 
-const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, light = false }) => {
+const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, light = false, backgroundImage = null, heroClass = '', headingStyle = {} }) => {
   if (light) {
     return (
       <header className="relative pt-36 pb-16 overflow-hidden bg-ivory selection:bg-maroon selection:text-white">
@@ -46,40 +46,54 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
   }
 
   return (
-    <header className="relative pt-40 pb-24 overflow-hidden selection:bg-white selection:text-maroon">
-      {/* Background */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #1A0303 0%, #3D0707 40%, #5C1A08 75%, #1A0303 100%)' }} />
-      <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/dark-leather.png')" }} />
+    <header
+      className={`relative pt-40 pb-24 overflow-hidden selection:bg-white selection:text-maroon${heroClass ? ` ${heroClass}` : ''}`}
+      style={backgroundImage ? {
+        backgroundImage: `url('${backgroundImage}')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center 30%',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#1A0303',
+        minHeight: 'calc(100vw / 2.332)',
+      } : {}}
+    >
+      {/* Background elements — suppressed when a custom bg image or class is active */}
+      {!backgroundImage && !heroClass && (
+        <>
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #1A0303 0%, #3D0707 40%, #5C1A08 75%, #1A0303 100%)' }} />
+          <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/dark-leather.png')" }} />
 
-      {/* Glow orb */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] rounded-full opacity-[0.06]"
-        style={{ background: 'radial-gradient(ellipse, #C9973B 0%, transparent 70%)', filter: 'blur(60px)' }} />
+          {/* Glow orb */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] rounded-full opacity-[0.06]"
+            style={{ background: 'radial-gradient(ellipse, #C9973B 0%, transparent 70%)', filter: 'blur(60px)' }} />
 
-      {/* Rotating ring */}
-      <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/10"
-        style={{ width: '600px', height: '600px' }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
-      />
+          {/* Rotating ring */}
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/10"
+            style={{ width: '600px', height: '600px' }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
+          />
 
-      {/* Floating glyphs */}
-      {glyphs.map((g, i) => (
-        <motion.div
-          key={i}
-          className="absolute select-none pointer-events-none font-black text-gold/[0.04]"
-          style={{
-            left: `${5 + (i * 16) % 88}%`,
-            top: `${10 + (i * 23) % 75}%`,
-            fontSize: `${3 + (i % 3)}rem`,
-            fontFamily: '"Baloo Thambi 2", sans-serif',
-          }}
-          animate={{ y: [0, -14, 0], rotate: [0, i % 2 === 0 ? 4 : -4, 0] }}
-          transition={{ duration: 7 + i * 1.1, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }}
-        >
-          {g}
-        </motion.div>
-      ))}
+          {/* Floating glyphs */}
+          {glyphs.map((g, i) => (
+            <motion.div
+              key={i}
+              className="absolute select-none pointer-events-none font-black text-gold/[0.04]"
+              style={{
+                left: `${5 + (i * 16) % 88}%`,
+                top: `${10 + (i * 23) % 75}%`,
+                fontSize: `${3 + (i % 3)}rem`,
+                fontFamily: '"Baloo Thambi 2", sans-serif',
+              }}
+              animate={{ y: [0, -14, 0], rotate: [0, i % 2 === 0 ? 4 : -4, 0] }}
+              transition={{ duration: 7 + i * 1.1, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }}
+            >
+              {g}
+            </motion.div>
+          ))}
+        </>
+      )}
 
       {/* Bottom divider */}
       <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
@@ -100,7 +114,7 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
             </div>
           )}
 
-          <h1 className="tamil-heading text-white italic" style={{ fontSize: 'clamp(3rem, 8vw, 6rem)', textShadow: '0 0 60px rgba(201,151,59,0.12)' }}>
+          <h1 className="tamil-heading text-white italic" style={{ fontSize: 'clamp(3rem, 8vw, 6rem)', textShadow: '0 0 60px rgba(201,151,59,0.12)', ...headingStyle }}>
             {title}
           </h1>
 

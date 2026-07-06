@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import { getBookCover } from '../utils/bookCovers';
 
 const API = 'http://localhost:3001';
 
@@ -256,10 +257,10 @@ const ClassicalTexts = () => {
                       {/* Book Cover */}
                       <div className="relative bg-transparent flex items-center justify-center p-8 overflow-hidden"
                         style={{ height: 260 }}>
-                        {book.cover_image ? (
+                        {getBookCover(book) ? (
                           <div className="h-full aspect-[3/4] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-transform duration-300 group-hover:scale-[1.04]">
                             <img
-                              src={`${API}${book.cover_image}`}
+                              src={getBookCover(book)}
                               alt={book.title_tamil}
                               className="h-full w-full object-contain pointer-events-none"
                               onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📜</span>'; }}

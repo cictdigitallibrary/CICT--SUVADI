@@ -52,22 +52,32 @@ const StyledSelect = ({ value, onChange, disabled, children }) => (
   </div>
 );
 
+/* ─── Normalize raw DB text: <br> variants and escape sequences → \n */
+const normalizeText = (raw) =>
+  (raw || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/\\r\\n|\\n/g, '\n')
+    .replace(/\r\n|\r/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
 /* ─── Highlight matching text ─────────────────────────── */
 const HighlightText = ({ text, query }) => {
-  if (!query || !text) return <span dangerouslySetInnerHTML={{ __html: (text || '').replace(/<br\/>/g, ' ').replace(/\\r\\n/g, ' ') }} />;
+  const cleanText = normalizeText(text);
 
-  const cleanText = (text || '').replace(/<br\/>/g, ' ').replace(/\\r\\n/g, ' ').replace(/<[^>]+>/g, '');
+  if (!query) return <>{cleanText}</>;
+
   const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
   const parts = cleanText.split(regex);
 
   return (
-    <span>
+    <>
       {parts.map((part, i) =>
         regex.test(part)
           ? <mark key={i} className="bg-gold/25 text-maroon-dark rounded-[2px] px-0.5 font-black">{part}</mark>
           : <span key={i}>{part}</span>
       )}
-    </span>
+    </>
   );
 };
 
@@ -839,22 +849,19 @@ const ManuscriptSearch = () => {
 const SongCard = ({ res, i, t, compact, query, onOpen }) => {
   const [imgError, setImgError] = useState(false);
 
-  return (
-    <motion.div
-      variants={fadeUp}
-      className={`bg-white border border-maroon/10 rounded-sm shadow-md overflow-hidden group
-        hover:border-gold/30 hover:shadow-xl transition-all duration-400
-        ${compact ? 'flex flex-col h-full' : ''}`}
-    >
-      <div className={`grid ${compact ? 'grid-cols-1' : 'md:grid-cols-5'} h-full`}>
-
-        {/* Image pane */}
+  if (compact) {
+    /* ── Compact card (browse grid) — keeps existing horizontal-stack layout ── */
+    return (
+      <motion.div
+        variants={fadeUp}
+        className="bg-white border border-maroon/10 rounded-sm shadow-md overflow-hidden group
+          hover:border-gold/30 hover:shadow-xl transition-all duration-400 flex flex-col h-full"
+      >
+        {/* Image */}
         <div
           onClick={() => onOpen(res)}
-          className={`relative bg-stone/3 flex items-center justify-center overflow-hidden
-            cursor-zoom-in border-b md:border-b-0 md:border-r border-maroon/8
-            group-hover:bg-ivory transition-colors duration-400
-            ${compact ? 'h-40' : 'md:col-span-2 min-h-56'}`}
+          className="relative bg-stone/3 flex items-center justify-center overflow-hidden
+            cursor-zoom-in border-b border-maroon/8 group-hover:bg-ivory transition-colors duration-400 h-40"
         >
           {res.image_url && !imgError ? (
             <>
@@ -880,70 +887,187 @@ const SongCard = ({ res, i, t, compact, query, onOpen }) => {
           )}
         </div>
 
-        {/* Text pane */}
-        <div className={`p-6 flex flex-col ${compact ? 'flex-1' : 'md:col-span-3'}`}>
-
-          {/* Card header */}
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex flex-col gap-0.5">
+        {/* Text */}
+        <div className="p-4 flex flex-col flex-1">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex flex-col gap-0.5 min-w-0">
               {res.book_name && (
-                <span className="tamil-label text-[10px] font-black text-maroon/70 uppercase tracking-widest group-hover:text-gold transition-colors">
+                <span className="tamil-label text-[10px] font-black text-maroon/70 uppercase tracking-widest truncate">
                   {res.book_name}
                 </span>
               )}
               {res.manuscript_name && (
-                <span className="tamil-text text-[11px] text-stone/40 font-bold">{res.manuscript_name}</span>
+                <span className="tamil-text text-[10px] text-stone/40 font-bold truncate">{res.manuscript_name}</span>
               )}
             </div>
-            <div className="shrink-0 bg-maroon text-gold px-2.5 py-1 text-[9px] font-black tracking-widest shadow rounded-sm">
-              {t('ஏடு', 'FOLIO')} #{res.page_number}
+            <div className="shrink-0 ml-2 bg-maroon text-gold px-2 py-0.5 text-[9px] font-black tracking-widest shadow rounded-sm">
+              #{res.page_number}
             </div>
           </div>
 
-          {/* Text content — highlight if query provided */}
           {res.text_content ? (
-            query ? (
-              <div
-                className={`tamil-heading text-maroon/85 font-serif leading-[2] group-hover:text-maroon transition-colors
-                  ${compact ? 'text-xs line-clamp-4' : 'text-lg'}`}
-                style={{ fontStyle: 'normal' }}
-              >
-                <HighlightText text={res.text_content} query={query} />
-              </div>
-            ) : (
-              <div
-                className={`tamil-heading text-maroon/85 font-serif leading-[2] group-hover:text-maroon transition-colors
-                  ${compact ? 'text-xs line-clamp-4' : 'text-lg'}`}
-                style={{ fontStyle: 'normal' }}
-                dangerouslySetInnerHTML={{
-                  __html: res.text_content.replace(/<br\/>/g, '<br/>').replace(/\\r\\n/g, ' ')
-                }}
-              />
-            )
+            <div
+              className="tamil-heading text-xs text-maroon/85 leading-[2] group-hover:text-maroon transition-colors line-clamp-4"
+              style={{ fontStyle: 'normal', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' }}
+            >
+              <HighlightText text={res.text_content} query={query} />
+            </div>
           ) : (
-            <p className="text-stone/30 italic text-sm">{t('படியெடுக்கப்படவில்லை', 'Transcription pending')}</p>
+            <p className="text-stone/30 italic text-xs">{t('படியெடுக்கப்படவில்லை', 'Transcription pending')}</p>
           )}
 
-          {/* Card footer */}
-          <div className="mt-auto pt-4 border-t border-maroon/5 flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
+          <div className="mt-auto pt-3 border-t border-maroon/5 flex items-center justify-between">
+            <div className="flex items-center gap-1">
               <div className="w-1 h-1 rounded-full bg-gold/60" />
-              <span className="font-cinzel text-[9px] text-stone/35 font-bold uppercase tracking-widest">
-                {t('ஓலைச்சுவடிப் படிமம்', 'PALM LEAF FRAGMENT')}
+              <span className="font-cinzel text-[8px] text-stone/30 font-bold uppercase tracking-widest">
+                {t('ஓலைச்சுவடி', 'PALM LEAF')}
               </span>
             </div>
             {res.image_url && !imgError && (
-              <a
-                href={`${API}${res.image_url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="tamil-label text-gold text-[10px] font-black hover:text-maroon transition-colors
-                  uppercase tracking-[0.1em] border-b border-gold/30 pb-0.5"
-              >
+              <a href={`${API}${res.image_url}`} target="_blank" rel="noopener noreferrer"
+                className="tamil-label text-gold text-[9px] font-black hover:text-maroon transition-colors uppercase tracking-wider border-b border-gold/30 pb-0.5">
                 {t('முழு படிமம்', 'FULL SCAN')} ↗
               </a>
             )}
           </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  /* ── Full card (search results) — image on top, text below ── */
+  return (
+    <motion.div
+      variants={fadeUp}
+      className="bg-white border border-maroon/10 rounded-sm shadow-md overflow-hidden group
+        hover:border-gold/30 hover:shadow-xl transition-all duration-400"
+    >
+      {/* Palm-leaf image — full width, on top */}
+      <div
+        onClick={() => onOpen(res)}
+        className="relative bg-stone/3 flex items-center justify-center overflow-hidden
+          cursor-zoom-in border-b border-maroon/8 group-hover:bg-ivory transition-colors duration-400"
+        style={{ height: '220px' }}
+      >
+        {res.image_url && !imgError ? (
+          <>
+            <img
+              src={`${API}${res.image_url}`}
+              alt={`Folio ${res.page_number}`}
+              className="w-full h-full object-contain p-4 group-hover:scale-[1.03] transition-transform duration-700 ease-out"
+              onError={() => setImgError(true)}
+            />
+            <div className="absolute inset-0 bg-maroon/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <div className="bg-white/10 backdrop-blur-sm rounded-full p-3 border border-white/20">
+                <Maximize className="text-white w-5 h-5" />
+              </div>
+            </div>
+            {/* Folio badge overlaid on image */}
+            <div className="absolute top-3 right-3 bg-maroon text-gold px-2.5 py-1 text-[9px] font-black tracking-widest shadow-lg rounded-sm z-10">
+              {t('ஏடு', 'FOLIO')} #{res.page_number}
+            </div>
+          </>
+        ) : (
+          <div className="text-center p-8 opacity-20">
+            <div className="text-5xl mb-2">📜</div>
+            <p className="font-cinzel text-[9px] uppercase tracking-widest font-bold">
+              {t('சுவடிப் பக்கம்', 'PAGE IMAGE')}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Description — below image */}
+      <div className="px-6 pt-5 pb-6 flex flex-col">
+
+        {/* Header: book / manuscript labels */}
+        <div className="flex items-start justify-between mb-5">
+          <div className="flex flex-col gap-0.5">
+            {res.book_name && (
+              <span className="tamil-label text-[10px] font-black text-maroon/70 uppercase tracking-widest group-hover:text-gold transition-colors">
+                {res.book_name}
+              </span>
+            )}
+            {res.manuscript_name && (
+              <span className="tamil-text text-[11px] text-stone/40 font-bold">{res.manuscript_name}</span>
+            )}
+          </div>
+          {/* Folio badge only when there is no image (image pane already shows it) */}
+          {(!res.image_url || imgError) && (
+            <div className="shrink-0 bg-maroon text-gold px-2.5 py-1 text-[9px] font-black tracking-widest shadow rounded-sm">
+              {t('ஏடு', 'FOLIO')} #{res.page_number}
+            </div>
+          )}
+        </div>
+
+        {/* ── Manuscript reading container ── */}
+        {res.text_content ? (
+          <div className="mx-auto w-full max-w-[780px]">
+
+            {/* Decorative top rule */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/30" />
+              <span className="text-gold/50 text-[11px] select-none leading-none">✦</span>
+              <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/30" />
+            </div>
+
+            {/* Parchment reader box */}
+            <div
+              className="rounded-sm border border-maroon/10 px-8 py-7 sm:px-10 sm:py-8"
+              style={{
+                background: '#faf8f2',
+                boxShadow: 'inset 0 1px 4px rgba(80,30,10,0.05), 0 2px 12px rgba(80,30,10,0.06)',
+              }}
+            >
+              <div
+                className="tamil-heading text-maroon/85 group-hover:text-maroon transition-colors"
+                style={{
+                  fontStyle: 'normal',
+                  fontSize: '1.0625rem',
+                  lineHeight: 1.65,
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
+                  textAlign: 'left',
+                }}
+              >
+                <HighlightText text={res.text_content} query={query} />
+              </div>
+            </div>
+
+            {/* Decorative bottom rule */}
+            <div className="flex items-center gap-3 mt-4">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent to-gold/20" />
+              <span className="text-gold/35 text-[11px] select-none leading-none">✦</span>
+              <div className="h-px flex-1 bg-gradient-to-l from-transparent to-gold/20" />
+            </div>
+
+          </div>
+        ) : (
+          <p className="text-stone/30 italic text-sm text-center">
+            {t('படியெடுக்கப்படவில்லை', 'Transcription pending')}
+          </p>
+        )}
+
+        {/* Card footer */}
+        <div className="mt-6 pt-4 border-t border-maroon/5 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1 h-1 rounded-full bg-gold/60" />
+            <span className="font-cinzel text-[9px] text-stone/35 font-bold uppercase tracking-widest">
+              {t('ஓலைச்சுவடிப் படிமம்', 'PALM LEAF FRAGMENT')}
+            </span>
+          </div>
+          {res.image_url && !imgError && (
+            <a
+              href={`${API}${res.image_url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tamil-label text-gold text-[10px] font-black hover:text-maroon transition-colors
+                uppercase tracking-[0.1em] border-b border-gold/30 pb-0.5"
+            >
+              {t('முழு படிமம்', 'FULL SCAN')} ↗
+            </a>
+          )}
         </div>
       </div>
     </motion.div>
