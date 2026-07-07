@@ -1111,3 +1111,21 @@ footer.bg-stone > div { position: relative; z-index: 2; }
   background: #FFFEFB;
   box-shadow: 0 0 0 3px rgba(201,151,59,0.14);
 }
+
+/* ════════════════════════════════════════════════════════
+   MANUSCRIPT SEARCH PAGE — hero redesign
+   Background: search-hero.png (bound manuscript + floral vine)
+   Content is left-anchored to clear the manuscript artwork on the right.
+════════════════════════════════════════════════════════ */
+.search-hero-bg {
+  background-position: center 40% !important;
+  min-height: clamp(420px, calc(100vw / 1.95), 620px) !important;
+  background-color: #23090A !important;
+}
+.search-hero-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, rgba(15,3,1,0.55) 0%, rgba(20,5,2,0.30) 30%, rgba(20,5,2,0.08) 52%, transparent 65%);
+}

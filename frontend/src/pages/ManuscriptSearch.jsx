@@ -280,6 +280,10 @@ const ManuscriptSearch = () => {
           'Search by poem number or explore literary themes through keyword queries across digitised palm-leaf manuscripts.'
         )}
         glyphs={['சுவடி', 'ஏடு', 'பாடல்', 'மூலம்', 'தேடல்', 'ஆய்வு']}
+        backgroundImage="/images/bg/search-hero.png"
+        heroClass="search-hero-bg"
+        align="left"
+        headingStyle={{ fontSize: 'clamp(2.1rem, 5.4vw, 4.2rem)' }}
       />
 
       <div className="container mx-auto px-4 sm:px-6 max-w-6xl py-10">
