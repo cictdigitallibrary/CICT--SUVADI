@@ -5,8 +5,8 @@ import {
   Plus, Edit, Trash2, Save, X, Book, Layers, FileText, Users,
   ChevronRight, LayoutDashboard, Search, Mail, UserCheck,
   BookOpen, MessageSquare, Eye, RefreshCw, TrendingUp, Database,
-  Scroll, Shield, ChevronDown, ChevronUp, RotateCcw, AlertTriangle,
-  ExternalLink, Image, FileIcon, Info,
+  Scroll, Shield, ChevronDown, ChevronUp, RotateCcw,
+  ExternalLink, FileIcon, Info,
 } from 'lucide-react';
 
 const API = 'http://localhost:3001/api/admin';
@@ -624,9 +624,7 @@ const AdminPortal = () => {
                       </>}
                       {/* Manuscripts */}
                       {activeTab === 'songs' && <>
-                        <Th>Image</Th>
                         <Th>Folio</Th>
-                        <Th>Image File</Th>
                         <Th>Transcription / சுவடி வரி</Th>
                         <Th>Author</Th>
                         <Th>Sub-Category</Th>
@@ -686,40 +684,7 @@ const AdminPortal = () => {
                               {/* Manuscripts */}
                               {activeTab === 'songs' && <>
                                 <Td>
-                                  {item.is_missing ? (
-                                    <div style={{ width: 48, height: 64 }}
-                                      className="rounded border border-red-200 bg-red-50/40 flex flex-col items-center justify-center gap-0.5">
-                                      <AlertTriangle className="w-3 h-3 text-red-400" />
-                                      <span className="text-[6px] text-red-400 font-bold text-center px-0.5 leading-tight">Missing</span>
-                                    </div>
-                                  ) : (
-                                    <a href={BASE + item.image_url} target="_blank" rel="noopener noreferrer">
-                                      <img src={BASE + item.image_url} alt={`F${item.fid}`}
-                                        style={{ width: 48, height: 64, objectFit: 'cover' }}
-                                        className="rounded border border-stone/15 hover:scale-150 transition-transform cursor-zoom-in shadow-sm"
-                                      />
-                                    </a>
-                                  )}
-                                </Td>
-                                <Td>
                                   <span className="font-cinzel font-black text-maroon">F{item.fid}</span>
-                                </Td>
-                                <Td>
-                                  <div>
-                                    {item.is_missing ? (
-                                      <div>
-                                        <span className="text-[10px] font-mono text-stone/40">{item.actual_filename || item.fname || '—'}</span>
-                                        <div className="text-[8px] text-red-400 flex items-center gap-1 mt-0.5 font-bold">
-                                          <div className="w-1 h-1 rounded-full bg-red-400" /> Missing local file
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <a href={BASE + item.image_url} target="_blank" rel="noopener noreferrer"
-                                        className="text-[10px] font-mono text-blue-500 hover:underline break-all">
-                                        {item.actual_filename}
-                                      </a>
-                                    )}
-                                  </div>
                                 </Td>
                                 <Td>
                                   <span className="tamil-text text-[11px] text-stone/50 max-w-[200px] truncate block"
