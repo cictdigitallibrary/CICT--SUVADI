@@ -1050,3 +1050,64 @@ footer.bg-stone > div { position: relative; z-index: 2; }
   writing-mode: vertical-rl;
   text-orientation: mixed;
 }
+
+/* ════════════════════════════════════════════════════════
+   CONTACT PAGE — Heritage redesign
+   Background: Contact.png (bound manuscript + floral vine)
+════════════════════════════════════════════════════════ */
+.contact-hero-bg {
+  background-position: center 42% !important;
+  min-height: clamp(440px, calc(100vw / 1.95), 660px) !important;
+  background-color: #2A0D04 !important;
+}
+.contact-hero-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(14,3,1,0.58) 0%, rgba(30,10,4,0.18) 32%, rgba(30,10,4,0.28) 68%, rgba(10,2,1,0.62) 100%);
+}
+
+/* Corner floral ornaments — cropped from contact-floral-corner.png, mirrored for symmetry */
+.contact-floral-deco {
+  position: absolute;
+  width: clamp(140px, 16vw, 260px);
+  height: auto;
+  opacity: 0.12;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.contact-floral-tl { top: -1.5rem;   left: -1.5rem;   }
+.contact-floral-tr { top: -1.5rem;   right: -1.5rem;  transform: scaleX(-1); }
+.contact-floral-bl { bottom: -1.5rem; left: -1.5rem;  transform: scaleY(-1); }
+.contact-floral-br { bottom: -1.5rem; right: -1.5rem; transform: scale(-1, -1); }
+
+.contact-card {
+  background: linear-gradient(160deg, #FFFEFB 0%, #FDF8ED 100%);
+  border: 1px solid rgba(201,151,59,0.28);
+  border-radius: 16px;
+  box-shadow: 0 6px 28px rgba(92,10,10,0.08), 0 1px 3px rgba(92,10,10,0.05);
+  transition: box-shadow 0.4s ease, transform 0.4s ease, border-color 0.4s ease;
+}
+.contact-card:hover {
+  box-shadow: 0 16px 44px rgba(92,10,10,0.14), 0 2px 8px rgba(201,151,59,0.12);
+  border-color: rgba(201,151,59,0.55);
+}
+.contact-form-panel {
+  background: linear-gradient(160deg, #FFFEFB 0%, #FDF8ED 100%);
+  border: 1px solid rgba(201,151,59,0.28);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(92,10,10,0.10), 0 2px 10px rgba(92,10,10,0.05);
+}
+.contact-input {
+  background: #FBF6EA;
+  border: 1px solid rgba(92,10,10,0.12);
+  border-radius: 10px;
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+.contact-input:focus {
+  border-color: #C9973B;
+  background: #FFFEFB;
+  box-shadow: 0 0 0 3px rgba(201,151,59,0.14);
+}

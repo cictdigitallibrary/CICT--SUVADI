@@ -52,11 +52,23 @@ const Contact = () => {
           'For scholarly inquiries, manuscript access requests, or collaborative research agendas, please reach out to our team.'
         )}
         glyphs={['தொ', 'ட', 'ர்', 'பு', 'அணு', 'கல்']}
+        backgroundImage="/images/bg/Contact.png"
+        heroClass="contact-hero-bg"
       />
 
-      <div className="container mx-auto px-6 max-w-6xl py-20">
+      <div className="container mx-auto px-6 max-w-6xl py-20 relative">
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        {/* Corner floral ornaments — subtle heritage framing */}
+        <img src="/images/bg/contact-floral-corner.png" alt="" aria-hidden="true"
+          className="contact-floral-deco contact-floral-tl hidden md:block" />
+        <img src="/images/bg/contact-floral-corner.png" alt="" aria-hidden="true"
+          className="contact-floral-deco contact-floral-tr hidden md:block" />
+        <img src="/images/bg/contact-floral-corner.png" alt="" aria-hidden="true"
+          className="contact-floral-deco contact-floral-bl hidden md:block" />
+        <img src="/images/bg/contact-floral-corner.png" alt="" aria-hidden="true"
+          className="contact-floral-deco contact-floral-br hidden md:block" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start relative z-10">
 
           {/* ── Left: Contact Info ── */}
           <motion.div
@@ -78,10 +90,10 @@ const Contact = () => {
                     href={item.href}
                     target={item.external ? '_blank' : undefined}
                     rel={item.external ? 'noopener noreferrer' : undefined}
-                    className="group flex items-center gap-6 bg-white border border-maroon/10 p-6 shadow hover:shadow-xl hover:-translate-y-1 hover:border-gold/30 transition-all duration-400 relative overflow-hidden block"
+                    className="contact-card group flex items-center gap-6 p-6 hover:-translate-y-1 relative overflow-hidden block"
                   >
-                    <div className="absolute top-0 left-0 w-0 group-hover:w-full h-[3px] bg-gradient-to-r from-maroon to-gold transition-all duration-700" />
-                    <div className="w-12 h-12 flex-shrink-0 bg-maroon/5 flex items-center justify-center text-2xl group-hover:bg-gold/10 transition-colors duration-300">
+                    <div className="absolute top-0 left-0 w-0 group-hover:w-full h-[3px] bg-gradient-to-r from-maroon to-gold transition-all duration-700 rounded-t-2xl" />
+                    <div className="w-12 h-12 flex-shrink-0 rounded-full bg-maroon/5 flex items-center justify-center text-2xl group-hover:bg-gold/10 transition-colors duration-300">
                       {item.icon}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -92,9 +104,9 @@ const Contact = () => {
                     <span className="text-gold text-lg flex-shrink-0 group-hover:translate-x-1 transition-transform duration-300">→</span>
                   </a>
                 ) : (
-                  <div className="group flex items-center gap-6 bg-white border border-maroon/10 p-6 shadow relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
-                    <div className="w-12 h-12 flex-shrink-0 bg-maroon/5 flex items-center justify-center text-2xl">
+                  <div className="contact-card group flex items-center gap-6 p-6 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-transparent via-gold/25 to-transparent rounded-t-2xl" />
+                    <div className="w-12 h-12 flex-shrink-0 rounded-full bg-maroon/5 flex items-center justify-center text-2xl">
                       {item.icon}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -115,10 +127,10 @@ const Contact = () => {
             >
               <Link
                 to="/feedback"
-                className="group flex items-center gap-5 bg-maroon border-l-4 border-gold p-6 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-400 relative overflow-hidden block"
+                className="group flex items-center gap-5 bg-maroon rounded-2xl border-l-4 border-gold p-6 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-400 relative overflow-hidden block"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
-                <div className="w-12 h-12 flex-shrink-0 bg-gold/10 flex items-center justify-center text-2xl group-hover:bg-gold/20 transition-colors">
+                <div className="w-12 h-12 flex-shrink-0 rounded-full bg-gold/10 flex items-center justify-center text-2xl group-hover:bg-gold/20 transition-colors">
                   💬
                 </div>
                 <div className="flex-1 relative">
@@ -137,10 +149,10 @@ const Contact = () => {
             initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="bg-white border border-maroon/10 shadow-2xl relative overflow-hidden"
+            className="contact-form-panel relative overflow-hidden"
           >
             {/* Top gold bar */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-maroon via-gold to-maroon" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-maroon via-gold to-maroon rounded-t-[20px]" />
 
             {/* Corner flourish */}
             <div className="absolute top-6 right-6 text-5xl text-maroon/[0.04] select-none font-serif">✉</div>
@@ -166,7 +178,7 @@ const Contact = () => {
                     </div>
                     <button
                       onClick={() => { setStatus('idle'); setFormData({ name: '', email: '', subject: '', message: '' }); }}
-                      className="px-8 py-3 border-2 border-maroon text-maroon text-xs font-black uppercase tracking-widest hover:bg-maroon hover:text-gold transition-all duration-300"
+                      className="px-8 py-3 rounded-xl border-2 border-maroon text-maroon text-xs font-black uppercase tracking-widest hover:bg-maroon hover:text-gold transition-all duration-300"
                     >
                       {t('மீண்டும் அனுப்ப', 'Send Another')}
                     </button>
@@ -199,7 +211,7 @@ const Contact = () => {
                           required
                           value={formData.name}
                           onChange={e => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full bg-ivory border border-maroon/10 p-4 outline-none focus:border-gold focus:bg-white transition-all duration-200 tamil-text text-sm font-bold"
+                          className="contact-input w-full p-4 outline-none tamil-text text-sm font-bold"
                         />
                       </div>
                       <div className="space-y-2 group">
@@ -212,7 +224,7 @@ const Contact = () => {
                           required
                           value={formData.email}
                           onChange={e => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full bg-ivory border border-maroon/10 p-4 outline-none focus:border-gold focus:bg-white transition-all duration-200 tamil-text text-sm font-bold"
+                          className="contact-input w-full p-4 outline-none tamil-text text-sm font-bold"
                         />
                       </div>
                     </div>
@@ -226,7 +238,7 @@ const Contact = () => {
                         type="text"
                         value={formData.subject}
                         onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                        className="w-full bg-ivory border border-maroon/10 p-4 outline-none focus:border-gold focus:bg-white transition-all duration-200 tamil-text text-sm font-bold"
+                        className="contact-input w-full p-4 outline-none tamil-text text-sm font-bold"
                       />
                     </div>
 
@@ -240,12 +252,12 @@ const Contact = () => {
                         required
                         value={formData.message}
                         onChange={e => setFormData({ ...formData, message: e.target.value })}
-                        className="w-full bg-ivory border border-maroon/10 p-4 outline-none focus:border-gold focus:bg-white transition-all duration-200 tamil-text text-sm font-bold resize-none"
+                        className="contact-input w-full p-4 outline-none tamil-text text-sm font-bold resize-none"
                       />
                     </div>
 
                     {status === 'error' && (
-                      <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold p-4 rounded">
+                      <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold p-4 rounded-xl">
                         ⚠️ {errorMsg}
                       </div>
                     )}
@@ -253,9 +265,9 @@ const Contact = () => {
                     <button
                       type="submit"
                       disabled={status === 'loading'}
-                      className="group w-full py-4 bg-maroon text-gold text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-maroon-dark hover:shadow-maroon/20 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                      className="group w-full py-4 bg-maroon text-gold text-xs font-black uppercase tracking-[0.2em] rounded-xl shadow-xl hover:bg-maroon-dark hover:shadow-maroon/20 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-gold/0 via-gold/10 to-gold/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gold/0 via-gold/10 to-gold/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                       <span className="relative tamil-label flex items-center justify-center gap-3">
                         {status === 'loading' ? (
                           <>
@@ -277,18 +289,13 @@ const Contact = () => {
 
 
         {/* ── Location visual ── */}
-        <div className="mt-24 bg-stone/5 border border-maroon/10 overflow-hidden relative group h-[360px]">
-          {/* Dot-grid background */}
-          <div className="absolute inset-0 opacity-[0.03]">
-            <div className="w-full h-full" style={{ backgroundImage: 'radial-gradient(#5C0A0A 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-          </div>
+        <div className="mt-24 bg-stone/5 rounded-2xl border border-gold/25 shadow-lg overflow-hidden relative group h-[360px] z-10">
+          {/* Real map — Central Institute of Classical Tamil (CICT), Perumbakkam, Chennai */}
+          <div className="absolute inset-0 bg-cover bg-center scale-100 group-hover:scale-105 transition-transform duration-[1200ms] ease-out"
+            style={{ backgroundImage: "url('/images/bg/contact-map.jpg')" }} />
 
-          {/* Grid lines */}
-          <div className="absolute inset-0 opacity-[0.04]"
-            style={{ backgroundImage: 'linear-gradient(#5C0A0A 1px, transparent 1px), linear-gradient(90deg, #5C0A0A 1px, transparent 1px)', backgroundSize: '80px 80px' }} />
-
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-maroon/5 group-hover:bg-transparent transition-colors duration-700" />
+          {/* Heritage overlay — keeps pin/label/button legible over the map */}
+          <div className="absolute inset-0 bg-gradient-to-b from-ivory/25 via-ivory/18 to-maroon/22" />
 
           {/* Center marker */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10 pointer-events-none">
@@ -307,7 +314,7 @@ const Contact = () => {
               href="https://maps.google.com/?q=Central+Institute+of+Classical+Tamil+Chennai"
               target="_blank"
               rel="noopener noreferrer"
-              className="pointer-events-auto mt-6 px-6 py-2 bg-maroon text-gold text-[10px] font-cinzel font-black uppercase tracking-[0.3em] hover:bg-gold hover:text-maroon transition-all duration-300 shadow-xl"
+              className="pointer-events-auto mt-6 px-6 py-2 rounded-lg bg-maroon text-gold text-[10px] font-cinzel font-black uppercase tracking-[0.3em] hover:bg-gold hover:text-maroon transition-all duration-300 shadow-xl"
             >
               {t('வரைபடம் காண்க', 'View on Map')} →
             </a>
