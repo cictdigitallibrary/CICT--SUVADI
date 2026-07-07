@@ -18,6 +18,47 @@ const CRITICAL_EDITIONS = [
   { ta: 'ஐங்குறுநூறு – முல்லை',   en: 'Aingurunuru – Mullai',    year: 'Press', img: '/images/edition/7.png' },
 ];
 
+/* Official content — Faculty of Manuscriptology, verbatim from suvadi.cict.in (Default.aspx) */
+const FACULTY_CONTENT = [
+  {
+    type: 'p',
+    ta: 'ஓலைச்சுவடியில் நூல்களை எழுதி வைக்கும் வழக்கமானது 19ஆம் நூற்றாண்டு வரை நீடித்தது. அச்சு இயந்திரங்கள் அறிமுகத்தால் ஓலைச்சுவடியில் இருந்த நூல்களெல்லாம் அச்சில் ஏற்றப்பட்டன. செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் பட்டியலிட்டுள்ள 41 செவ்வியல் நூல்களின் ஓலைச்சுவடிகள் இன்றைக்கும் உலகெங்கும் காணக்கிடைக்கின்றன. அவற்றுள் பல சுவடிகளிலிருந்து அச்சாக்கம் பெற்றுள்ளன. இன்னும் அச்சேறாமலும் பற்பல உள்ளன.',
+    en: 'The tradition of writing texts on palm-leaf manuscripts continued until the 19th century. With the advent of printing presses, all the texts that existed on palm leaves came to be printed. The palm-leaf manuscripts of the 41 classical texts listed by the Central Institute of Classical Tamil are still found scattered across the world today. Many of them have been printed from these manuscripts. Quite a few still remain unprinted.',
+  },
+  {
+    type: 'p',
+    ta: 'சென்ற நூற்றாண்டுவரை ஆறுமுக நாவலர், சி.வை. தாமோதரம்பிள்ளை, உ.வே. சாமிநாதையர், ஔவை. சு. துரைசாமிப்பிள்ளை போன்ற தமிழறிஞர்கள் சுவடிகளை நூல்களாகப் பதிப்பிக்கும் பணியைச் செவ்வனே செய்தனர். பல்வேறு காலக்கட்டங்களில் பலதரப்பட்ட பதிப்பாசிரியர்களால் வெளிவந்த நூல்களில் சுவடிகளிலிருந்த சிற்சில பிழைப் பாடங்களும் இடம்பெற்றன. இவற்றினைக் கருத்தில் கொண்ட செம்மொழி நிறுவனம் சுவடியியல் புலத்தினை (Faculty of Manuscriptology) அமைத்துச் செம்பதிப்புகளை உருவாக்கத் தொடங்கியது. அதற்காகச் சுவடியியல் புலம் ஓலைச்சுவடிகளைப் பாதுகாத்து வரும் நூலகங்களுக்குச் சென்று சுவடிகளைப் படமெடுத்துக் குறுந்தகடுகளில் (CD/DVD) மின்படியாக்கம் செய்துள்ளது. அக்குறுந்தகடுகளில் இருக்கும் சுவடி நூல்களை ஆய்வாளர்கள் பயன்கொள்ளவேண்டும் என்ற நோக்கத்தில் ஓர் உயர் தரத்திலான மின்னணு நூலகம் (Digital Library) உருவாக்கியுள்ளது. இந்த மின்னணு நூலகம் வழியாக ஒரு நூலுக்குரிய பல சுவடிகளைத் தேடவும் (Search) அச்சுவடிகளிலுள்ள பாடவேறுபாடுகளைக் (Textual variations) கண்டறியவும் முடியும்.',
+    en: 'Until the last century, Tamil scholars such as Arumuga Navalar, C.W. Damodaram Pillai, U.V. Swaminatha Iyer, and Auvai. S. Duraisamipillai diligently carried out the work of editing manuscripts into printed books. Across various periods, texts brought out by different editors also carried a few erroneous readings inherited from the manuscripts. Taking this into account, the Central Institute of Classical Tamil established the Faculty of Manuscriptology to undertake the preparation of Critical Editions. To this end, the Faculty of Manuscriptology has visited libraries that preserve palm-leaf manuscripts, photographed the manuscripts, and digitised them onto compact discs (CD/DVD). With the aim of enabling researchers to make use of the manuscripts held on these discs, it has built a high-quality Digital Library. Through this Digital Library, one can search for the many manuscripts belonging to a single text (Search) and identify the textual variations (Textual variations) among them.',
+  },
+  {
+    type: 'p',
+    ta: 'இதுவரை செவ்வியல் தொடர்பாகப் பதிப்பிக்கப்பட்ட நூல்கள் அனைத்தும் அந்நூலிற்குக் கிடைக்கக்கூடிய அனைத்துச் சுவடிகளையும் பதிப்புகளையும் கொண்டு ஆய்ந்து பதிப்பிக்கப்படவில்லை. இக்குறைபாட்டை நீக்குவதற்கு உலகெங்கிலுமிருந்து கிடைக்கப் பெற்ற எல்லாச் சுவடிகள், பதிப்புகளை ஆய்ந்து, பாடங்களை உறுதிசெய்து செம்பதிப்பாகக் கொண்டு வருவதைச் சுவடியியல் புலத்தின் தலையாய பணியாகக் கொண்டுள்ளது.',
+    en: 'Until now, not all the classical texts that have been published were edited after studying every manuscript and edition available for that text. To remove this shortcoming, the Faculty of Manuscriptology has taken as its foremost task the study of every manuscript and edition obtainable from anywhere in the world, the verification of readings, and the production of Critical Editions.',
+  },
+  {
+    type: 'p',
+    ta: 'அவ்வகையில் நிறுவனத்தின் சுவடியியல் புலத்திலிருந்து வெளிவந்துள்ள செம்பதிப்புகள்:',
+    en: "In this manner, the Critical Editions brought out by the Institute's Faculty of Manuscriptology are:",
+  },
+  {
+    type: 'list',
+    items: [
+      { ta: 'இறையனார் களவியல் (2013)', en: 'Iraiyanar Kalaviyal (2013)' },
+      { ta: 'ஐங்குறுநூறு – மருதம் (2017)', en: 'Ainkurunuru – Marutham (2017)' },
+      { ta: 'ஐங்குறுநூறு – நெய்தல் (2017)', en: 'Ainkurunuru – Neithal (2017)' },
+      { ta: 'ஐங்குறுநூறு – குறிஞ்சி (2021)', en: 'Ainkurunuru – Kurinji (2021)' },
+      { ta: 'ஐங்குறுநூறு – பாலை (2021)', en: 'Ainkurunuru – Paalai (2021)' },
+      { ta: 'கைந்நிலை (2024)', en: 'Kainnilai (2024)' },
+      { ta: 'ஐங்குறுநூறு – முல்லை (அச்சில்)', en: 'Ainkurunuru – Mullai (In press)' },
+    ],
+  },
+  {
+    type: 'p',
+    ta: 'இதைப் போன்றே மற்ற செவ்வியல் நூல்களைச் செம்பதிப்புகளாகக் கொணரும் பணியில் சுவடியியல் புலம் முனைப்புடன் ஈடுபட்டுள்ளது.',
+    en: 'In the same way, the Faculty of Manuscriptology continues to work with dedication to bring out other classical texts as Critical Editions.',
+  },
+];
+
 const FEATURES = [
   {
     num: '01',
@@ -283,7 +324,7 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 2 ▸ INSTITUTIONAL INTRODUCTION
       ══════════════════════════════════════════ */}
-      <section className="home-faculty-section py-32">
+      <section className="home-faculty-section py-24">
         {/* Generated parchment artwork background */}
         <div className="home-faculty-artwork" />
         <div className="home-faculty-overlay" />
@@ -292,89 +333,56 @@ const Home = () => {
           {'அகர முதல எழுத்தெல்லாம் ஆதி பகவன் முதற்றே உலகு கற்க கசடறக் கற்பவை கற்றபின் நிற்க அதற்குத் தக யாதும் ஊரே யாவரும் கேளிர்'}
         </div>
 
-        <div className="container mx-auto px-6 max-w-6xl relative" style={{ zIndex: 3 }}>
+        <div className="container mx-auto px-6 max-w-7xl relative" style={{ zIndex: 3 }}>
+          {/* Section header */}
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
+            className="text-center mb-10">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-1.5 h-1.5 bg-gold rounded-full" />
+              <span className="tamil-label text-xs text-bronze uppercase tracking-[0.3em] font-black">
+                {t('நிறுவன அறிமுகம்', 'Institutional Charter')}
+              </span>
+            </div>
+            <h2 className="tamil-heading text-5xl md:text-6xl text-maroon font-black italic">
+              {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
+            </h2>
+            <div className="w-24 h-1.5 bg-gradient-to-r from-maroon to-gold/60 mx-auto mt-6" />
+          </motion.div>
+
+          {/* Heritage article — official content, Faculty of Manuscriptology (suvadi.cict.in) */}
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-start">
+            className="faculty-article-card group relative">
+            {/* Subtle corner accents */}
+            <span className="faculty-article-corner faculty-article-corner-tl" />
+            <span className="faculty-article-corner faculty-article-corner-br" />
 
-            {/* Left column */}
-            <div className="space-y-12">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 bg-gold rounded-full" />
-                  <span className="tamil-label text-xs text-bronze uppercase tracking-[0.3em] font-black">
-                    {t('நிறுவன அறிமுகம்', 'Institutional Charter')}
-                  </span>
-                </div>
-                <h2 className="tamil-heading text-5xl md:text-6xl text-maroon font-black italic">
-                  {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
-                </h2>
-                <div className="w-24 h-1.5 bg-gradient-to-r from-maroon to-gold/60" />
-              </div>
-
-              {/* Mission quote */}
-              <div className="home-mission-card group">
-                <div className="absolute -bottom-10 -right-10 text-9xl text-gold/5 italic opacity-[0.03] select-none group-hover:opacity-[0.08] transition-opacity">CICT</div>
-                <p className="tamil-body text-maroon/75 text-lg leading-loose font-bold italic pt-6">
-                  {t('உலகெங்கிலுமிருந்து கிடைக்கப் பெற்ற எல்லாச் சுவடிகளை ஆய்ந்து பாடங்களை உறுதிசெய்து செம்பதிப்பாகக் கொண்டு வருவதே எமது பணியாகும்.',
-                    'We are mandated to survey global collections, authenticate variants, and publish definitive Critical Editions of Classical Tamil literature.')}
+            {FACULTY_CONTENT.map((block, i) => (
+              block.type === 'list' ? (
+                <ol key={i} className="faculty-article-list">
+                  {block.items.map((item, j) => (
+                    <li key={j}>
+                      <span className="faculty-article-list-num">{j + 1}.</span>
+                      <span>{t(item.ta, item.en)}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p key={i} className="faculty-article-p">
+                  {t(block.ta, block.en)}
                 </p>
-              </div>
+              )
+            ))}
+          </motion.div>
 
-              <div className="flex gap-4">
-                <Link to="/search" className="btn-primary flex-1 py-5 shadow-maroon/20 text-center">
-                  <span className="tamil-label font-black uppercase tracking-widest">{t('தேடல் பக்கம்', 'Access Search')}</span>
-                </Link>
-                <Link to="/team" className="btn-outline flex-1 py-5 text-center">
-                  <span className="tamil-label font-black uppercase tracking-widest">{t('அறிஞர் குழு', 'Meet Faculty')}</span>
-                </Link>
-              </div>
-            </div>
-
-            {/* Right column — timeline narrative */}
-            <div className="space-y-0 pt-4">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="h-px flex-1 bg-gold/20" />
-                <span className="tamil-text text-bronze text-sm font-bold italic">{t('சுருக்கக் குறிப்பு', 'Preservation Brief')}</span>
-              </div>
-
-              {[
-                {
-                  era: t('19ஆம் நூற்றாண்டு', '19th Century'),
-                  icon: '🌿',
-                  text: t('ஓலைச்சுவடியில் நூல்களை எழுதி வைக்கும் பழக்கமானது 19ஆம் நூற்றாண்டு வரை நீடித்தது. அச்சு இயந்திரங்கள் அறிமுகத்தால் இவை அச்சில் ஏற்றப்பட்டன.',
-                    'Until the 19th century, palm leaves were the primary medium of textual transmission. The advent of printing marked a revolutionary shift in accessibility.')
-                },
-                {
-                  era: t('முன்னோடிகள்', 'Pioneers'),
-                  icon: '📖',
-                  text: t('ஆறுமுக நாவலர், சி.வை. தாமோதரம்பிள்ளை, உ.வே. சாமிநாதையர் போன்ற முன்னோடிகள் சுவடிகளை நூல்களாகப் பதிப்பிக்கும் பணியைத் தொடங்கினர்.',
-                    'Visionary scholars preserved our heritage by transitioning these fragile records into authoritative printed volumes for future generations.')
-                },
-                {
-                  era: t('இன்று', 'Today'),
-                  icon: '💻',
-                  text: t('சுவடியியல் புலம் அந்தப் பணியைத் தொடர்ந்து மேம்பட்ட மின்னணுத் தொழில்நுட்பத்தால் உலகெங்கும் கொண்டு செல்கிறது.',
-                    'Continuing this legacy, our Faculty leverages state-of-the-art digital infrastructure to make these treasures accessible to the global scholarly community.')
-                },
-              ].map((item, i) => (
-                <motion.div key={i} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }} transition={{ delay: i * 0.15, duration: 0.6 }}
-                  className="flex gap-6 group pb-8 last:pb-0">
-                  {/* Timeline line */}
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <div className="home-timeline-dot">
-                      {item.icon}
-                    </div>
-                    {i < 2 && <div className="w-px flex-1 bg-gradient-to-b from-gold/25 to-transparent mt-2 min-h-[2rem]" />}
-                  </div>
-                  {/* Content */}
-                  <div className="pb-2">
-                    <span className="font-cinzel text-[10px] uppercase tracking-[0.3em] text-bronze font-bold block mb-2">{item.era}</span>
-                    <p className="tamil-text text-stone/60 text-base leading-relaxed font-medium">{item.text}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+          {/* CTA links */}
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.7 }}
+            className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto mt-10">
+            <Link to="/search" className="btn-primary flex-1 py-5 shadow-maroon/20 text-center">
+              <span className="tamil-label font-black uppercase tracking-widest">{t('தேடல் பக்கம்', 'Access Search')}</span>
+            </Link>
+            <Link to="/team" className="btn-outline flex-1 py-5 text-center">
+              <span className="tamil-label font-black uppercase tracking-widest">{t('அறிஞர் குழு', 'Meet Faculty')}</span>
+            </Link>
           </motion.div>
         </div>
       </section>
