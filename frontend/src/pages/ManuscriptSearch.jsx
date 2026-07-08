@@ -6,7 +6,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Search, Eye, ChevronDown, BookOpen, ZoomIn, ZoomOut,
   RotateCw, X, Maximize, FileText, ChevronLeft, ChevronRight,
-  Scroll, Layers, SlidersHorizontal, Info, ChevronUp, Database, Languages
+  Scroll, Layers, SlidersHorizontal, Info, Languages
 } from 'lucide-react';
 import PageHero from '../components/PageHero';
 
@@ -88,6 +88,56 @@ const getTransWord = (text) => (text.match(/[a-zA-Z]+$/) || [''])[0];
 // Replace the trailing ASCII word with a Tamil suggestion
 const applyTransSuggestion = (text, tamil) => text.replace(/[a-zA-Z]+$/, tamil);
 
+/* ─── Official content — Search intro & manuscript register, verbatim from
+   suvadi.cict.in/asp/suvadisearch.aspx ─────────────────────────────────── */
+const SEARCH_INTRO_STEPS = [
+  { ta: 'செவ்வியியல் நூலை முதலில் தேர்வு செய்யவும்;', en: 'First select the classical text;' },
+  { ta: 'பின்பு சுவடியைத் தேர்வு செய்யவும்;', en: 'Then select the manuscript;' },
+  { ta: 'அதன்பின் எண் வழித் தேடல்/பாடலின் ஒரு சொல் வழித் தேடல் மேற்கொள்க.', en: 'After that, proceed with search by number or by a word in the poem.' },
+];
+
+const SEARCH_INTRO_NOTES = [
+  {
+    ta_title: 'எண் வழித் தேடல்:',
+    en_title: 'Search by Number:',
+    ta: 'தேடலுக்குரிய பாடல்/ நூற்பா எண்ணைக் கொடுப்பதன் மூலம் உரிய சுவடி ஏட்டின் பக்கம் கிடைக்கப்பெறும்.',
+    en: 'By giving the poem/verse number to be searched, the corresponding manuscript folio page will be retrieved.',
+  },
+  {
+    ta_title: 'பாடலின் குறிப்பிட்ட ஏதெனும் ஒரு சொல் வழித் தேடல்:',
+    en_title: 'Search by a Specific Word in the Poem:',
+    ta: 'தேடலுக்குரிய பாடலின் சொல்லைக் கொடுப்பதன் மூலம் உரிய சுவடி ஏட்டின் பக்கம் கிடைக்கப்பெறும்.',
+    en: 'By giving a word from the poem to be searched, the corresponding manuscript folio page will be retrieved.',
+  },
+];
+
+const SEARCH_TABLE_ROWS = [
+  { title_ta: 'பதினெண் கீழ்க்கணக்கு', title_en: 'Pathinen Kizhkanakku', text_ta: 'நாலடியார்', text_en: 'Naladiyar', cd_ta: 'எண்: 313', cd_en: 'No: 313', count: 400 },
+  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'பதிகம்', text_en: 'Pathigam', cd_ta: 'எண்: 313', cd_en: 'No: 313', count: 20 },
+  { title_ta: 'பத்துப்பாட்டு', title_en: 'Pattuppattu', text_ta: 'திருமுருகாற்றுப்படை', text_en: 'Thirumurugatrupadai', cd_ta: 'எண்: 314', cd_en: 'No: 314', count: 317 },
+  { title_ta: 'பத்துப்பாட்டு', title_en: 'Pattuppattu', text_ta: 'திருமுருகாற்றுப்படை', text_en: 'Thirumurugatrupadai', cd_ta: 'எண்: 314', cd_en: 'No: 314', count: 317 },
+  { title_ta: 'எட்டுத்தொகை', title_en: 'Ettuthogai', text_ta: 'ஐங்குறுநூறு', text_en: 'Ainkurunuru', cd_ta: 'எண்: 8A', cd_en: 'No: 8A', count: 500 },
+  { title_ta: 'தொல்காப்பியம்', title_en: 'Tholkappiyam', text_ta: 'பொருள் - அகம் - சி.வை.தா பதிப்பு', text_en: 'Porul - Agam - C.W. Thamotharampillai Edition', cd_ta: 'எண்: 313 (1-30)', cd_en: 'No: 313 (1-30)', count: 30 },
+  { title_ta: 'தொல்காப்பியம்', title_en: 'Tholkappiyam', text_ta: 'பொருள் - புறம் - சி.வை.தா பதிப்பு', text_en: 'Porul - Puram - C.W. Thamotharampillai Edition', cd_ta: 'எண்: 313 (1-36)', cd_en: 'No: 313 (1-36)', count: 36 },
+  { title_ta: 'பதினெண் கீழ்க்கணக்கு', title_en: 'Pathinen Kizhkanakku', text_ta: 'திருக்குறள்', text_en: 'Thirukkural', cd_ta: 'எண்: 314', cd_en: 'No: 314', count: 1330 },
+  { title_ta: 'எட்டுத்தொகை', title_en: 'Ettuthogai', text_ta: 'அகநானூறு', text_en: 'Agananuru', cd_ta: 'எண்: 112(301-400)', cd_en: 'No: 112 (301-400)', count: 100 },
+  { title_ta: 'தொல்காப்பியம்', title_en: 'Tholkappiyam', text_ta: 'சொல்.சேனா', text_en: 'Sol. Sena', cd_ta: 'எண்:112(485-947)', cd_en: 'No: 112 (485-947)', count: 462 },
+  { title_ta: 'தொல்காப்பியம்', title_en: 'Tholkappiyam', text_ta: 'மூலம் (எழுத்து)', text_en: 'Moolam (Eluthu)', cd_ta: 'எண்:247 (1-484)', cd_en: 'No: 247 (1-484)', count: 484 },
+  { title_ta: 'தொல்காப்பியம்', title_en: 'Tholkappiyam', text_ta: 'மூலம் (பொருள்)', text_en: 'Moolam (Porul)', cd_ta: 'எண்:100 (948-1614)', cd_en: 'No: 100 (948-1614)', count: 666 },
+  { title_ta: 'பதினெண் கீழ்க்கணக்கு', title_en: 'Pathinen Kizhkanakku', text_ta: 'ஏலாதி', text_en: 'Elathi', cd_ta: 'எண்:143', cd_en: 'No: 143', count: 80 },
+  { title_ta: 'பதினெண் கீழ்க்கணக்கு', title_en: 'Pathinen Kizhkanakku', text_ta: 'திரிகடுகம்', text_en: 'Thirikadukam', cd_ta: 'எண்:179', cd_en: 'No: 179', count: 100 },
+  { title_ta: 'முத்தொள்ளாயிரம்', title_en: 'Muthollayiram', text_ta: 'முத்தொள்ளாயிரம்', text_en: 'Muthollayiram', cd_ta: 'எண்:19', cd_en: 'No: 19', count: 109 },
+  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'பதிகம்', text_en: 'Pathigam', cd_ta: 'எண்: 18 (1-90)', cd_en: 'No: 18 (1-90)', count: 90 },
+  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - மங்கல வாழ்த்துப் பாடல்', text_en: 'Pugarkkandam - Mangala Vazhthu Padal', cd_ta: 'எண்: 18 (1-20)', cd_en: 'No: 18 (1-20)', count: 20 },
+  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - மனையறம்படுத்த காதை', text_en: 'Pugarkkandam - Manaiarampadutha Kathai', cd_ta: 'எண்: 18 (1-90)', cd_en: 'No: 18 (1-90)', count: 90 },
+  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - அரங்கேற்று காதை', text_en: 'Pugarkkandam - Arangetru Kathai', cd_ta: 'எண்: 18 (1-175)', cd_en: 'No: 18 (1-175)', count: 175 },
+  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - அந்திமாலைச் சிறப்புசெய் காதை', text_en: 'Pugarkkandam - Anthimalai Sirappusey Kathai', cd_ta: 'எண்: 18 (1-84)', cd_en: 'No: 18 (1-84)', count: 84 },
+  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - இந்திர விழவு ஊர் எடுத்த காதை', text_en: 'Pugarkkandam - Indira Vizhavu Ur Edutha Kathai', cd_ta: 'எண்: 18 (1-240)', cd_en: 'No: 18 (1-240)', count: 240 },
+  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - கடலாடு காதை', text_en: 'Pugarkkandam - Kadaladu Kathai', cd_ta: 'எண்: 18 (1-174)', cd_en: 'No: 18 (1-174)', count: 174 },
+  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - கானல் வரி', text_en: 'Pugarkkandam - Kanal Vari', cd_ta: 'எண்: 18 (1-52)', cd_en: 'No: 18 (1-52)', count: 52 },
+  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - வேனிற் காதை', text_en: 'Pugarkkandam - Venir Kathai', cd_ta: 'எண்: 18 (1-80)', cd_en: 'No: 18 (1-80)', count: 80 },
+];
+
 /* ═══════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════ */
@@ -122,7 +172,6 @@ const ManuscriptSearch = () => {
   /* UI state */
   const [activeView, setActiveView]       = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);
-  const [showInventory, setShowInventory] = useState(false);
 
   /* Transliteration state */
   const [transSugs, setTransSugs]         = useState([]);
@@ -285,6 +334,93 @@ const ManuscriptSearch = () => {
         align="left"
         headingStyle={{ fontSize: 'clamp(2.1rem, 5.4vw, 4.2rem)' }}
       />
+
+      {/* ══════════════════════════════════════════════════
+          OFFICIAL SEARCH INTRODUCTION — verbatim content from
+          suvadi.cict.in/asp/suvadisearch.aspx
+      ══════════════════════════════════════════════════ */}
+      <div className="w-full px-4 sm:px-6 py-14">
+        <motion.div
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="search-intro-card w-[92%] sm:w-[90%] max-w-[1400px] mx-auto"
+        >
+          <h2 className="tamil-heading text-2xl md:text-3xl text-maroon font-black mb-5">
+            {t(
+              'செவ்வியல் சுவடித் தேடல் (Online Classical Tamil Manuscripts Search Engine)',
+              'Classical Manuscript Search (Online Classical Tamil Manuscripts Search Engine)'
+            )}
+          </h2>
+
+          <p className="search-intro-p">
+            {t(
+              'ஆய்வாளர்கள் எளிதாகச் செவ்வியல் சுவடிகளைப் படிப்பதற்கும், பாடவேறுபாடு கண்டறிவதற்கும் ஏற்றவாறு இணைய வழிச் சுவடித் தேடலில் பாடலின் எண்ணிட்டுத் தேடும் வசதியும் பாடலின் குறிப்பிட்ட ஏதெனும் ஒரு சொல்லைக் கொண்டு தேடும் முறையும் உருவாக்கப்பட்டுள்ளது.',
+              "The online manuscript search engine has been designed so that researchers can easily read classical manuscripts and identify textual variations, with the facility to search by a poem's number and by any specific word in the poem."
+            )}
+          </p>
+
+          <ul className="search-intro-steps">
+            {SEARCH_INTRO_STEPS.map((s, i) => (
+              <li key={i}>
+                <StepBadge n={i + 1} active />
+                <span>{t(s.ta, s.en)}</span>
+              </li>
+            ))}
+          </ul>
+
+          <h3 className="search-intro-subheading">
+            {t('தேடல் குறிப்புகள்:', 'Search Notes:')}
+          </h3>
+
+          <div className="space-y-4 mb-8">
+            {SEARCH_INTRO_NOTES.map((note, i) => (
+              <p key={i} className="search-intro-p">
+                <strong className="text-maroon">{i + 1}.{t(note.ta_title, note.en_title)}</strong>
+                {' '}{t(note.ta, note.en)}
+              </p>
+            ))}
+          </div>
+
+          <h3 className="search-intro-subheading">
+            {t(
+              'இந்த சுவடித் தேடலில் பதிவேற்றம் செய்யப்பட்டடுள்ள ஓலைச்சுவடிகள் விபரம்:',
+              'Details of the Palm-Leaf Manuscripts Uploaded to this Search Engine:'
+            )}
+          </h3>
+
+          <div className="search-intro-table-wrap">
+            <table className="search-intro-table">
+              <thead>
+                <tr>
+                  <th>{t('நூல் தலைப்பு', 'Text Title')}</th>
+                  <th>{t('செவ்வியல் நூல்', 'Classical Text')}</th>
+                  <th>{t('செம்மொழி நிறுவனக் குறுந்தகடு எண்', 'CICT Compact Disc No.')}</th>
+                  <th>{t('எண்ணிக்கை', 'Count')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SEARCH_TABLE_ROWS.map((row, i) => (
+                  <tr key={i}>
+                    <td>{t(row.title_ta, row.title_en)}</td>
+                    <td>{t(row.text_ta, row.text_en)}</td>
+                    <td>{t(row.cd_ta, row.cd_en)}</td>
+                    <td>{row.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="search-intro-p mt-8 mb-0">
+            {t(
+              'மேலும் பல மின்படியாக்கப்பட்ட சுவடிகள், இத்தேடலில் பதிவேற்றம் செய்யப்படும்.',
+              'Many more digitised manuscripts will be uploaded to this search engine.'
+            )}
+          </p>
+        </motion.div>
+      </div>
 
       <div className="container mx-auto px-4 sm:px-6 max-w-6xl py-10">
 
@@ -794,47 +930,6 @@ const ManuscriptSearch = () => {
           )}
         </AnimatePresence>
 
-        {/* ── Collapsible Archival Holdings ────────────────── */}
-        <div className="mt-12 border-t border-maroon/8 pt-8">
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={() => setShowInventory(!showInventory)}
-              className="flex items-center gap-2 bg-maroon/[0.04] border border-maroon/10 rounded-sm px-6 py-2.5 text-maroon hover:bg-maroon hover:text-white hover:border-maroon transition-all duration-300 shadow-sm"
-            >
-              <Database className="w-4 h-4 text-gold" />
-              <span className="tamil-label text-xs uppercase tracking-wider font-black">
-                {showInventory
-                  ? t('காப்பக விவரங்களை மறை', 'Hide Archival Holdings')
-                  : t('பதிவேற்றப்பட்டுள்ள காப்பக விவரங்கள் (14 நூல்கள்)', 'View Archival Holdings')}
-              </span>
-              {showInventory ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
-            </button>
-          </div>
-
-          <AnimatePresence>
-            {showInventory && (
-              <motion.section
-                initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.4, ease: 'easeInOut' }}
-                className="overflow-hidden mt-6"
-              >
-                <div className="pb-8">
-                  <div className="text-center mb-6">
-                    <p className="font-cinzel text-[9px] text-bronze font-bold uppercase tracking-[0.4em] mb-1.5">
-                      {t('தரவுப்பட்டியல்', 'System Inventory')}
-                    </p>
-                    <h2 className="tamil-heading text-2xl text-maroon">
-                      {t('பதிவேற்றம் செய்யப்பட்டுள்ள சுவடிகள்', 'Archival Holdings')}
-                    </h2>
-                  </div>
-                  <ManuscriptsInfoTable t={t} />
-                </div>
-              </motion.section>
-            )}
-          </AnimatePresence>
-        </div>
-
       </div>
 
       {/* ── Folio Viewer Modal ──────────────────────────────── */}
@@ -1075,82 +1170,6 @@ const SongCard = ({ res, i, t, compact, query, onOpen }) => {
         </div>
       </div>
     </motion.div>
-  );
-};
-
-/* ═══════════════════════════════════════════════════════
-   Archival Holdings Table
-   ═══════════════════════════════════════════════════════ */
-const ManuscriptsInfoTable = ({ t }) => {
-  const info = [
-    { bk: { ta: 'பதினெண் கீழ்க்கணக்கு', en: 'Patinenkilkanakku' }, ms: { ta: 'நாலடியார்',          en: 'Naladiyar' },           cd: '313',           pg: 400  },
-    { bk: { ta: 'சிலப்பதிகாரம்',         en: 'Silappatikaram' },    ms: { ta: 'பதிகம்',              en: 'Patikam' },              cd: '313',           pg: 20   },
-    { bk: { ta: 'பத்துப்பாட்டு',          en: 'Pattupattu' },        ms: { ta: 'திருமுருகாற்றுப்படை', en: 'Thirumurugatruppadai' }, cd: '314',           pg: 317  },
-    { bk: { ta: 'எட்டுத்தொகை',           en: 'Ettuthokai' },        ms: { ta: 'ஐங்குறுநூறு',         en: 'Aingurunuru' },          cd: '8A',            pg: 500  },
-    { bk: { ta: 'தொல்காப்பியம்',          en: 'Tolkappiyam' },       ms: { ta: 'பொருள்-அகம்',         en: 'Porul-Akam' },           cd: '313 (1-30)',    pg: 30   },
-    { bk: { ta: 'தொல்காப்பியம்',          en: 'Tolkappiyam' },       ms: { ta: 'பொருள்-புறம்',         en: 'Porul-Puram' },          cd: '313 (1-36)',    pg: 36   },
-    { bk: { ta: 'பதினெண் கீழ்க்கணக்கு', en: 'Patinenkilkanakku' }, ms: { ta: 'திருக்குறள்',          en: 'Thirukkural' },          cd: '314',           pg: 1330 },
-    { bk: { ta: 'எட்டுத்தொகை',           en: 'Ettuthokai' },        ms: { ta: 'அகநானூறு',            en: 'Akananuru' },            cd: '112(301-400)',  pg: 100  },
-    { bk: { ta: 'தொல்காப்பியம்',          en: 'Tolkappiyam' },       ms: { ta: 'சொல்-சேனா',           en: 'Sol-Sena' },             cd: '112(485-947)', pg: 462  },
-    { bk: { ta: 'தொல்காப்பியம்',          en: 'Tolkappiyam' },       ms: { ta: 'மூலம் (எழுத்து)',      en: 'Mulam (Eluthu)' },       cd: '247 (1-484)',  pg: 484  },
-    { bk: { ta: 'தொல்காப்பியம்',          en: 'Tolkappiyam' },       ms: { ta: 'மூலம் (பொருள்)',       en: 'Mulam (Porul)' },        cd: '100 (948-1614)',pg: 666  },
-    { bk: { ta: 'பதினெண் கீழ்க்கணக்கு', en: 'Patinenkilkanakku' }, ms: { ta: 'ஏலாதி',               en: 'Elathi' },               cd: '143',           pg: 80   },
-    { bk: { ta: 'பதினெண் கீழ்க்கணக்கு', en: 'Patinenkilkanakku' }, ms: { ta: 'திரிகடுகம்',           en: 'Thirikadukam' },         cd: '179',           pg: 100  },
-    { bk: { ta: 'முத்தொள்ளாயிரம்',        en: 'Muttollayiram' },     ms: { ta: 'முத்தொள்ளாயிரம்',     en: 'Muttollayiram' },        cd: '19',            pg: 109  },
-  ];
-
-  const total = info.reduce((acc, r) => acc + r.pg, 0);
-
-  return (
-    <div className="overflow-x-auto border border-maroon/10 rounded-sm shadow-md bg-white">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="bg-maroon text-gold">
-            <th className="px-4 py-3 tamil-label text-[10px] uppercase font-black tracking-widest border-r border-white/10">
-              {t('செவ்வியல் நூல்', 'Classical Text')}
-            </th>
-            <th className="px-4 py-3 tamil-label text-[10px] uppercase font-black tracking-widest border-r border-white/10">
-              {t('சுவடி வகை', 'Manuscript Category')}
-            </th>
-            <th className="px-4 py-3 tamil-label text-[10px] uppercase font-black tracking-widest text-center border-r border-white/10">
-              {t('குறுந்தகடு', 'CD No.')}
-            </th>
-            <th className="px-4 py-3 tamil-label text-[10px] uppercase font-black tracking-widest text-right">
-              {t('ஏட்டு எண்ணிக்கை', 'Leaf Count')}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {info.map((row, i) => (
-            <tr key={i} className={`border-b border-maroon/5 group hover:bg-gold/3 transition-colors
-              ${i % 2 === 0 ? 'bg-white' : 'bg-ivory/40'}`}>
-              <td className="px-4 py-2.5 tamil-label text-xs text-stone/55 font-black group-hover:text-maroon transition-colors">
-                {t(row.bk.ta, row.bk.en)}
-              </td>
-              <td className="px-4 py-2.5 tamil-label text-xs text-maroon font-black">
-                {t(row.ms.ta, row.ms.en)}
-              </td>
-              <td className="px-4 py-2.5 font-cinzel text-[10px] text-stone/40 text-center font-bold">
-                {row.cd}
-              </td>
-              <td className="px-4 py-2.5 text-right font-cinzel text-xs font-black text-maroon">
-                {row.pg.toLocaleString()}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr className="bg-maroon/3 border-t border-maroon/10">
-            <td colSpan={3} className="px-4 py-2.5 tamil-label text-[10px] font-black text-maroon/50 uppercase tracking-widest">
-              {t('மொத்தம்', 'Total')}
-            </td>
-            <td className="px-4 py-2.5 text-right font-cinzel text-xs font-black text-maroon">
-              {total.toLocaleString()}
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
   );
 };
 
