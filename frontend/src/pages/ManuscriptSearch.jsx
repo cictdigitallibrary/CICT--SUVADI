@@ -332,7 +332,7 @@ const ManuscriptSearch = () => {
         backgroundImage="/images/bg/search-hero.png"
         heroClass="search-hero-bg"
         align="left"
-        headingStyle={{ fontSize: 'clamp(2.1rem, 5.4vw, 4.2rem)' }}
+        headingStyle={{ fontSize: 'clamp(1.8rem, 4.5vw, 3.6rem)', lineHeight: '1.3', fontWeight: '800', letterSpacing: '0.02em' }}
       />
 
       {/* ══════════════════════════════════════════════════
@@ -935,7 +935,13 @@ const ManuscriptSearch = () => {
       {/* ── Folio Viewer Modal ──────────────────────────────── */}
       <AnimatePresence>
         {activeView && (
-          <ManuscriptViewer folio={activeView} onClose={() => setActiveView(null)} t={t} />
+          <ManuscriptViewer 
+            folio={activeView} 
+            onClose={() => setActiveView(null)} 
+            t={t} 
+            activeList={(results?.results || []).find(r => r.id === activeView.id) ? results?.results : (browseResults?.results || []).find(r => r.id === activeView.id) ? browseResults?.results : []}
+            onNavigate={(newFolio) => setActiveView(newFolio)}
+          />
         )}
       </AnimatePresence>
     </div>
@@ -1176,10 +1182,13 @@ const SongCard = ({ res, i, t, compact, query, onOpen }) => {
 /* ═══════════════════════════════════════════════════════
    Manuscript Viewer Modal
    ═══════════════════════════════════════════════════════ */
-const ManuscriptViewer = ({ folio, onClose, t }) => {
+const ManuscriptViewer = ({ folio, onClose, t, activeList = [], onNavigate }) => {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [showText, setShowText] = useState(true);
+
+  const currentIndex = activeList.findIndex(r => r.id === folio.id);
+  const totalFolios = activeList.length;
 
   return (
     <motion.div
@@ -1195,16 +1204,62 @@ const ManuscriptViewer = ({ folio, onClose, t }) => {
 
         {/* Viewer header */}
         <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-maroon/10 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-maroon rounded-sm shadow">
-              <BookOpen className="w-3.5 h-3.5 text-gold" />
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-maroon rounded-sm shadow">
+                <BookOpen className="w-3.5 h-3.5 text-gold" />
+              </div>
+              <div>
+                <h3 className="tamil-label text-xs text-maroon font-black leading-tight">{folio.book_name}</h3>
+                <p className="tamil-text text-[9px] text-stone/50 font-bold">
+                  {folio.manuscript_name} — {t('ஏடு', 'Folio')} #{folio.page_number}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="tamil-label text-xs text-maroon font-black leading-tight">{folio.book_name}</h3>
-              <p className="tamil-text text-[9px] text-stone/50 font-bold">
-                {folio.manuscript_name} — {t('ஏடு', 'Folio')} #{folio.page_number}
-              </p>
-            </div>
+
+            {currentIndex !== -1 && totalFolios > 1 && (
+              <div className="flex items-center gap-1.5 pl-5 border-l border-maroon/15 ml-1">
+                {/* Previous button */}
+                <button
+                  onClick={() => onNavigate(activeList[currentIndex - 1])}
+                  disabled={currentIndex === 0}
+                  title={t('முந்தைய', 'Previous')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[10px] font-cinzel font-black uppercase tracking-wider transition-all duration-200
+                    ${currentIndex === 0
+                      ? 'text-maroon/25 border border-maroon/10 cursor-not-allowed'
+                      : 'bg-maroon text-gold border border-maroon hover:bg-maroon/90 active:scale-95 shadow-sm hover:shadow-md'}`}
+                >
+                  <ChevronLeft className="w-3 h-3" />
+                  <span className="hidden sm:inline">{t('முன்', 'Prev')}</span>
+                </button>
+
+                {/* Folio counter — shows actual page_number of current folio */}
+                <div className="px-3 py-1.5 border border-gold/30 bg-gold/5 rounded-sm text-center min-w-[90px]">
+                  <p className="font-cinzel text-[8px] uppercase tracking-[0.2em] text-maroon/40 leading-none mb-0.5">
+                    {t('ஏடு', 'Folio')}
+                  </p>
+                  <p className="font-cinzel text-[11px] font-black text-maroon leading-none">
+                    #{folio.page_number}
+                    <span className="text-maroon/35 font-bold mx-1">/</span>
+                    <span className="text-maroon/50">{activeList[totalFolios - 1]?.page_number ?? totalFolios}</span>
+                  </p>
+                </div>
+
+                {/* Next button */}
+                <button
+                  onClick={() => onNavigate(activeList[currentIndex + 1])}
+                  disabled={currentIndex === totalFolios - 1}
+                  title={t('அடுத்தது', 'Next')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-[10px] font-cinzel font-black uppercase tracking-wider transition-all duration-200
+                    ${currentIndex === totalFolios - 1
+                      ? 'text-maroon/25 border border-maroon/10 cursor-not-allowed'
+                      : 'bg-maroon text-gold border border-maroon hover:bg-maroon/90 active:scale-95 shadow-sm hover:shadow-md'}`}
+                >
+                  <span className="hidden sm:inline">{t('அடு', 'Next')}</span>
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -1229,8 +1284,9 @@ const ManuscriptViewer = ({ folio, onClose, t }) => {
             </button>
             {/* Toggle text */}
             <button onClick={() => setShowText(!showText)}
+              title={showText ? t('சுருக்க', 'Collapse Panel') : t('விரிவாக்க', 'Expand Panel')}
               className={`p-1.5 rounded-full transition-all border
-                ${showText ? 'bg-maroon text-white border-maroon shadow' : 'bg-white text-maroon/50 border-maroon/8'}`}>
+                ${showText ? 'bg-maroon text-white border-maroon shadow' : 'bg-white text-maroon/50 border-maroon/8 hover:text-maroon'}`}>
               <FileText className="w-3.5 h-3.5" />
             </button>
             <div className="w-px h-6 bg-maroon/10 mx-1" />
@@ -1243,23 +1299,24 @@ const ManuscriptViewer = ({ folio, onClose, t }) => {
         </div>
 
         {/* Viewer body */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-[#111]">
           {/* Image pane */}
-          <div className="flex-grow relative overflow-hidden bg-[#111] flex items-center justify-center p-6">
+          <div className="flex-grow relative overflow-hidden flex items-center justify-center p-8 md:p-14">
             <motion.div
               animate={{ scale: zoom, rotate: rotation }}
               drag
               dragConstraints={{ top: -500, bottom: 500, left: -500, right: 500 }}
-              className="relative cursor-grab active:cursor-grabbing"
+              className="relative flex items-center justify-center w-full h-full cursor-grab active:cursor-grabbing"
             >
               <img
                 src={`${API}${folio.image_url}`}
-                className="max-w-full max-h-[70vh] shadow-[0_0_80px_rgba(0,0,0,0.7)] border border-white/5"
+                className="w-full h-full object-contain shadow-[0_8px_50px_rgba(0,0,0,0.6)] border border-white/5"
                 alt="Archival Scan"
+                draggable={false}
               />
             </motion.div>
-            <div className="absolute bottom-4 right-4 bg-black/60 text-white/30 font-cinzel text-[9px]
-              uppercase tracking-[0.3em] px-3 py-1.5 rounded-full border border-white/5">
+            <div className="absolute top-6 left-6 bg-black/60 text-white/40 font-cinzel text-[9px]
+              uppercase tracking-[0.3em] px-3 py-1.5 rounded-full border border-white/5 pointer-events-none">
               {t('நிறுவனக் காப்பகம்', 'Institutional Archive')}
             </div>
           </div>
@@ -1302,14 +1359,16 @@ const ManuscriptViewer = ({ folio, onClose, t }) => {
                       : t('இந்த ஏட்டிற்கு எழுத்துப் பிரதி இல்லை.', 'No transcription available for this folio.')}
                   </div>
                 </div>
-                <div className="px-5 py-3 border-t border-maroon/8 bg-maroon/[0.02]">
-                  <p className="font-cinzel text-[8px] text-stone/30 uppercase tracking-[0.3em] text-center">
-                    © CICT | All archival rights reserved.
-                  </p>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Global Footer */}
+        <div className="px-5 py-3 border-t border-maroon/10 bg-ivory shrink-0 z-10">
+          <p className="font-cinzel text-[9px] text-stone/50 uppercase tracking-[0.3em] text-center font-bold">
+            © CICT | All archival rights reserved.
+          </p>
         </div>
       </div>
     </motion.div>

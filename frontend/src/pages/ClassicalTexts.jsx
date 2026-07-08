@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { getBookCover } from '../utils/bookCovers';
 
@@ -171,214 +172,157 @@ const ClassicalTexts = () => {
         </div>
       </header>
 
-      {/* ── Authority Archive Section ── */}
-      <section className="relative py-16 overflow-hidden bg-[#FFF8F0]" style={{ backgroundImage: 'url(/images/parchment_bg.png)', backgroundRepeat: 'repeat' }}>
-        {/* Pandya Corner Ornaments */}
-        <PandyaCorner className="top-0 left-0" />
-        <PandyaCorner className="top-0 right-0" style={{ transform: 'scaleX(-1)' }} />
-        <PandyaCorner className="bottom-0 left-0" style={{ transform: 'scaleY(-1)' }} />
-        <PandyaCorner className="bottom-0 right-0" style={{ transform: 'scale(-1)' }} />
+      {/* ── Introduction Section ── */}
+      <section className="relative py-10 md:py-14 bg-[#FAF8F2]">
+        <div className="w-[92%] lg:w-[95%] max-w-[1600px] mx-auto px-0 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.1 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="bg-white border border-gold/20 shadow-[0_8px_40px_rgba(201,151,59,0.12),0_2px_8px_rgba(60,20,5,0.06)] rounded-sm overflow-hidden"
+          >
+            {/* Top accent bar */}
+            <div className="h-[3px] w-full bg-gradient-to-r from-maroon via-gold to-maroon" />
 
-        {/* Faint Floating Glyphs */}
-        <FloatingGlyphs />
+            <div className="px-6 md:px-10 lg:px-14 py-8 md:py-10">
 
-        <div className="container mx-auto px-6 max-w-6xl relative z-10">
-          <div className="flex items-center justify-between mb-8 relative z-10">
-            <div className="flex-1 text-center">
-              {/* Golden divider line ornament above */}
-              <div className="flex justify-center mb-4">
-                <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-100 contrast-125" />
-              </div>
-              <div className="flex items-center justify-center gap-1">
-                <TitleFlourishLeft />
-                <h2 className="font-cinzel text-3xl md:text-4xl text-maroon font-bold tracking-wider">
-                  {t('நூல் தொகுப்புகள்', 'AUTHORITY ARCHIVE')}
-                </h2>
-                <TitleFlourishRight />
+              {/* Section label */}
+              <div className="flex items-center justify-center gap-4 mb-8">
+                <div className="h-px flex-1 max-w-[80px] bg-gradient-to-r from-transparent to-gold/50" />
+                <span className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-gold/70 font-bold">
+                  {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
+                </span>
+                <div className="h-px flex-1 max-w-[80px] bg-gradient-to-l from-transparent to-gold/50" />
               </div>
 
-              {/* Golden divider line ornament */}
-              <div className="flex justify-center my-4">
-                <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-100 contrast-125" />
+              {/* Page title */}
+              <h2 className="font-cinzel text-2xl md:text-3xl lg:text-4xl text-maroon font-bold mb-3 text-center tracking-wide">
+                {t('செம்மொழித் தமிழ் நூல்களின் முதல் அச்சுப் பதிப்புகள்', 'First Print Editions of Classical Tamil Texts')}
+              </h2>
+
+              {/* Gold divider */}
+              <div className="flex justify-center my-6">
+                <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-70" />
               </div>
 
-              <p className="tamil-body text-stone/50 text-sm italic font-medium mt-2">
-                {t('Explore the foundational works of Classical Tamil literature.', 'Explore the foundational works of Classical Tamil literature.')}
-              </p>
+              {/* ── அறிமுகம் — Introduction ── */}
+              <h3 className="font-cinzel text-base md:text-lg text-maroon font-black uppercase tracking-[0.3em] mb-5 flex items-center gap-3">
+                <span className="text-gold/60">◆</span>
+                {t('அறிமுகம்', 'Introduction')}
+              </h3>
+
+              <div className="space-y-5 tamil-body text-stone/80 text-base md:text-[1.0625rem] leading-[1.9] md:leading-[2.1] font-medium text-justify">
+                <p>
+                  {t(
+                    'தமிழின் தொன்மை, தனித்தன்மை, தமிழர்களின் நாகரிகம், பண்பாடு ஆகியவற்றின் சிறப்புகளைக் கவனத்தில் கொண்டு பல்வேறு வெளியீடுகளைக் கொண்டுவருவதைச் செம்மொழி நிறுவனம் குறிக்கோளாகக் கொண்டுள்ளது. இந்த வகையில் பழந்தமிழ் நூல்களை வெளியிடுதல், செம்மொழித் தமிழ் தொடர்பான தகவல்களை வழங்குதல் முதலான பணிகளை நிறுவனம் மேற்கொண்டுள்ளது. அந்த வகையில் செம்மொழித் தமிழுக்கு ஆதாரமாக உள்ள 41 நூல்களின் முதல் அச்சுப் பதிப்புகளை ஆவணப்படுத்திச் செம்மொழித் தமிழாய்வு நிறுவனம் வெளியிடுகிறது.',
+                    'Focusing on the antiquity, uniqueness, civilisation, and culture of the Tamils, the Central Institute of Classical Tamil aims to bring out various publications. In this regard, the Institute has undertaken tasks such as publishing ancient Tamil texts and providing information related to Classical Tamil. The Institute is now documenting and publishing the first print editions of the 41 primary texts that serve as the foundation of Classical Tamil.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    'செவ்வியல் தகுதிப்பாட்டிற்கான நூல்களைப் பாதுகாத்துக் கையளித்துவந்த தமிழ்ப் புலமை மரபிற்கும், உரையாசிரியர்கள், பதிப்பாசிரியர்களுக்கும், உலகளாவிய நிலையில் தமிழ்ச் சுவடிகளையும், நூல்களையும் பாதுகாத்து வரும் நிறுவனங்களுக்கும் தமிழ்ச் சமூகம் எப்போதும் நன்றிபாராட்ட கடமைப்பட்டுள்ளது.',
+                    'The Tamil society is forever indebted to the Tamil scholarly tradition, commentators, publishers who have preserved and handed down texts of classical merit, and to the institutions worldwide that preserve Tamil manuscripts and books.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    '41 செவ்வியல் நூல்களின் அச்சுப் பதிப்புகளைச் செம்மொழித் தமிழாய்வு மத்திய நிறுவனத்திற்கு வழங்கியுதவிய மறைமலையடிகள் நூலகம், டாக்டர் உ.வே. சாமிநாதையர் நூல்நிலையம், ரோஜா முத்தையா ஆராய்ச்சி நூலகம், தமிழ்ப் பல்கலைக்கழக நூலகம், தமிழ் இணையக் கல்விக்கழக மின்நூலகம் உள்ளிட்ட நூலகத்தார்களுக்கும், ஆய்வாளர்களுக்கும் செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் நன்றி பாராட்டி மகிழ்கிறது.',
+                    'The Central Institute of Classical Tamil expresses its profound gratitude to the libraries — including Maraimalai Adigal Library, Dr. U.V. Swaminatha Iyer Library, Roja Muthiah Research Library, Tamil University Library, and Tamil Virtual Academy Library — as well as to researchers who generously provided the first print editions of the 41 classical texts to the Institute.'
+                  )}
+                </p>
+              </div>
+
+              {/* ── பதிப்புக் குறிப்புகள் — Publication Notes ── */}
+              <div className="my-10 border-t border-gold/20" />
+
+              <h3 className="font-cinzel text-base md:text-lg text-maroon font-black uppercase tracking-[0.3em] mb-5 flex items-center gap-3">
+                <span className="text-gold/60">◆</span>
+                {t('பதிப்புக் குறிப்புகள்', 'Publication Notes')}
+              </h3>
+
+              <div className="space-y-5 tamil-body text-stone/80 text-base md:text-[1.0625rem] leading-[1.9] md:leading-[2.1] font-medium text-justify">
+                <p>
+                  {t(
+                    'தமிழ்ச் செவ்வியல் நூல்களுள் திருக்குறள், நாலடியார் ஆகிய இரு நூல்களே முதன் முதலாக அச்சு வடிவம் பெற்றன. 1812இல் தஞ்சை நகரைச் சேர்ந்த மலையப்பப் பிள்ளையின் மகனாகிய ஞானப்பிரகாசன் எனும் அறிஞர் திருக்குறள், நாலடியார் இரண்டையும் ஒன்றாக இணைத்து அச்சிட்டு வெளியிட்டார். அதனுடன் திருவள்ளுவமாலை மூலமும் இடம்பெற்றிருந்தது.',
+                    'Among the Classical Tamil texts, Thirukkural and Naladiyar were the first to be printed. In 1812, a scholar named Gnanaprakasan — son of Malaiyappa Pillai of Thanjavur — printed and published Thirukkural and Naladiyar together as a single volume, which also included the Thiruvalluvamalai source text.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    'தொல்காப்பியத்தின் அச்சுப் பதிப்பு வரலாறு மழைவை மகாலிங்கையர் பதிப்பித்து வெளியிட்ட எழுத்ததிகார நச்சினார்க்கினியர் உரைப் பதிப்பிலிருந்து தொடங்குகிறது. 1847ஆம் ஆண்டு மகாலிங்கையரின் பதிப்பு வெளிவந்தது. நச்சினார்க்கினியர் உரைப் பதிப்பில் தொடங்கிய தொல்காப்பிய அச்சுப் பதிப்பு வரலாறு 1935ஆம் ஆண்டு வ.உ. சிதம்பரம் பிள்ளை பதிப்பித்து வெளியிட்ட தொல்காப்பிய இளம்பூரணர் உரைப் பதிப்போடு முதல் கட்ட பதிப்பு வரலாறு நிறைவுகொண்டிருக்கிறது.',
+                    'The print history of Tolkappiyam begins with the Ezhuttatikara Nacchinarkiniyar commentary edition published by Mazhaivai Mahalingaiyar in 1847. This history of Tolkappiyam print editions concludes its first phase with the Ilamporanar commentary edition published by V.O. Chidambaram Pillai in 1935.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    'சங்க இலக்கிய நூல்களுள் முதன் முதலாக அச்சு வடிவம் பெற்ற நூல் கலித்தொகை ஆகும். 1887ஆம் ஆண்டு சி.வை. தாமோதரம் பிள்ளை நச்சினார்க்கனியர் உரையுடன் கலித்தொகையைப் பதிப்பித்து வெளியிட்டதன் வழியாகச் சங்க இலக்கியப் பதிப்பு வரலாறு தொடங்குகிறது. கலித்தொகைக்கு முன்னரே பத்துப்பாட்டினுள் ஒன்றாகிய திருமுருகாற்றுப்படைக்குப் பல அச்சுப் பதிப்புகள் வெளிவந்துள்ளன. அப்பதிப்புகளைப் பத்துப்பாட்டின் முழுமையான பதிப்பாகக் கொள்ளமுடியாத நிலையில், சங்க இலக்கிய நூல்களுள் முதன் முதலாக அச்சுவடிவம் பெற்ற நூலாகக் கலித்தொகை அமைகிறது.',
+                    'Among Sangam literary texts, Kalithokai was the first to be printed. The print history of Sangam literature begins with C.V. Damodaram Pillai\'s publication of Kalithokai with Nacchinarkiniyar\'s commentary in 1887. Although Thirumurugaatruppadai (one of the Pattuppattu) had received multiple print editions before Kalithokai, since those cannot be considered a complete edition of Pattuppattu, Kalithokai stands as the first Sangam literary text to attain print form.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    '1872ஆம் ஆண்டில் சிலப்பதிகாரமும் 1894ஆம் ஆண்டில் மணிமேகலையும் முதன் முதலாக அச்சுவடிவம் பெற்றன. 1883இல் இறையனார் களவியலுரைக்கும், 1905இல் முத்தொள்ளாயிரத்திற்கும் முதல் அச்சுப் பதிப்பு வெளிவந்துள்ளன.',
+                    'Silappadikaram received its first print edition in 1872, and Manimekalai in 1894. The first print editions of Irayanarar Kalaviyalurai and Muthollayiram appeared in 1883 and 1905 respectively.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    'தொல்காப்பியம், சங்க இலக்கியம், காப்பிய நூல்களுக்கான முதல் அச்சுப் பதிப்புகளைக் கண்டறிவதில் நமக்குச் சிக்கல் ஏதும் ஏற்படவில்லை. கீழ்க்கணக்கு நூல்களுள் திருக்குறள், நாலடியார் நூல்களைத் தவிர்த்து ஏனைய நூல்களின் முதல் அச்சுப் பதிப்புகளைக் கண்டறிவதில் பெருஞ்சிரமம் ஏற்படுகிறது. இதனால் கிடைத்திருக்கிற கீழ்க்கணக்கு நூல்களுக்கான அச்சுப் பதிப்புகளில் மிகவும் காலத்தால் மூத்த பதிப்புகளை முதல் பதிப்பாகக் கருதி இங்குத் தரப்பட்டுள்ளன.',
+                    'Identifying the first print editions of Tolkappiyam, Sangam literature, and epic texts posed no significant difficulty. However, tracing the first print editions of Keezhakanakku texts — other than Thirukkural and Naladiyar — has been considerably challenging. Consequently, the oldest available print editions for Keezhakanakku texts have been recorded here as the first editions.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    'கீழ்க்கணக்கு நூல்களில் இங்குத் தரப்பட்டுள்ள அச்சுப் பதிப்புகளுக்கும் காலத்தால் முன்னரான பதிப்புகள் இருப்பதாகத் தகவல்கள் மட்டும் கிடைக்கின்றன; அச்சுப் பதிப்புகள் எங்கும் கிடைக்கப்பெறவில்லை. அதனால் அதற்கடுத்தடுத்த நிலையில் வெளிவந்த அச்சுப் பதிப்புகள் இங்குத் தரப்பட்டுள்ளன.',
+                    'For some Keezhakanakku texts listed here, there is only historical information indicating earlier print editions existed; the actual copies are no longer traceable. In such cases, the next earliest available print editions have been recorded.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    'ஐந்திணையெழுபது நூல் பழையுரையுள்ள 26 பாடல்களை மட்டும் மு. இராகவையங்கார் 1906இல் செந்தமிழில் வெளியிட்டிருக்கிறார். அவை முழுமையான பதிப்பாகக் கருதமுடியாத நிலையில் அதன் பின்னர் 1926இல் வெளிவந்த சோமசுந்தர தேசிகர் பதிப்பை முதல் பதிப்பாகக் கொண்டு இங்குத் தரப்பட்டுள்ளது.',
+                    'M. Ragavaiyengar published only 26 songs of Ainthanaiyezhupathu with old commentary in Senthamizh in 1906. Since that cannot be considered a complete edition, the Somasundara Desika edition published in 1926 has been recorded here as the first edition.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    'இனியவை நாற்பது முகவை இராமாநுச கவிராயரால் 1844இல் அச்சிட்டு வெளியிட்டிருப்பதாக ஒரு தகவலுண்டு. அந்த அச்சுப் பதிப்பு எங்கும் கிடைக்கப்பெறாமையால் 1903இல் வெளிவந்த ரா. இராகவையங்கார் பதிப்பு இங்குத் தரப்பட்டுள்ளது.',
+                    'There is a record that Iniyavai Narpathu was printed and published by Mukavai Ramanuja Kavirayar in 1844. Since that edition is not traceable anywhere, the 1903 edition by Ra. Ragavaiyengar has been recorded here.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    'பழமொழி நானூற்றை 1874இல் சோடசாவதானம் சுப்பராயசெட்டியார் பதிப்பித்து வெளியிட்டதாகத் தகவல் உள்ளது; இப்போது அப்பதிப்பு கிடைக்கப்பெறாமையால் 1917இல் வெளிவந்த தி. செல்வகேசவராயர் பதிப்பும், ஆசாரக்கோவைக்குத் தில்லையம்பூர் சந்திசேகர கவிராஜ பண்டிதர் 1857இல் அச்சுப் பதிப்பை வெளியிட்டிருக்கிறார் என்ற தகவல் மட்டும் உள்ள நிலையில், 1883இல் வெளிவந்த அச்சுப் பதிப்பும் இங்குத் தரப்பட்டுள்ளன.',
+                    'Pazhamozhi Nanuru was reportedly published by Sodasavadhanam Subbarayasettiyar in 1874; since that edition is no longer available, the 1917 edition by T. Selvakesavarayar has been recorded. Similarly, for Asarakkovai, there is only a record that Thillayambur Chandrasekhara Kaviraja Pandithar published an edition in 1857; in its absence, the 1883 edition has been recorded here.'
+                  )}
+                </p>
+                <p>
+                  {t(
+                    'ஏனைய கீழ்க்கணக்கு நூல்களின் அச்சுப் பதிப்புகள் முதல் பதிப்பாகக் கருதத்தக்கனவாகும். இந்த அச்சுப் பதிப்புகளுக்கும் மேலான பழைய அச்சுப் பதிப்புகளை வைத்திருப்பவர்களாயினும், அறிந்திருப்பவர்களாயினும் அவை பற்றிய தகவலைச் செம்மொழித் தமிழாய்வு நிறுவனத்திற்குத் தெரிவித்து உதவினால் இப்பதிப்புப் பட்டியலை மேம்படுத்த உதவியாக இருக்கும்.',
+                    'The print editions of the remaining Keezhakanakku texts may be considered as their first editions. If anyone possesses or has knowledge of earlier print editions of any of these texts, sharing that information with the Central Institute of Classical Tamil would greatly help in improving this publication list.'
+                  )}
+                </p>
+              </div>
+
+              {/* Lower decorative ornament */}
+              <div className="flex justify-center mt-12 mb-10">
+                <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-60" />
+              </div>
+
+              {/* Action Button */}
+              <div className="flex justify-center pb-4">
+                <Link to="/ebooks" onClick={() => window.scrollTo(0, 0)} className="inline-flex items-center gap-3 bg-gradient-to-r from-maroon to-[#4A0A0A] text-white px-8 py-3.5 rounded border border-gold/40 shadow-lg hover:shadow-gold/20 hover:-translate-y-1 transition-all duration-300 font-cinzel font-bold tracking-widest text-sm uppercase group">
+                  {t('மின்நூல்களை ஆராய்க', 'Explore E-Books')} 
+                  <span className="text-gold text-lg group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
+              </div>
             </div>
 
-            <div className="absolute right-0 bottom-4 text-[10px] font-cinzel font-bold text-gold uppercase tracking-[0.3em] flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-gold"></span>
-              {t('செவ்வியல் நூல்கள்', 'PRIMARY TEXTS')}
-            </div>
-          </div>
-
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-32 space-y-4">
-              <div className="w-12 h-12 border-2 border-maroon/10 border-t-gold rounded-full animate-spin" />
-              <p className="font-cinzel tracking-[0.4em] text-bronze animate-pulse uppercase text-[10px]">
-                {t('பதிவேடுகளைத் திரட்டுகிறது…', 'RETRIEVING AUTHORITY RECORDS…')}
-              </p>
-            </div>
-          ) : (
-            <div className="relative">
-              <motion.div
-                variants={stagger}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, amount: 0.1 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10"
-              >
-                {texts.map((book, idx) => {
-                  return (
-                    <motion.div
-                      key={book.id}
-                      custom={idx}
-                      variants={{
-                        hidden: { opacity: 0, y: 30 },
-                        show: i => ({
-                          opacity: 1,
-                          y: 0,
-                          transition: {
-                            delay: i * 0.1, // Staggered delay of 100ms
-                            duration: 0.5,
-                            ease: [0.22, 1, 0.36, 1]
-                          }
-                        })
-                      }}
-                      className="group bg-[#FFF8F0] border border-[#C9973B]/40 shadow-[0_4px_12px_-2px_rgba(60,20,5,0.08),_0_12px_32px_-4px_rgba(201,151,59,0.2)] hover:shadow-[0_8px_20px_-4px_rgba(60,20,5,0.12),_0_20px_45px_-8px_rgba(201,151,59,0.35)] transition-all duration-300 rounded-xl flex flex-col h-full hover:-translate-y-2 relative overflow-hidden"
-                    >
-                      {/* Corner Ornaments */}
-                      <CornerOrnament position="top-left" />
-                      <CornerOrnament position="top-right" />
-                      <CornerOrnament position="bottom-left" />
-                      <CornerOrnament position="bottom-right" />
-
-                      {/* Book Cover */}
-                      <div className="relative bg-transparent flex items-center justify-center p-8 overflow-hidden"
-                        style={{ height: 260 }}>
-                        {getBookCover(book) ? (
-                          <div className="h-full aspect-[3/4] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-transform duration-300 group-hover:scale-[1.04]">
-                            <img
-                              src={getBookCover(book)}
-                              alt={book.title_tamil}
-                              className="h-full w-full object-contain pointer-events-none"
-                              onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📜</span>'; }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="text-5xl opacity-20">📜</div>
-                        )}
-                      </div>
-
-                      {/* Info */}
-                      <div className="px-8 pb-8 pt-4 flex flex-col flex-1 relative mt-auto">
-                        <div className="flex justify-between items-end gap-2">
-                          <div className="flex-1">
-                            <h3 className="tamil-label text-xl text-maroon font-black mb-1">
-                              {book.title_tamil}
-                            </h3>
-                            <p className="font-cinzel text-xs text-stone/50 uppercase tracking-widest font-bold">
-                              {book.title_english}
-                            </p>
-                          </div>
-
-                          {/* Circular gold chevron button */}
-                          <a href={`/search?book_id=${book.id}`} className="w-10 h-10 rounded-full border border-gold/45 group-hover:border-gold bg-transparent flex items-center justify-center text-gold transition-all duration-300 flex-shrink-0 group-hover:bg-gold/15 group-hover:scale-105">
-                            <span className="text-[14px] font-bold transform transition-transform duration-300 group-hover:translate-x-0.5">❯</span>
-                          </a>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            </div>
-          )}
+            {/* Bottom accent bar */}
+            <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+          </motion.div>
         </div>
       </section>
-
-      {/* ── Manuscripts Directory Table ── */}
-      <div className="container mx-auto px-6 max-w-6xl py-20">
-        <section className="relative pt-16">
-          <div className="flex flex-col items-center justify-center text-center mb-12">
-            {/* Divider ornament above heading */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-gold/50" />
-              <span className="text-gold text-xs">❦</span>
-              <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-gold/50" />
-            </div>
-
-            <h2 className="font-cinzel text-3xl text-maroon font-bold mb-3 tracking-wide">
-              {t('செவ்வியல் சுவடி வகையகம்', 'Manuscript Category Directory')}
-            </h2>
-            <p className="tamil-body text-stone/50 text-sm italic font-medium">
-              {t('அனைத்து நூல்களின் கீழ் வகைப்படுத்தப்பட்டுள்ள முழு சுவடி பட்டியல்', 'Comprehensive directory of categorised digitised palm-leaf manuscripts')}
-            </p>
-          </div>
-
-          <div className="overflow-hidden border border-gold/30 rounded-lg shadow-xl bg-white relative">
-            {/* Top color gradient highlight bar */}
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-maroon via-gold to-maroon" />
-
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#380505] text-gold border-b border-gold/20">
-                  <th className="p-5 font-cinzel text-[10px] text-gold/60 font-black tracking-widest text-center w-16">#</th>
-                  <th className="p-5 font-cinzel text-[11px] text-gold uppercase tracking-widest font-bold border-r border-gold/15">{t('செவ்வியல் நூல்', 'PARENT AUTHORITY')}</th>
-                  <th className="p-5 font-cinzel text-[11px] text-gold uppercase tracking-widest font-bold border-r border-gold/15">{t('சுவடி வகை', 'ARCHIVAL CATEGORY')}</th>
-                  <th className="p-5 font-cinzel text-[11px] text-gold uppercase tracking-widest font-bold text-right">{t('தேடு', 'COLLECTION')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {manuscripts.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-20 text-center">
-                      <div className="flex flex-col items-center justify-center space-y-3">
-                        <svg className="w-12 h-12 text-gold/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        <p className="font-cinzel text-[11px] text-gold font-bold uppercase tracking-[0.3em]">
-                          {t('தரவு கிடைக்கவில்லை', 'NO RECORDS FOUND')}
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : manuscripts.map((m, idx) => (
-                  <motion.tr
-                    key={m.id}
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.02 }}
-                    className={`border-b border-gold/10 hover:bg-gold/[0.04] transition-colors group ${idx % 2 === 0 ? 'bg-white' : 'bg-[#FCFAF5]'}`}
-                  >
-                    <td className="p-5 font-cinzel text-[10px] text-maroon/30 font-black text-center">{idx + 1}</td>
-                    <td className="p-5 border-r border-gold/10">
-                      <span className="tamil-label text-xs text-bronze uppercase tracking-[0.15em] font-black group-hover:text-maroon transition-colors">{m.book_name}</span>
-                    </td>
-                    <td className="p-5 border-r border-gold/10">
-                      <span className="tamil-label text-base text-maroon font-black">{m.title_tamil}</span>
-                    </td>
-                    <td className="p-5 text-right">
-                      <a href={`/search?cid=${m.id}&book_id=${m.text_id}`}
-                        className="font-cinzel text-gold hover:text-maroon text-[10.5px] font-bold uppercase tracking-widest transition-all inline-flex items-center gap-1 group-hover:-translate-x-1">
-                        {t('ஆய்வு செய்க', 'EXPLORE')} →
-                      </a>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-12 text-center">
-            <p className="font-cinzel text-[8.5px] text-bronze font-bold uppercase tracking-[0.6em] opacity-40">
-              CENTRAL INSTITUTE OF CLASSICAL TAMIL
-            </p>
-          </div>
-        </section>
-      </div>
     </div>
   );
 };

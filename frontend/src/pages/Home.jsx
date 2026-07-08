@@ -217,7 +217,7 @@ const Home = () => {
 
         {/* Manuscript artwork background — full-width img drives section height */}
         <img
-          src="/images/bg/hero-wide-bg.png"
+          src="/images/bg/hero-wide-bg-new.jpg"
           alt=""
           aria-hidden="true"
           className="home-hero-artwork"
@@ -243,7 +243,7 @@ const Home = () => {
 
             {/* Main title */}
             <motion.div className="space-y-3" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}>
-              <h1 className="tamil-heading text-white italic" style={{ fontSize: 'clamp(4rem, 12vw, 8.5rem)', textShadow: '0 4px 80px rgba(201,151,59,0.30), 0 0 160px rgba(201,151,59,0.12)' }}>
+              <h1 className="tamil-heading text-maroon italic" style={{ fontSize: 'clamp(4rem, 12vw, 8.5rem)', textShadow: '0 4px 80px rgba(201,151,59,0.30), 0 0 160px rgba(201,151,59,0.12)' }}>
                 {t('சுவடி', 'Suvadi')}
               </h1>
               <p className="tamil-label text-gold/90 text-xl md:text-3xl tracking-widest font-black uppercase">

@@ -9,13 +9,7 @@ import { getBookCover } from '../utils/bookCovers';
 
 const API = 'http://localhost:3001';
 
-const LIBRARIES = [
-  { ta: 'மறைமலையடிகள் நூலகம்',           en: 'Maraimalai Adigal Library' },
-  { ta: 'உ.வே.சாமிநாதையர் நூல்நிலையம்',  en: 'U.Ve.Swaminatha Iyer Library' },
-  { ta: 'ரோஜா முத்தையா ஆராய்ச்சி நூலகம்', en: 'Roja Muthiah Research Library' },
-  { ta: 'தமிழ்ப் பல்கலைக்கழக நூலகம்',    en: 'Tamil University Library' },
-  { ta: 'தமிழ் இணையக் கல்விக்கழகம்',     en: 'Tamil Virtual Academy' },
-];
+
 
 const stagger = {
   hidden: {},
@@ -25,6 +19,48 @@ const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   show:   { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
 };
+
+const CornerOrnament = ({ position }) => {
+  const styles = {
+    'top-left': { top: '8px', left: '8px' },
+    'top-right': { top: '8px', right: '8px', transform: 'scaleX(-1)' },
+    'bottom-left': { bottom: '8px', left: '8px', transform: 'scaleY(-1)' },
+    'bottom-right': { bottom: '8px', right: '8px', transform: 'scale(-1)' },
+  };
+  return (
+    <img
+      src="/images/gold_corner.png"
+      alt="corner ornament"
+      className="absolute pointer-events-none select-none w-16 h-16 opacity-100 contrast-125"
+      style={styles[position]}
+    />
+  );
+};
+
+const PandyaCorner = ({ className, style }) => (
+  <img
+    src="/images/pandya_corner.png"
+    alt="pandya corner decoration"
+    className={`absolute pointer-events-none select-none w-[320px] h-[320px] opacity-100 drop-shadow-md ${className}`}
+    style={style}
+  />
+);
+
+const TitleFlourishLeft = () => (
+  <img
+    src="/images/gold_flourish_left.png"
+    alt="flourish"
+    className="w-12 h-auto object-contain inline-block align-middle mr-3 opacity-100 contrast-125"
+  />
+);
+
+const TitleFlourishRight = () => (
+  <img
+    src="/images/gold_flourish_right.png"
+    alt="flourish"
+    className="w-12 h-auto object-contain inline-block align-middle ml-3 opacity-100 contrast-125"
+  />
+);
 
 const EBooks = () => {
   const { t } = useLanguage();
@@ -46,84 +82,270 @@ const EBooks = () => {
         )}
         badge={ebooks.length > 0 ? `${ebooks.length} ${t('நூல்கள்', 'Volumes Available')}` : undefined}
         glyphs={['முதல்', 'அச்சு', 'நூல்', 'பத்து', 'திரு', 'கலி']}
+        backgroundImage="/images/bg/ebooks(hero-latest).jpg"
         heroClass="ebooks-hero-bg"
         headingStyle={{
           fontSize: 'clamp(1.7rem, 4.8vw, 3.5rem)',
         }}
       />
 
-      <div className="container mx-auto px-6 max-w-6xl py-20">
+      <div className="w-full">
+        {/* ── Introduction Panel (Wide Container) ── */}
+        <div className="mx-auto w-[95%] max-w-[1700px] pt-20">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="bg-white border border-maroon/10 shadow-xl mb-16 relative overflow-hidden"
+          >
+            {/* Gold top accent */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-maroon via-gold to-maroon" />
 
-        {/* ── Introduction Panel ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="bg-white border border-maroon/10 shadow-xl mb-16 relative overflow-hidden"
-        >
-          {/* Gold top accent */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-maroon via-gold to-maroon" />
+            <div className="p-8 md:p-12 lg:p-16 max-h-[70vh] overflow-y-auto scrollbar-custom">
+            <style>{`
+              .scrollbar-custom::-webkit-scrollbar { width: 6px; }
+              .scrollbar-custom::-webkit-scrollbar-track { background: rgba(201,151,59,0.05); }
+              .scrollbar-custom::-webkit-scrollbar-thumb { background: rgba(92,26,8,0.5); border-radius: 3px; }
+              .scrollbar-custom::-webkit-scrollbar-thumb:hover { background: rgba(92,26,8,0.8); }
+            `}</style>
 
-          <div className="grid lg:grid-cols-2 gap-0">
-            {/* Intro */}
-            <div className="p-8 md:p-12 border-b lg:border-b-0 lg:border-r border-maroon/5">
-              <h2 className="tamil-label text-xl text-maroon border-b border-maroon/10 pb-4 mb-8">
-                {t('அறிமுகம்', 'Introduction')}
-              </h2>
-              <p className="tamil-body text-stone/80 mb-5 font-medium">
-                {t(
-                  'தமிழின் தொன்மை, தனித்தன்மை, தமிழர்களின் நாகரிகம், பண்பாடு ஆகியவற்றின் சிறப்புகளைக் கவனத்தில் கொண்டு பல்வேறு வெளியீடுகளைக் கொண்டுவருவதைச் செம்மொழி நிறுவனம் குறிக்கோளாகக் கொண்டுள்ளது.',
-                  'The Central Institute of Classical Tamil documents the unique heritage of Classical Tamil by publishing digital versions of rare first-printed editions.'
-                )}
+            <h2 className="tamil-label text-2xl text-maroon border-b border-maroon/10 pb-4 mb-6">
+              {t('செம்மொழித் தமிழ் நூல்களின் முதல் அச்சுப் பதிப்புகள் - அறிமுகம் & பதிப்புக் குறிப்புகள்', 'First Printed Editions of Classical Tamil Texts - Introduction & Publication Notes')}
+            </h2>
+            
+            <div className="space-y-6 text-stone/80 tamil-body leading-loose text-[15px]">
+              <p className="font-bold text-lg text-maroon">
+                {t('அச்சுப் பதிப்புகளின் வெளியீட்டு விவரம்', 'Publication Details of Printed Editions')}
               </p>
-              <p className="tamil-body text-stone/70">
-                {t(
-                  'செம்மொழித் தமிழுக்கு ஆதாரமாக உள்ள 41 நூல்களின் முதல் அச்சுப் பதிப்புகளை ஆவணப்படுத்திச் செம்மொழித் தமிழாய்வு நிறுவனம் வெளியிடுகிறது.',
-                  'The first printed editions of foundational texts are curated and published to ensure wide access for scholars and enthusiasts worldwide.'
-                )}
-              </p>
-            </div>
 
-            {/* Acknowledgements */}
-            <div className="p-8 md:p-12 bg-maroon/[0.015]">
-              <h2 className="tamil-label text-xl text-maroon border-b border-maroon/10 pb-4 mb-8">
-                {t('நன்றியுரை', 'Acknowledgements')}
-              </h2>
-              <p className="tamil-text text-sm text-stone/60 mb-6 font-bold uppercase tracking-wider">
-                {t('இந்த அச்சுப் பதிப்புகளை நிறுவனத்திற்கு வழங்கி உதவிய நூலகங்கள்:', 'Libraries that provided originals to CICT:')}
+              <div className="text-center font-bold text-maroon text-xl mt-8 mb-4">{t('தொல்காப்பியம்', 'Tolkappiyam')}</div>
+              
+              <p className="font-bold">{t('எழுத்ததிகாரம்', 'Eluthathikaram')}</p>
+              <p className="font-bold">{t('நச்சினார்க்கினியர் உரைப் பதிப்பு', 'Nachinarkkiniyar Commentary Edition')}</p>
+              <p className="text-justify">
+                {t('1. தொல்காப்பியம் எழுத்ததிகார மூலமும் மதுரை ஆசிரியர் பாரத்துவாசி நச்சினார்க்கினியர் உரையும், சகலகலாசாலைத் தமிழ்த் தலைமைப் புலமை நடாத்திய மழைவை மகாலிங்கையரால் பரிசோதிக்கப்பட்டுக் கல்விக்கடல் அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, பிலவங்க – ஆவணி [1847]', '1. Tolkappiyam Eluthathikaram with Nachinarkkiniyar commentary, examined by Mazhaivai Mahalinga Iyer, published at Kalvikadal Press, 1847')}
               </p>
-              <ul className="space-y-4">
-                {LIBRARIES.map((lib, i) => (
-                  <motion.li
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.1 * i }}
-                    className="flex items-start gap-3 group"
-                  >
-                    <span className="text-gold mt-1.5 flex-shrink-0 group-hover:scale-125 transition-transform">✦</span>
-                    <span className="tamil-text text-stone/70 font-semibold leading-relaxed group-hover:text-maroon transition-colors">
-                      {t(lib.ta, lib.en)}
-                    </span>
-                  </motion.li>
-                ))}
-              </ul>
+
+              <p className="font-bold mt-6">{t('இளம்பூரணர் உரைப் பதிப்பு', 'Ilampuranar Commentary Edition')}</p>
+              <p className="text-justify">
+                {t('தொல்காப்பியம் எழுத்ததிகார மூலமும் உரையாசிரியரென்னும் சிறப்புப் பெயரையுடைய இளம்பூரணருரையும், மகாவித்துவான் மீனாட்சிசுந்தரம் பிள்ளையவர்கள் மாணக்கருள் ஒருவராகிய திரிசிரபுரம் சோடசாவதானம் சுப்பராய செட்டியாரால் பரிசோதிக்கப்பட்டுச் சென்னை, அத்திநீயம் அண்ட் டேலிநியூஸ் பிரான்ச் அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, விபவ – கார்த்திகை [1868]', 'Tolkappiyam Eluthathikaram with Ilampuranar commentary, examined by Subbaraya Chettiar, published at Athenaeum and Daily News Branch Press, Chennai, 1868')}
+              </p>
+
+              <p className="font-bold mt-6">{t('சொல்லதிகாரம்', 'Sollathikaram')}</p>
+              <p className="font-bold">{t('சேனாவரையர் உரைப் பதிப்பு', 'Senavarayar Commentary Edition')}</p>
+              <p className="text-justify">
+                {t('தொல்காப்பியம் சொல்லதிகார மூலமும் சேனாவரையருரையும், மேலைமணம்பேடு ஸ்ரீநிவாஸசடகோப முதலியாரவர்கள் வேண்டுகோளின்படி கோமளபுரம் இராசகோபால பிள்ளையவர்களால் வர்த்தமானதரங்கிணீசாகை அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, விபவ – கார்த்திகை [1868]', 'Tolkappiyam Sollathikaram with Senavarayar commentary, published at Varthamana Tharangini Press, 1868')}
+              </p>
+
+              <p className="font-bold mt-6">{t('இளம்பூரணர் உரைப் பதிப்பு', 'Ilampuranar Commentary Edition')}</p>
+              <p className="text-justify">
+                {t('தொல்காப்பியம் சொல்லதிகார மூலமும் இளம்பூரணர் உரையும், காவேரிப்பாக்கம் நமச்சிவாய முதலியாரால் பரிசோதிக்கப்பட்டுச் சென்னை, காக்ஸ்டன் பிரஸில் பதிப்பிக்கப்பட்டது, 1927', 'Tolkappiyam Sollathikaram with Ilampuranar commentary, examined by Namasivaya Mudaliar, published at Caxton Press, Chennai, 1927')}
+              </p>
+
+              <p className="font-bold mt-6">{t('நச்சினார்க்கினியர் உரைப் பதிப்பு', 'Nachinarkkiniyar Commentary Edition')}</p>
+              <p className="text-justify">
+                {t('தொல்காப்பியம் சொல்லதிகார மூலமும் நச்சினார்க்கினியர் உரையும், யாழ்ப்பாணம் சி.வை. தாமோதரம் பிள்ளையால் பரிசோதிக்கப்பட்டு, சென்னபட்டணம், விக்டோரியா ஜூபிலி அச்சியந்திரசாலையில் பதிப்பிக்கப்பட்டது, நந்தன - புரட்டாசி [1892]', 'Tolkappiyam Sollathikaram with Nachinarkkiniyar commentary, examined by C.W. Thamotharampillai, published at Victoria Jubilee Press, Chennai, 1892')}
+              </p>
+
+              <p className="font-bold mt-6">{t('தெய்வச்சிலையார் உரைப் பதிப்பு', 'Deivachilaiyar Commentary Edition')}</p>
+              <p className="text-justify">
+                {t('தொல்காப்பியம் சொல்லதிகார மூலமும் தெய்வச்சிலையார் உரையும், அரங்க. வேங்கடாசலம் பிள்ளையால் பரிசோதிக்கப்பட்டுப் பதிப்பிக்கப்பட்டது, கரந்தைத் தமிழ்ச்சங்கப் பதிப்பு, சுக்கில – வைகாசி [1929]', 'Tolkappiyam Sollathikaram with Deivachilaiyar commentary, examined by Aranga Venkatachalam Pillai, Karanthai Tamil Sangam Edition, 1929')}
+              </p>
+
+              <p className="font-bold mt-6">{t('கல்லாடர் உரைப் பதிப்பு', 'Kalladar Commentary Edition')}</p>
+              <p className="text-justify">
+                {t('தொல்காப்பியம் சொல்லதிகார மூலமும் கல்லாடனார் விருத்தியுரையும் பழைய உரையும், சைவப் புலவர் சித்தாந்த நன்மணி கு. சுந்தரமூர்த்தி எழுதிய விளக்கவுரையுடன் பதிப்பிக்கப்பட்டது, திருநெல்வேலித் தென்னிந்திய சைவசித்தாந்த நூற்பதிப்புக் கழகம், திருநெல்வேலி, 1964', 'Tolkappiyam Sollathikaram with Kalladar commentary, published by South India Saiva Siddhanta Works Publishing Society, Tirunelveli, 1964')}
+              </p>
+
+              <p className="font-bold mt-8">{t('பொருளதிகாரம்', 'Porulathikaram')}</p>
+              <p className="font-bold">{t('இளம்பூரணர் உரைப் பதிப்பு', 'Ilampuranar Commentary Edition')}</p>
+              <p className="text-justify">
+                {t('தொல்காப்பியம் பொருளதிகாரம் அகத்திணையியல் புறத்திணையியல் மூலமும் இளம்பூரணார் உரையும், கா. நமச்சிவாய முதலியாரால் பரிசோதிக்கப்பட்டுச் சென்னை காக்ஸ்டன் பிரஸில் பதிப்பிக்கப்பட்டது, 1920', 'Tolkappiyam Porulathikaram Akathinaiyiyal, Purathinaiyiyal with Ilampuranar commentary, examined by K. Namasivaya Mudaliar, published at Caxton Press, Chennai, 1920')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('தொல்காப்பியம் பொருளதிகாரம் களவியல், கற்பியல், பொருளியல் மூலமும் இளம்பூரணர் உரையும், வ.உ. சிதம்பரம் பிள்ளையால் பரிசோதிக்கப்பட்டு, வாவிள்ள இராமஸ்வாமி சாஸ்த்ருலு அண்ட் ஸன்ஸ் அச்சுக்கூடத்தில் பதிக்கப்பட்டுள்ளது, 1933', 'Tolkappiyam Porulathikaram Kalaviyal, Karpiyal, Poruliyal with Ilampuranar commentary, examined by V.O. Chidambaram Pillai, published at Vavilla Ramaswamy Sastrulu and Sons Press, 1933')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('தொல்காப்பியம் பொருளதிகாரம் மெய்ப்பாட்டியல், உவமையியல், செய்யுளியல், மரபியல் மூலமும் இளம்பூரணர் உரையும், வ.உ.சிதம்பரம் பிள்ளையால் பரிசோதிக்கப்பட்டு, வாவிள்ள இராமஸ்வாமி சாஸ்த்ருலு அண்ட் ஸன்ஸ் அச்சுக்கூடத்தில் பதிக்கப்பட்டுள்ளது, 1935', 'Tolkappiyam Porulathikaram Meippattiyal, Uvamaiyiyal, Seyyuliyal, Marabiyal with Ilampuranar commentary, examined by V.O. Chidambaram Pillai, published at Vavilla Ramaswamy Sastrulu and Sons Press, 1935')}
+              </p>
+
+              <p className="font-bold mt-6">{t('நச்சினார்க்கினியர் உரைப் பதிப்பு', 'Nachinarkkiniyar Commentary Edition')}</p>
+              <p className="text-justify">
+                {t('தொல்காப்பியம் பொருளதிகார மூலமும் பாரத்துவாசி நச்சினார்க்கினியர் உரையும், யாழ்ப்பாணம் சி.வை. தாமோதரம் பிள்ளையால் பரிசோதிக்கப்பட்டு, சென்னை, ஸ்காட்டிஸ் அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, பார்த்திப – ஆவணி [1885]', 'Tolkappiyam Porulathikaram with Nachinarkkiniyar commentary, examined by C.W. Thamotharampillai, published at Scottish Press, Chennai, 1885')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('தொல்காப்பியம் பொருளதிகாரம் செய்யுளியல் மூலமும் நச்சினார்க்கினியர் உரையும், ஸேதுஸமஸ்தான வித்வான், ரா. இராகவையங்காரால் பரிசோதிக்கப்பட்டு, மதுரை, தமிழ்ச்சங்க முத்திராசாலையில் பதிப்பிக்கப்பட்டது, 1917', 'Tolkappiyam Porulathikaram Seyyuliyal with Nachinarkkiniyar commentary, examined by R. Raghava Iyengar, published at Madurai Tamil Sangam Press, 1917')}
+              </p>
+
+              <p className="font-bold mt-6">{t('பேராசிரியர் உரைப் பதிப்பு', 'Perasiriyar Commentary Edition')}</p>
+              <p className="text-justify">
+                {t('தொல்காப்பியம் பொருளதிகாரம் மெய்ப்பாட்டியல், உவமவியல், செய்யுளியல், மரபியல் மூலமும் நச்சினார்க்கினியர் உரையும், ராவ்பஹதூர் ச. பவானந்தம் பிள்ளையால் பரிசோதிக்கப்பட்டு, லாங்மென்ஸ் க்ரீன் அண்ட் கம்பெனியார் அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, 1917', 'Tolkappiyam Porulathikaram with Perasiriyar commentary, examined by S. Bavanandam Pillai, published at Longmans Green and Co. Press, 1917')}
+              </p>
+
+              <p className="font-bold mt-6">{t('தொல்காப்பிய மூலம்', 'Tolkappiyam Text')}</p>
+              <p className="text-justify">
+                {t('தொல்காப்பியம் - நன்னூல் மூலம், வால்ற்றார் ஜாயீஸ் துரையவர்களுதவியைக் கொண்டு இ. சாமுவேல் பிள்ளையினால் சென்னை மாநகரம் கிறிஸ்து மதக்கியான விளக்கச் சங்கத்தார் அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, 1858', 'Tolkappiyam - Nannul text, published by E. Samuel Pillai with the help of Walter Joyce at Christian Knowledge Society Press, Chennai, 1858')}
+              </p>
+
+              <div className="text-center font-bold text-maroon text-xl mt-12 mb-4">{t('சங்க இலக்கியம்', 'Sangam Literature')}</div>
+
+              <p className="font-bold">{t('எட்டுத்தொகை', 'Ettuthogai')}</p>
+              <p className="text-justify">
+                {t('2. எட்டுத்தொகையிலொன்றாகிய நற்றிணை மூலமும் பின்னத்தூர் நாராயணசாமி ஐயர் அவர்கள் எழுதிய உரையும், மேற்படி உரையாசிரியரால் சென்னபட்டணம் சைவவித்தியாநுபாலன யந்திரசாலையில் அச்சிற்பதிப்பிக்கப்பட்டது, ராக்ஷச – வைகாசி [1915]', '2. Natrinai with Pinnathur Narayanasamy Iyer commentary, published at Saiva Vidyanubalana Press, Chennai, 1915')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('3. எட்டுத்தொகையுள் இரண்டாவதாகிய குறுந்தொகை மூலமும் திருக்கண்ணபுரத் தலத்தான் திருமாளிகைச் சௌரிப்பெருமாளரங்கன் இயற்றிய உரையும், மேற்படி உரையாசிரியரால் வித்யாரத்னாகர அச்சுக்கூடத்திற் பதிப்பித்து வெளியிடப்பட்டது, 1915', '3. Kurunthogai with Sowriperumal Rangan commentary, published at Vidyaratnakara Press, 1915')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('4. எட்டுத்தொகையுள் மூன்றாவதாகிய ஐங்குறுநூறு மூலமும் பழைய உரையும், கும்பகோணம் காலேஜ் தமிழ்ப் பண்டிதராகிய உத்தமதானபுரம் வே. சாமிநாதையரால் பல பிரதிரூபங்களைக் கோண்டு பரிசோதித்து சென்னபட்டணம் வைஜயந்தி அச்சுக்கூடத்திற் பதிப்பிக்கப்பட்டது, சோபகிருது – ஆனி [1903]', '4. Ainkurunuru with old commentary, examined by U.V. Swaminatha Iyer, published at Vaijayanthi Press, Chennai, 1903')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('5. எட்டுத்தொகையுள் நான்காவதாகிய பதிற்றுப்பத்து மூலமும் பழைய உரையும், சென்னைப் பிரஸிடென்ஸி காலேஜ் தமிழ்ப் பண்டிதராகிய உத்தமதானபுரம் வே. சாமிநாதையரால் பரிசோதித்துச் சென்னபட்டணம் வைஜயந்தி அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, குரோதி – ஆனி [1904]', '5. Pathitrupathu with old commentary, examined by U.V. Swaminatha Iyer, published at Vaijayanthi Press, Chennai, 1904')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('6. எட்டுத்தொகையுள் ஐந்தாவதாகிய பரிபாடல் மூலமும் ஆசிரியர் பரிமேலழகரியற்றிய உரையும், சென்னை, பிரஸிடென்ஸி காலேஜ் தமிழ்ப் பண்டிதராகிய உத்தமதானபுரம் வே. சாமிநாதையரால் பரிசோதித்து, சென்னை, கமர்ஷியல் அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, 1918', '6. Paripadal with Parimelazhagar commentary, examined by U.V. Swaminatha Iyer, published at Commercial Press, Chennai, 1918')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('7. நல்லந்துவனார் கலித்தொகை மூலமும் மதுரை பாரத்துவாசி நச்சினார்க்கினியர் உரையும், யாழ்ப்பாணம் சி. வை. தாமோதரம் பிள்ளையவர்களால் பரிசோதிக்கப்பட்டு, சென்னை ஸ்காட்டிஸ் அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது,1887', '7. Kalithogai with Nachinarkkiniyar commentary, examined by C.W. Thamotharampillai, published at Scottish Press, Chennai, 1887')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('8. எட்டுத்தொகையுள் நெடுந்தொகை ஆகும் அகநானூறு மூலமும் பழைய உரையும், ஸேதுஸமஸ்தான வித்வான் உ. வே. ரா. இராகவையங்கார் ஸ்வாமிகள் பரிசோதித்துத் தந்து சென்னை, கம்பர் விலாஸம் வே. இராஜகோபாலையங்காரால் பதிப்பிக்கட்டது, ருதிரோத்காரி [1918]', '8. Ahananuru with old commentary, examined by R. Raghava Iyengar, published by V. Rajagopala Iyengar, Chennai, 1918')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('9. எட்டுத்தொகையுள் ஒன்றாகிய புறநானூறு மூலமும் உரையும், கும்பகோணம் காலேஜ் தமிழ்ப் பண்டிதராகிய உத்தமதானபுரம் வே. சாமிநாதையரால் பரிசோதித்துச் சென்னை, வெ.நா. ஜூபிலி அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, 1894', '9. Purananuru with commentary, examined by U.V. Swaminatha Iyer, published at V.N. Jubilee Press, Chennai, 1894')}
+              </p>
+
+              <p className="font-bold mt-8">{t('பத்துப்பாட்டு', 'Pathuppattu')}</p>
+              <p className="text-justify">
+                {t('10. பத்துப்பாட்டு மூலமும் மதுரையாசிரியர் பாரத்துவாசி நச்சினார்க்கினியர் உரையும், கும்பகோணம் காலேஜ் தமிழ்ப் பண்டிதராகிய உத்தமதானபுரம் வே. சாமிநாதையரால் பரிசோதித்து, சென்னை, திராவிடரத்நாகர அச்சுக்கூடத்திற் பதிப்பிக்கப்பட்டது, 1889', '10. Pathuppattu with Nachinarkkiniyar commentary, examined by U.V. Swaminatha Iyer, published at Dravidaratnakara Press, Chennai, 1889')}
+              </p>
+
+              <p className="font-bold mt-8">{t('பதினெண்கீழ்க்கணக்கு', 'Pathinenkeezhkanakku')}</p>
+              <p className="text-justify">
+                {t('20. தெய்வப்புலமை திருவள்ளுவ நாயனார் அருளிச்செய்த திருக்குறள் மூலபாடம், தொண்டமண்டலம் சென்னைப் பட்டினத்தில் தஞ்சை நகரம் மலையப்ப பிள்ளை குமாரன் ஞானப்பிறகாசனால் மாசத்தினச்சரிதையின் அச்சுக்கூடத்தில் அச்சிடப்பட்டது, 1812', '20. Thirukkural text, printed by Gnana Prakasam of Thanjavur at Masathinacharuthai Press, Chennai, 1812')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('21. முனிவர்களருளிச்செய்த நாலடியார் மூலபாடம், தொண்டமண்டலம் சென்னைப் பட்டினத்தில் தஞ்சை நகரம் மலையப்ப பிள்ளை குமாரன் ஞானப்பிறகாசனால் மாசத்தினச்சரிதையின் அச்சுக்கூடத்தில் அச்சிடப்பட்டது,1812', '21. Naladiyar text, printed by Gnana Prakasam of Thanjavur at Masathinacharuthai Press, Chennai, 1812')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('22. பூதஞ்சேந்தனார் அருளிச் செய்த இனியது நாற்பது மூலமும் உரையும், சேதுஸம்ஸ்தான வித்வானும் செந்தமிழ்ப் பத்திராசிரியருமான ரா. இராகவையங்காரால் வெளியிடப்பட்டது, மதுரை, தமிழ்ச்சங்க முத்திராசாலைப் பதிப்பு, 1903', '22. Iniyavai Narpathu with commentary, published by R. Raghava Iyengar at Madurai Tamil Sangam Press, 1903')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('23. சங்கமருவிய சான்றோரிலொருவராகிய பெருவாயின் முள்ளியாரால் அருளிச் செய்யப்பட்ட ஆசாரக்கோவை மூலமும் உரையும், பாளையங்கோட்டை, சிந்தாமணியந்திரசாலையில் பதிப்பிக்கப்பட்டது, 1883', '23. Asarakkovai with commentary, published at Chinthamani Press, Palayamkottai, 1883')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('24. நல்லாதனாரால் செய்யப்பட்ட சங்கமருவிய நீதி நூலாகிய திரிகடுகம், திருக்கோட்டியூர் இராமாநுசாசாரியார் செய்த உரையுடன் நல்லூர் சதாசிவப்பிள்ளையால் சென்னபட்டணம் வர்த்தமானதரங்கிணீசாகை யச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, விபவ - புரட்டாதி [1868]', '24. Thirikadugam with Ramanuja Chariyar commentary, published by Nallur Sadasiva Pillai at Varthamana Tharangini Press, Chennai, 1868')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('25. விளம்பிநாகனார் இயற்றிய நான்மணிக்கடிகை மூலமும் உரையும் பி. வாசுதேவ முதலியாரால் பதிப்பித்து வெளியிடப்பட்டது, 1872', '25. Nanmanikadugai with commentary, published by P. Vasudeva Mudaliar, 1872')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('26. முன்றுறையரையனார் இயற்றிய பழமொழி நானூறு மூலமும் உரையும், சென்னைப் பச்சையப்பன் கல்லூரித் தமிழாசிரியர் தி. செல்வக்கேசவராய முதலியாரால் பரிசோதிக்கப்பட்டுப் பதிப்பிக்கப்பட்டது, சென்னை, எஸ்.பி.சி.கே. பிரஸ், 1917', '26. Pazhamozhi Nānūru with commentary, examined by T. Selvakkesavaraya Mudaliar, published at SPCK Press, Chennai, 1917')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('27. காரியாசான் செய்த சிறுபஞ்சமூலம் மூலமும் உரையும், சண்முகசுந்தர முதலியாரவர்களால் பரிசோதித்து திரிசிரபுரம் புத்தக வியாபாரம் தி. சபாபதிப்பிள்ளையவர்களது மட்டுவார்குழலாம்பாள் அச்சுக்கூடத்திற் பதிப்பிக்கப்பட்டது, யுவ - மேடரவி [1875]', '27. Sirupanchamoolam with commentary, examined by Shanmugasundara Mudaliar, published at Mattuvarkuzhalambal Press, Trichy, 1875')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('28. பொய்கையாரருளிச்செய்த களவழி நாற்பது மூலமும் உரையும், கொன்றமாநகரம் சண்முகசுந்தரமுதலியாரவர்களால் பரிசோதித்து மட்டுவார்குழலாம்பாள் அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, யுவ – மேடரவி [1875]', '28. Kalavazhi Narpathu with commentary, examined by Shanmugasundara Mudaliar, published at Mattuvarkuzhalambal Press, 1875')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('29. மதுரைக் கண்ணங்கூத்தனார் செய்த கார்நாற்பது மூலமும் உரையும், சண்முகசுந்தர முதலியாரவர்களால் பரிசோதித்து திரிசிரபுரம் புத்தக வியாபாரம் தி. சபாபதிப்பிள்ளையவர்களது மட்டுவார்குழலாம்பாள் அச்சுக்கூடத்திற் பதிப்பிக்கப்பட்டது, மிதுனரவி [1870]', '29. Karnarpathu with commentary, examined by Shanmugasundara Mudaliar, published at Mattuvarkuzhalambal Press, Trichy, 1870')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('30. கபிலராற்செய்த இன்னா நாற்பது மூலமும் உரையும், கொன்றைமாநகரம் சண்முகசுந்தர முதலியார் அவர்களாற் பரிசோதித்து, தி. சபாபதிப்பிள்ளையவர்களது மட்டுவார்குழலாம்பாள் அச்சுக்கூடத்திற் பதிப்பிக்கப்பட்டது, தாது – ஆவணி [1876]', '30. Inna Narpathu with commentary, examined by Shanmugasundara Mudaliar, published at Mattuvarkuzhalambal Press, 1876')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('31. மதுரை சங்கப்புலவருளொருவராகிய கூடலூர் கிழார் இயற்றிய முதுமொழிக் காஞ்சி, உறையூர் மதுரைநாயக முதலியாரல் பார்வையிடப்பட்டுத் திருச்சினாப்பள்ளி வி. பக்கியம் பிள்ளை அண்டு சன்ஸ் அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, 1895', '31. Mudumozhikkanchi, examined by Madurainayaga Mudaliar, published at V. Packiam Pillai and Sons Press, Trichy, 1895')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('32. கணிமேதையார் செய்த ஏலாதி மூலமும் உரையும், ஊ. புஷ்பரத செட்டியாரால் தமது கலாரத்நாகர அச்சுக்கூடத்திற் பதிப்பிக்கப்பட்டது, சென்னை, 1887', '32. Elathi with commentary, published by U. Pushparatha Chettiar at Kalaratnakara Press, Chennai, 1887')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('33. மாறன்பொறையனார் அருளிச்செய்த ஐந்திணையைம்பது மூலமும் உரையும், சேதுசம்ஸ்தான வித்துவானும் செந்தமிழ்ப் பத்திராசிரியருமாகிய ரா. இராகவையங்காரால் பரிசோதிக்கப்பட்டது, மதுரை, தமிழ்ச்சங்க முத்திராசாலை பதிப்பு, 1903', '33. Ainthinai Aimpathu with commentary, examined by R. Raghava Iyengar, published at Madurai Tamil Sangam Press, 1903')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('34. கணிமேதாவியார் அருளிச்செய்த திணைமாலை நூற்றைம்பது மூலமும் உரையும், சேதுசம்ஸ்தான வித்வானும் செந்தமிழ்ப் பத்திராசிரியருமான ரா. இராகவையங்காரால் பதிப்பிக்கப்பெற்றது, மதுரை, தமிழ்ச்சங்க முத்திராசாலைப் பதிப்பு, 1904', '34. Thinaimalai Nootraimpathu with commentary, published by R. Raghava Iyengar at Madurai Tamil Sangam Press, 1904')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('35. மூவாதியார் செய்த ஐந்திணை யெழுபது மூலமும் உரையும், இலக்கண விளக்க ஆசிரியர் பரம்பரை சோமசுந்தர தேசிகரால் பரிசோதிக்கப்பட்டு வெளியிடப்பட்டது, வஸந்தா அச்சுக்கூடம், மாயூரம், 1926', '35. Ainthinai Ezhupathu with commentary, examined by Somasundara Desikar, published at Vasantha Press, Mayiladuthurai, 1926')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('36. சாத்தந்தையார் மகனார் கண்ணன் சேந்தனார் அருளிச் செய்த திணைமொழி ஐம்பது மூலமும் பழைய உரையும், இலக்கண விளக்க பரம்பரை சோமசுந்தர தேசிகரால் பரிசோதிக்கப்பட்டு திருவாரூர்த் தமிழ்ச் சங்கத்தாரால் வெளியிடப்பட்டது, திருவாரூர் விக்டோரியா அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, 1918', '36. Thinaimozhi Aimpathu with old commentary, examined by Somasundara Desikar, published by Thiruvarur Tamil Sangam at Victoria Press, 1918')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('37. பதினெண் கீழ்க்கணக்கினுள் கைந்நிலை மூலமும் பழைய உரையும், இடையாற்று மங்கலம் வைத்தீச்சுவரையரவர்கள் குமாரர் அனந்தராமையரால் பரிசோதித்துச் சென்னை, நோபில் அச்சுக்கூடத்தில் பதிப்பிக்கப்பெற்றது, 1931', '37. Kainnilai with old commentary, examined by Anantharamaiyar, published at Noble Press, Chennai, 1931')}
+              </p>
+
+              <div className="text-center font-bold text-maroon text-xl mt-12 mb-4">{t('காப்பியங்கள்', 'Epics')}</div>
+              
+              <p className="font-bold">{t('சிலப்பதிகாரப் பதிப்பு', 'Silappatikaram Editions')}</p>
+              <p className="text-justify">
+                {t('38. சிலப்பதிகாரம் புகார்காண்டம், வேனிற்காதை வரையுள்ள மூலம், தி. ஈ. ஸ்ரீநிவாசராகவாசாரியாரால் பு. ம. சபாபதி முதலியாரது கல்விவிளக்க அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, 1872', '38. Silappatikaram Puhar Kandam up to Venirkathai text, published by T.E. Srinivasaraghavachariyar at Kalvivilakka Press, 1872')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('சிலப்பதிகாரம் முதலாவது புகார்காண்டம் மூலம், சென்னை பிரெஸிடென்ஸி காலேஜ் தமிழ்ப் பண்டிதராகிய ஈ. ஸ்ரீநிவாசராகவாசாரியாரவர்களால், ஊ. புஷ்பரத செட்டியாரவர்களது கலாரத்நாகரம் என்னும் அச்சுக்கூடத்தில் அச்சிடப்பட்டது, 1876', 'Silappatikaram Puhar Kandam text, published by E. Srinivasaraghavachariyar at Kalaratnakara Press, 1876')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('சேரர் குலத்துதித்த இளங்கோவடிகள் இயற்றிய பஞ்சகாவியங்களுள் ஒன்றாகிய சிலப்பதிகாரம் புகார் காண்டம் மூலமும் அடியார்க்குநல்லார் உரையும், தமிழ்ப் புலவர் தி. க. சுப்பராய செட்டியாரால் மிமோரியல் அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, விக்கிரம – சித்திரை [1880]', 'Silappatikaram Puhar Kandam with Adiyarkkunallar commentary, published by T.K. Subbaraya Chettiar at Memorial Press, 1880')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('இளங்கோவடிகளருளிச் செய்த சிலப்பதிகார மூலமும் அடியார்க்கு நல்லார் உரையும் அரும்பதவுரையும், கும்பகோணம் காலேஜ் தமிழ்ப் பண்டிதராகிய உத்தமதானபுரம் வே. சாமிநாதையரால் பரிசோதித்துச் சென்னை வெ.நா. ஜூபிலி அச்சுக்கூடத்தில் பதிப்பிக்கப்பட்டது, 1892', 'Silappatikaram with Adiyarkkunallar and Arumpatha commentaries, examined by U.V. Swaminatha Iyer, published at V.N. Jubilee Press, Chennai, 1892')}
+              </p>
+
+              <p className="font-bold mt-6">{t('மணிமேகலைப் பதிப்பு', 'Manimekalai Editions')}</p>
+              <p className="text-justify">
+                {t('39. மணிமேகலை (மூலம் மட்டும்) மதுரைக் கூலவாணிகன் சாத்தனார் பாடியது, புரசை அட்டாவதானம் சபாபதி முதலியார் அவர்கள் மாணாக்கர் திருமயிலை சண்முகம்பிள்ளையால் பார்வையிடப்பட்டுச் சென்னை மதராஸ் ரிப்பன் அச்சியந்திரசாலையில் பதிப்பிக்கப்பட்டது, விஜய – தனுர்ரவி [1894]', '39. Manimekalai (text only), examined by Thirumayilai Shanmugampillai, published at Madras Ripon Press, Chennai, 1894')}
+              </p>
+              <p className="text-justify mt-4">
+                {t('கடைச்சங்கப் புலவர்களுள் ஒருவராகிய மதுரைக் கூலவாணிகன் சாத்தனார் அருளிச் செய்த மணிமேகலை மூலமும் கும்பகோணம் கவர்ன்மென்ட் காலேஜ் தமிழ்ப் பண்டிதராகிய உத்தமதானபுரம் வே. சாமிநாதையரெழுதிய அரும்பதவுரையும், உ.வே. சாமிநாதையரால் சென்னை, வெ.நா. ஜூபிலி அச்சுக்கூடத்தில் பதிப்பிக்கப்படது, 1898', 'Manimekalai with Arumpatha commentary by U.V. Swaminatha Iyer, published by U.V. Swaminatha Iyer at V.N. Jubilee Press, Chennai, 1898')}
+              </p>
+
+              <div className="text-center font-bold text-maroon text-xl mt-12 mb-4">{t('இறையனாரகப்பொருள்', 'Iraiyanar Agapporul')}</div>
+              <p className="text-justify">
+                {t('40. இறையனாரகப்பொருள், மதுரைக் கணக்காயனார் மகனார் நக்கீரனார் கண்டருளிய உரையோடு யாழ்ப்பாணம் சி.வை. தாமோதரம் பிள்ளையால் பரிசோதிக்கப்பட்டுப் பதிப்பிக்கப்பட்டது, ஸ்காட்டிஸ் அச்சுக்கூடம், சென்னை, சுபானு - சித்திரை [1883]', '40. Iraiyanar Agapporul with Nakkiranar commentary, examined by C.W. Thamotharampillai, published at Scottish Press, Chennai, 1883')}
+              </p>
+
+              <div className="text-center font-bold text-maroon text-xl mt-12 mb-4">{t('முத்தொள்ளாயிரம்', 'Muthollayiram')}</div>
+              <p className="text-justify">
+                {t('41. முத்தொள்ளாயிரச் செய்யுட்கள், ஸேதுஸம்தான வித்துவானும் செந்தமிழ்ப் பத்திராசிரியருமான ரா. இராகவையங்காரால் பரிசோதிக்கப்பெற்றன, மதுரை, தமிழ்ச்சங்க முத்திராசாலைப் பதிப்பு,1905', '41. Muthollayiram verses, examined by R. Raghava Iyengar, published at Madurai Tamil Sangam Press, 1905')}
+              </p>
             </div>
           </div>
         </motion.div>
+        </div>
 
         {/* ── Book Cards ── */}
-        <div className="mb-16">
-          <div className="flex items-center justify-between mb-10 pb-4 border-b border-maroon/8">
-            <h2 className="tamil-label text-2xl text-maroon">
-              {t('நூல் தொகுப்புகள்', 'Archived Collections')}
-            </h2>
-            <div className="hidden md:block text-[10px] font-bold text-bronze uppercase tracking-[0.3em]">
-              {ebooks.length} {t('நூல்கள்', 'Volumes Available')}
+        <div className="relative mt-20 mb-20 py-16 overflow-hidden">
+          {/* Pandya Corner Ornaments strictly around Archived Collections section */}
+          <PandyaCorner className="top-0 left-0" />
+          <PandyaCorner className="top-0 right-0" style={{ transform: 'scaleX(-1)' }} />
+          <PandyaCorner className="bottom-0 left-0" style={{ transform: 'scaleY(-1)' }} />
+          <PandyaCorner className="bottom-0 right-0" style={{ transform: 'scale(-1)' }} />
+
+          <div className="mx-auto w-[95%] max-w-[1700px] relative z-10 px-6">
+            <div className="flex items-center justify-between mb-16 relative z-10">
+              <div className="flex-1 text-center">
+                {/* Golden divider line ornament above */}
+                <div className="flex justify-center mb-4">
+                  <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-100 contrast-125" />
+                </div>
+                <div className="flex items-center justify-center gap-1">
+                  <TitleFlourishLeft />
+                  <h2 className="font-cinzel text-3xl md:text-4xl text-maroon font-bold tracking-wider">
+                    {t('நூல் தொகுப்புகள்', 'Archived Collections')}
+                  </h2>
+                  <TitleFlourishRight />
+                </div>
+                <div className="flex justify-center my-4">
+                  <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-100 contrast-125" />
+                </div>
+              </div>
+              <div className="hidden md:flex absolute right-0 bottom-4 text-[10px] font-bold text-bronze uppercase tracking-[0.3em] items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-gold"></span>
+                {ebooks.length} {t('நூல்கள்', 'Volumes Available')}
+              </div>
             </div>
-          </div>
 
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-32 space-y-4">
@@ -138,7 +360,7 @@ const EBooks = () => {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, amount: 0.1 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 xl:gap-16 relative z-10 px-2 md:px-8 lg:px-20 xl:px-40 2xl:px-64"
             >
               {ebooks.map((book) => (
                 <Link
@@ -148,52 +370,61 @@ const EBooks = () => {
                 >
                   <motion.div
                     variants={fadeUp}
-                    className="group bg-white border border-maroon/10 shadow hover:shadow-2xl hover:shadow-maroon/5 transition-all duration-500 overflow-hidden flex flex-col h-full cursor-pointer hover:border-gold/30 hover:-translate-y-2 relative"
+                    className="group bg-[#FFF8F0] border border-[#C9973B]/40 shadow-[0_4px_12px_-2px_rgba(60,20,5,0.08),_0_12px_32px_-4px_rgba(201,151,59,0.2)] hover:shadow-[0_8px_20px_-4px_rgba(60,20,5,0.12),_0_20px_45px_-8px_rgba(201,151,59,0.35)] transition-all duration-300 rounded-xl flex flex-col h-full hover:-translate-y-2 relative overflow-hidden"
                   >
-                    {/* Top accent line */}
-                    <div className="absolute top-0 left-0 w-0 group-hover:w-full h-[3px] bg-gradient-to-r from-gold to-gold-light transition-all duration-700" />
+                    {/* Corner Ornaments */}
+                    <CornerOrnament position="top-left" />
+                    <CornerOrnament position="top-right" />
+                    <CornerOrnament position="bottom-left" />
+                    <CornerOrnament position="bottom-right" />
 
-                    {/* Cover */}
-                    <div className="relative bg-maroon/[0.02] flex items-center justify-center overflow-hidden border-b border-maroon/5 group-hover:bg-ivory transition-colors duration-500"
-                         style={{ height: 220 }}>
-                      {book.cover_image || getBookCover(book) ? (
-                        <img
-                          src={getBookCover(book)}
-                          alt={book.title_tamil}
-                          className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-700 ease-out"
-                        />
+                    {/* Book Cover */}
+                    <div className="relative bg-transparent flex items-center justify-center p-8 overflow-hidden"
+                      style={{ height: 420 }}>
+                      {getBookCover(book) ? (
+                        <div className="h-full aspect-[3/4] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-transform duration-300 group-hover:scale-[1.04]">
+                          <img
+                            src={getBookCover(book)}
+                            alt={book.title_tamil}
+                            className="h-full w-full object-contain pointer-events-none"
+                            onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📜</span>'; }}
+                          />
+                        </div>
                       ) : (
-                        <span className="text-6xl opacity-[0.08]">📚</span>
+                        <div className="text-5xl opacity-20">📜</div>
                       )}
-                      {/* Year badge */}
-                      <div className="absolute top-3 right-3 bg-maroon text-gold text-[9px] font-bold px-2 py-0.5 shadow-lg opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                      
+                      {/* Year badge - kept from original EBooks for info */}
+                      <div className="absolute top-3 right-3 bg-maroon text-gold text-[9px] font-bold px-2 py-0.5 shadow-lg opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 rounded-sm z-10">
                         {book.first_edition_year || 'N.A.'}
                       </div>
-                      {/* Hover overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-maroon/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
 
                     {/* Info */}
-                    <div className="p-6 flex flex-col flex-1">
-                      <h3 className="tamil-label text-base text-maroon font-extrabold mb-1 group-hover:text-gold transition-colors line-clamp-1">
-                        {book.title_tamil}
-                      </h3>
-                      <p className="font-cinzel text-[9px] text-bronze uppercase tracking-widest font-bold mb-4 opacity-60">
-                        {book.title_english}
-                      </p>
+                    <div className="px-8 pb-8 pt-4 flex flex-col flex-1 relative mt-auto">
+                      <div className="flex justify-between items-end gap-2 mb-4">
+                        <div className="flex-1">
+                          <h3 className="tamil-label text-xl text-maroon font-black mb-1 line-clamp-2 min-h-[3rem]">
+                            {book.title_tamil}
+                          </h3>
+                          <p className="font-cinzel text-xs text-stone/50 uppercase tracking-widest font-bold">
+                            {book.title_english}
+                          </p>
+                        </div>
+                      </div>
 
                       {book.description_tamil && (
-                        <p className="tamil-text text-[13px] text-stone/50 leading-relaxed line-clamp-3 mb-6 font-medium italic">
+                        <p className="tamil-text text-[13px] text-stone/60 leading-relaxed line-clamp-3 mb-6 font-medium italic">
                           {t(book.description_tamil, book.description_english)}
                         </p>
                       )}
 
-                      <div className="mt-auto pt-4 border-t border-maroon/5 flex items-center justify-between">
-                        <span className="text-[9px] text-stone/40 font-cinzel font-bold">
+                      <div className="mt-auto pt-4 border-t border-gold/20 flex items-center justify-between">
+                        <span className="text-[9px] text-stone/40 font-cinzel font-bold tracking-[0.2em]">
                           {t('ஆவணம்', 'VOL. ARCHIVE')}
                         </span>
-                        <span className="text-gold text-[10px] font-bold group-hover:translate-x-1.5 transition-transform tracking-[0.2em] uppercase">
-                          {t('படிக்க', 'READ')} →
+                        <span className="text-maroon text-[10px] font-bold group-hover:text-gold transition-colors tracking-[0.2em] uppercase flex items-center gap-1">
+                          {t('படிக்க', 'READ')} <span className="group-hover:translate-x-1 transition-transform">→</span>
                         </span>
                       </div>
                     </div>
@@ -203,43 +434,9 @@ const EBooks = () => {
             </motion.div>
           )}
         </div>
-
-        {/* ── Publishing Notes (dark banner) ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="bg-maroon relative overflow-hidden shadow-2xl mb-10"
-        >
-          <div className="absolute inset-0 opacity-[0.05]"
-            style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/dark-leather.png')" }} />
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
-
-          <div className="relative z-10 p-8 md:p-12">
-            <h2 className="tamil-heading text-2xl text-gold mb-8 flex items-center gap-4">
-              <span>{t('பதிப்புக் குறிப்புகள்', 'Publishing Excellence')}</span>
-              <div className="h-px flex-1 bg-gold/20" />
-            </h2>
-            <div className="grid lg:grid-cols-2 gap-10 xl:gap-20 text-[15px] leading-loose text-white/70">
-              <p className="tamil-body font-medium">
-                {t(
-                  'தமிழ்ச் செவ்வியல் நூல்களுள் திருக்குறள், நாலடியார் ஆகிய இரு நூல்களே முதன் முதலாக அச்சு வடிவம் பெற்றன. 1812இல் தஞ்சை நகரைச் சேர்ந்த மலையப்பப் பிள்ளையின் மகனாகிய ஞானப்பிரகாசன் எனும் அறிஞர் இவ்விரு நூல்களையும் ஒன்றாக இணைத்து அச்சிட்டு வெளியிட்டார்.',
-                  'Among Classical Tamil literary works, Thirukkural and Naladiyar were the pioneers to be printed. In 1812, the scholar Gnana Prakasam of Thanjavur published them together.'
-                )}
-              </p>
-              <p className="tamil-body font-medium">
-                {t(
-                  'தொல்காப்பியத்தின் அச்சுப் பதிப்பு வரலாறு மழைவை மகாலிங்கையர் பதிப்பித்த எழுத்ததிகார நச்சினார்க்கினியர் உரைப் பதிப்பிலிருந்து தொடங்குகிறது. 1847ஆம் ஆண்டு அப்பதிப்பு வெளிவந்தது.',
-                  "Tolkappiyam's printed history began with the 1847 edition of Eluthathikaram, with Nachinarkkiniyar's commentary, published by the scholar Mazhaivai Mahalinga Iyer."
-                )}
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
       </div>
     </div>
+  </div>
   );
 };
 

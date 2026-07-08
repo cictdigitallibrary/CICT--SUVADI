@@ -5,7 +5,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, ChevronLeft, ChevronRight,
-  ZoomIn, ZoomOut, AlertCircle, Maximize, Minimize, BookOpen
+  ZoomIn, ZoomOut, AlertCircle, Maximize, Minimize, BookOpen, Download
 } from 'lucide-react';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -121,34 +121,87 @@ export default function FlipbookReader() {
   const [isFS,       setIsFS]       = useState(false);
   const [zoom,       setZoom]       = useState(1.0);
   const [portrait,   setPortrait]   = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [dlError,    setDlError]    = useState(false);
+
+  /* ── Download handler ── */
+  const handleDownload = useCallback(async () => {
+    setDlError(false);
+    const filename = `${decodeURIComponent(bookTitle)}.pdf`;
+
+    if (isPDF && proxyUrl) {
+      try {
+        setDownloading(true);
+        const res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error('fetch failed');
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      } catch {
+        // Fallback: open the proxy URL in a new tab
+        window.open(proxyUrl, '_blank', 'noopener');
+      } finally {
+        setDownloading(false);
+      }
+    } else if (isImg && imageBase) {
+      // Image-based books — no single PDF; open first page as a best-effort
+      setDlError(true);
+      setTimeout(() => setDlError(false), 3500);
+    } else {
+      setDlError(true);
+      setTimeout(() => setDlError(false), 3500);
+    }
+  }, [isPDF, proxyUrl, isImg, imageBase, bookTitle]);
   
   const PRELOAD = isImg ? Math.min(4, totalPages) : 1;
   const ready   = isImg ? imgLoaded >= PRELOAD : (pdfReady || pdfErr);
 
-
   const bookRef = useRef(null);
   const total   = isImg ? totalPages : pdfTotal;
 
-  /* responsive sizing – each page fills ~42% of viewport width */
+  /* ── Responsive sizing ──
+     Goal: use as much of the viewport as possible without distorting pages.
+     - In two-up mode: each page = pageWidth, total book = 2 × pageWidth
+     - In portrait mode: single page fills the viewport width
+     - Page aspect ratio from actual suvadi images: 794 × 1024
+  */
   const [sz, setSz] = useState({ w: 450, h: 580 });
   useEffect(() => {
     const calc = () => {
       const vw = window.innerWidth;
-      const vh = window.innerHeight - 130;
-      // portrait on very narrow screens
-      setPortrait(vw < 680);
-      // page ratio from actual suvadi images: 794×1024
-      const ratio = 794 / 1024;
-      const maxW  = portrait ? vw - 20 : Math.floor(vw * 0.43);
-      const maxH  = Math.floor(vh * 0.88);
-      let w = Math.min(maxW, Math.floor(maxH * ratio), 560);
-      let h = Math.round(w / ratio);
-      setSz({ w: Math.max(w, 200), h: Math.max(h, 250) });
+      const vh = window.innerHeight - 130; // subtract header + nav bar
+      const narrow = vw < 680;
+      setPortrait(narrow);
+
+      const ratio = 794 / 1024; // page width / page height
+
+      if (narrow) {
+        // Portrait / mobile: single page
+        const maxW = vw - 24;
+        const maxH = Math.floor(vh * 0.88);
+        let w = Math.min(maxW, Math.floor(maxH * ratio));
+        let h = Math.round(w / ratio);
+        setSz({ w: Math.max(w, 180), h: Math.max(h, 240) });
+      } else {
+        // Desktop: two-up spread — each PAGE gets up to 44% of vw
+        // (The book container will be 2 × pageWidth, so the spread = 88% vw)
+        const maxPageW = Math.floor(vw * 0.44);
+        const maxH = Math.floor(vh * 0.92);
+        let w = Math.min(maxPageW, Math.floor(maxH * ratio));
+        let h = Math.round(w / ratio);
+        setSz({ w: Math.max(w, 220), h: Math.max(h, 280) });
+      }
     };
     calc();
     window.addEventListener('resize', calc);
     return () => window.removeEventListener('resize', calc);
-  }, [portrait]);
+  }, []); // intentionally no portrait dep — calc() sets it
 
   /* navigation */
   const flipNext = useCallback(() => bookRef.current?.pageFlip()?.flipNext(), []);
@@ -173,6 +226,9 @@ export default function FlipbookReader() {
   const scaledW = Math.round(sz.w * zoom);
   const scaledH = Math.round(sz.h * zoom);
 
+  // Total book width: 2 pages side-by-side in two-up; 1 page in portrait
+  const bookTotalW = portrait ? scaledW : scaledW * 2;
+
   /* no source guard */
   if (!isImg && !isPDF) return (
     <div style={{ minHeight: '100vh', background: '#1a0303', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
@@ -185,7 +241,7 @@ export default function FlipbookReader() {
   /* shared flipbook props */
   const fbProps = {
     ref: bookRef, width: scaledW, height: scaledH, size: 'fixed',
-    minWidth: 150, maxWidth: 800, minHeight: 200, maxHeight: 1200,
+    minWidth: 150, maxWidth: 900, minHeight: 200, maxHeight: 1400,
     maxShadowOpacity: 0.2,
     showCover: false,
     usePortrait: portrait,
@@ -223,14 +279,50 @@ export default function FlipbookReader() {
           <button onClick={() => setZoom(z => Math.max(z - 0.1, 0.5))} style={iBtn}><ZoomOut  size={13}/></button>
           <button onClick={() => setZoom(z => Math.min(z + 0.1, 1.8))} style={iBtn}><ZoomIn   size={13}/></button>
           <button onClick={toggleFS} style={iBtn}>{isFS ? <Minimize size={13}/> : <Maximize size={13}/>}</button>
+
+          {/* Download button */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              title={isPDF ? `Download ${decodeURIComponent(bookTitle)}.pdf` : 'PDF not available for this edition'}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: downloading ? 'rgba(201,151,59,0.12)' : '#5C1A08',
+                border: '1px solid rgba(201,151,59,0.45)',
+                color: '#C9973B', padding: '6px 12px', cursor: downloading ? 'wait' : 'pointer',
+                fontSize: 9, fontFamily: 'Cinzel,serif', fontWeight: 700,
+                letterSpacing: '0.18em', textTransform: 'uppercase', borderRadius: 2,
+                opacity: downloading ? 0.7 : 1,
+                transition: 'all 0.2s',
+                flexShrink: 0,
+              }}
+            >
+              {downloading
+                ? <><span style={{ display: 'inline-block', width: 11, height: 11, border: '1.5px solid rgba(201,151,59,0.3)', borderTopColor: '#C9973B', borderRadius: '50%', animation: 'fbspin 0.8s linear infinite', marginRight: 2 }} />Downloading</>  
+                : <><Download size={12} /><span className="hidden sm:inline">Download PDF</span></>}
+            </button>
+            {dlError && (
+              <span style={{ color: 'rgba(201,151,59,0.7)', fontSize: 7.5, fontFamily: 'Cinzel,serif', letterSpacing: '0.15em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                PDF not available
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
       {/* ══ STAGE ══ */}
       <main style={{
-        paddingTop: 56, minHeight: '100vh',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        gap: 20, padding: '74px 12px 24px', boxSizing: 'border-box', position: 'relative',
+        paddingTop: 56,
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 20,
+        padding: '74px 12px 24px',
+        boxSizing: 'border-box',
+        position: 'relative',
       }}>
         {/* Ambient glow */}
         <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 320, background: 'radial-gradient(ellipse,rgba(201,151,59,0.05) 0%,transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
@@ -243,7 +335,7 @@ export default function FlipbookReader() {
             >
               <div style={{ width: 46, height: 46, border: '2px solid rgba(201,151,59,0.15)', borderTopColor: '#C9973B', borderRadius: '50%', animation: 'fbspin 0.9s linear infinite' }} />
               <p style={{ color: 'rgba(201,151,59,0.85)', fontSize: 10, fontFamily: 'Cinzel,serif', letterSpacing: '0.4em', textTransform: 'uppercase', margin: 0 }}>
-                LOADING MANUSCRIPT…
+                LOADING BOOK EDITION…
               </p>
               {isImg && (
                 <div style={{ width: 220, height: 2, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }}>
@@ -265,11 +357,26 @@ export default function FlipbookReader() {
         </AnimatePresence>
 
         {/* ── FLIPBOOK WRAPPER ── */}
-        <div style={{ position: 'relative', opacity: ready ? 1 : 0, transition: 'opacity 0.5s ease', zIndex: 1 }}>
+        <div style={{
+          position: 'relative',
+          opacity: ready ? 1 : 0,
+          transition: 'opacity 0.5s ease',
+          zIndex: 1,
+          /* Wrap exactly the book — no extra horizontal space */
+          width: bookTotalW,
+          /* Center within the stage */
+          margin: '0 auto',
+        }}>
           {/* Book drop-shadow */}
           <div style={{ position: 'absolute', bottom: -22, left: '4%', width: '92%', height: 28, background: 'rgba(0,0,0,0.6)', filter: 'blur(22px)', borderRadius: '50%' }} />
-          {/* Outer frame */}
-          <div style={{ boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,151,59,0.12)', position: 'relative' }}>
+          {/* Outer frame — sized to exact book width, no overflow */}
+          <div style={{
+            boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,151,59,0.12)',
+            position: 'relative',
+            width: bookTotalW,
+            height: scaledH,
+            overflow: 'hidden',
+          }}>
 
             {/* IMAGE MODE */}
             {isImg && (
@@ -297,7 +404,7 @@ export default function FlipbookReader() {
                 options={PDF_OPTIONS}
               >
                 {pdfErr ? (
-                  <div style={{ width: scaledW * 2, height: scaledH, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: '#fff' }}>
+                  <div style={{ width: bookTotalW, height: scaledH, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: '#fff' }}>
                     <AlertCircle color="#8B1C1C" size={32} />
                     <p style={{ fontFamily: 'Cinzel,serif', fontSize: 12, color: '#555' }}>Could not load PDF.</p>
                     <a href={rawPdfUrl} target="_blank" rel="noreferrer" style={{ color: '#8B1C1C', fontFamily: 'Cinzel,serif', fontSize: 10, letterSpacing: '0.2em' }}>

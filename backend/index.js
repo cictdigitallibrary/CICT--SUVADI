@@ -475,7 +475,7 @@ app.get('/api/ebooks/:id', async (req, res) => {
 app.get('/api/ebooks/:id/editions', async (req, res) => {
   try {
     const { rows } = await db.query(
-      `SELECT e.id, e.title_tamil, e.pdf_url
+      `SELECT e.id, e.title_tamil, e.pdf_url, e.local_pdf_url
        FROM sv_ebook_editions e
        WHERE e.book_id = $1 AND e.status = 1
        ORDER BY e.id ASC`,
@@ -564,88 +564,53 @@ app.get('/api/proxy/transliterate', (req, res) => {
   }).on('error', () => res.json({ suggestions: [] }));
 });
 
-// PDF proxy — bypasses CORS for ebook PDFs, with automatic local self-hosting cache
+// PDF server — serves PDFs exclusively from local storage (self-contained, no remote dependency)
 app.get('/api/proxy/pdf', async (req, res) => {
   const { url } = req.query;
-  if (!url || !url.startsWith('https://suvadi.cict.in/')) {
-    return res.status(403).json({ error: 'Forbidden URL' });
+  if (!url) {
+    return res.status(400).json({ error: 'url query parameter is required' });
   }
 
   try {
-    // 1. DB Lookup to find the requested edition
+    // Look up the edition by its original CICT URL
     const { rows } = await db.query(
-      `SELECT id, pdf_url, local_pdf_url FROM sv_ebook_editions WHERE pdf_url = $1 LIMIT 1`,
+      `SELECT id, local_pdf_url FROM sv_ebook_editions WHERE pdf_url = $1 LIMIT 1`,
       [url]
     );
     const edition = rows[0];
 
-    // 2. Serve from Local Cache if valid
-    if (edition && edition.local_pdf_url) {
-      const localPath = path.join(__dirname, '..', edition.local_pdf_url);
-      try {
-        const stats = await fs.promises.stat(localPath);
-        if (stats.isFile() && stats.size > 0) {
-          // express sendFile automatically handles HTTP Range requests and streaming
-          return res.sendFile(localPath);
-        }
-      } catch (err) {
-        console.warn(`[Proxy] Local file missing/unreadable: ${localPath}. Falling back to remote.`);
-      }
+    if (!edition || !edition.local_pdf_url) {
+      console.warn(`[PDF] No DB record for URL: ${url}`);
+      return res.status(404).json({ error: 'Edition not found in database' });
     }
 
-    // 3. Fallback: Proxy from remote & download in background
-    const options = { headers: {} };
-    if (req.headers.range) options.headers.range = req.headers.range;
+    // Resolve the absolute path to the locally stored PDF
+    const localPath = path.join(__dirname, '..', edition.local_pdf_url);
 
-    https.get(url, options, (proxyRes) => {
-      for (const [key, value] of Object.entries(proxyRes.headers)) {
-        res.setHeader(key, value);
+    // Verify the file actually exists and is non-empty before serving
+    try {
+      const stats = await fs.promises.stat(localPath);
+      if (!stats.isFile() || stats.size < 1024) {
+        throw new Error('File missing or too small');
       }
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Range, Content-Length, Content-Type');
-      res.status(proxyRes.statusCode);
+    } catch (_) {
+      console.error(`[PDF] Local file not found or invalid: ${localPath}`);
+      return res.status(404).json({
+        error: 'PDF not available locally. Run: node backend/download_missing_pdfs.js',
+      });
+    }
 
-      // Cache it locally if it's a full 200 OK response (not a 206 Partial Content)
-      if (proxyRes.statusCode === 200 && edition && !req.headers.range) {
-        const fileName = `edition_${edition.id}.pdf`;
-        const relativePath = `storage/pdfs/${fileName}`;
-        const absolutePath = path.join(__dirname, '..', 'storage', 'pdfs', fileName);
-        
-        // Ensure storage directory exists
-        fs.mkdirSync(path.join(__dirname, '..', 'storage', 'pdfs'), { recursive: true });
+    // Serve the file — Express handles Range requests, Content-Type, and streaming automatically
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Range, Content-Length, Content-Type');
+    return res.sendFile(localPath);
 
-        const fileStream = fs.createWriteStream(absolutePath);
-        
-        // Pipe stream to both client and local disk
-        proxyRes.pipe(fileStream);
-        proxyRes.pipe(res);
-
-        fileStream.on('finish', async () => {
-          try {
-            await db.query(
-              `UPDATE sv_ebook_editions SET local_pdf_url = $1, original_pdf_url = $2 WHERE id = $3`,
-              [relativePath, url, edition.id]
-            );
-            console.log(`[Proxy] Successfully cached PDF locally: ${relativePath}`);
-          } catch(e) {
-            console.error(`[Proxy] Failed to update DB for cached PDF:`, e.message);
-          }
-        });
-        
-        fileStream.on('error', (err) => {
-          console.error(`[Proxy] File write error for ${absolutePath}:`, err.message);
-        });
-      } else {
-        // Just proxy normally (e.g. for Range requests)
-        proxyRes.pipe(res);
-      }
-    }).on('error', (err) => {
-      if (!res.headersSent) res.status(500).json({ error: err.message });
-    });
   } catch (err) {
+    console.error('[PDF] Error:', err.message);
     if (!res.headersSent) res.status(500).json({ error: err.message });
   }
 });
+
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ADMIN API ROUTES

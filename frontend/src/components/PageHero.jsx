@@ -14,7 +14,7 @@ import { motion } from 'framer-motion';
  */
 const DEFAULT_GLYPHS = ['அ', 'ம்', 'ழ்', 'ல்', 'ர்', 'ஓம்'];
 
-const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, light = false, backgroundImage = null, heroClass = '', headingStyle = {} }) => {
+const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, light = false, backgroundImage = null, heroClass = '', headingStyle = {}, align = 'center' }) => {
   if (light) {
     return (
       <header className="relative pt-36 pb-16 overflow-hidden bg-ivory selection:bg-maroon selection:text-white">
@@ -99,12 +99,12 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
       <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
 
       {/* Content */}
-      <div className="container mx-auto px-6 max-w-5xl text-center relative z-10">
+      <div className={`container mx-auto px-6 relative z-10 flex ${align === 'left' ? 'justify-start lg:pl-16 xl:pl-28' : 'justify-center'}`}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="space-y-6"
+          className={`space-y-6 text-center ${align === 'left' ? 'max-w-[600px]' : 'max-w-5xl mx-auto'}`}
         >
           {label && (
             <div className="flex items-center justify-center gap-5">
@@ -127,11 +127,11 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
           </div>
 
           {subtitle && (
-            <p className="tamil-body text-white/65 max-w-2xl mx-auto leading-loose text-lg font-medium">{subtitle}</p>
+            <p className={`tamil-body text-white/65 mx-auto leading-relaxed font-medium ${align === 'left' ? 'text-base md:text-lg max-w-[90%]' : 'text-lg max-w-2xl'}`}>{subtitle}</p>
           )}
 
           {badge && (
-            <div className="inline-block px-6 py-2 border border-gold/20 bg-white/5">
+            <div className="inline-block px-6 py-2 border border-gold/20 bg-white/5 mt-4">
               <span className="font-cinzel text-[10px] uppercase tracking-[0.4em] text-gold/70 font-bold">{badge}</span>
             </div>
           )}
