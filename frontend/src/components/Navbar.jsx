@@ -60,9 +60,9 @@ const Navbar = () => {
 
         {/* ── Logo ── */}
         <Link to="/" className="flex items-center gap-4 group flex-shrink-0">
-          <div className={`w-11 h-11 flex items-center justify-center p-1 border transition-all duration-500 shadow-xl flex-shrink-0 ${shouldBeSolid ? 'bg-maroon border-gold/50 group-hover:border-gold group-hover:rotate-6' : 'bg-[#5C0A0A]/8 border-[#5C0A0A]/30 group-hover:border-gold/60'}`}>
-            <img src="/images/logo_cict.png" alt="CICT"
-              className="w-full h-full object-contain"
+          <div className="w-14 h-14 flex items-center justify-center transition-transform duration-500 flex-shrink-0 group-hover:scale-105">
+            <img src="/images/cict_emblem.png" alt="CICT Emblem"
+              className="w-full h-full object-contain drop-shadow-md"
               onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-white text-xs font-bold">CICT</span>'; }}
             />
           </div>
@@ -82,8 +82,10 @@ const Navbar = () => {
           </div>
         </Link>
 
-        {/* ── Desktop Nav links ── */}
-        <div className="hidden lg:flex items-center gap-10">
+        {/* ── Right side container ── */}
+        <div className="flex items-center gap-4 lg:gap-6 ml-auto">
+          {/* ── Desktop Nav links ── */}
+          <div className="hidden lg:flex items-center gap-10">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
             return (
@@ -134,6 +136,12 @@ const Navbar = () => {
             <span className={`block w-6 h-[2.5px] transition-all duration-500 ease-out ${shouldBeSolid ? 'bg-white' : 'bg-[#5C0A0A]'} ${mobileMenuOpen ? '-rotate-45 -translate-y-[8.5px] bg-gold' : ''}`} />
           </div>
         </button>
+
+        {/* ── New Right Emblem ── */}
+        <div className="w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center bg-white rounded-full p-[2px] ml-2 flex-shrink-0 shadow-md border border-gray-200">
+          <img src="/images/emblem_right.png" alt="Institutional Emblem" className="w-full h-full object-contain rounded-full" />
+        </div>
+      </div>
       </div>
 
       {/* ── Mobile Menu Drawer ── */}

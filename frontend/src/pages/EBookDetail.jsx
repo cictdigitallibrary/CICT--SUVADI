@@ -129,9 +129,9 @@ const EBookDetail = () => {
                           {/* Front Cover */}
                           <div className="book-3d-cover absolute inset-0 z-20 bg-white shadow-[2px_2px_10px_rgba(0,0,0,0.3)] border border-black/5">
                             <img
-                              src={getBookCover(book)}
+                              src={getBookCover(edition)}
                               alt={edition.title_tamil}
-                              className="w-full h-full object-fill"
+                              className="w-full h-full object-contain p-1"
                             />
                             {/* Lighting overlay on hover */}
                             <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-overlay" />

@@ -7,24 +7,86 @@
 const API = 'http://localhost:3001';
 
 const COVER_MAP = {
+  'தொல்காப்பியம் - எழுத்து – நச்சர். – மழைவை மகாலிங்கையர் (1847)': '/images/cover/editions/thol_1.jpg',
+  'தொல்காப்பியம் - எழுத்து – இளம். – சுப்பராய செட்டியார் (1868)': '/images/cover/editions/thol_1.jpg',
+  'தொல்காப்பியம் - சொல். சேனா. – கோமளபுரம் இராசகோபால பிள்ளை ( 1868)': '/images/cover/editions/thol_3.jpg',
+  'தொல்காப்பியம் - சொல் – இளம் – கா. நமச்சிவாய முதலியார் (1927)': '/images/cover/editions/thol_3.jpg',
+  'தொல்காப்பியம் - சொல் – நச்சர். – சி.வை. தாமோதரம் பிள்ளை (1892)': '/images/cover/editions/thol_6.jpg',
+  'தொல்காப்பியம் - சொல் – தெய்வ. - அரங்க வேங்கடாசலம் (1929)': '/images/cover/editions/thol_6.jpg',
+  'தொல்காப்பியம் - பொருள் – இளம் – அகம், புறம் – கா. நமச்சிவாய முதலியார் (1920)': '/images/cover/editions/thol_9.jpg',
+  'தொல்காப்பியம் - பொருள் – இளம் - களவு, கற்பு, பொருளியல் – வ.உ. சிதம்பரம் பிள்ளை (1933)': '/images/cover/editions/thol_9.jpg',
+  'தொல்காப்பியம் - பொருள் – இளம் - மெய், உவ, செய், மரபு - வ.உ. சிதம்பரம் பிள்ளை (1935)': '/images/cover/editions/thol_11.jpg',
+  'தொல்காப்பியம் - பொருள் – நச்சர். - சி.வை. தாமோதரம் பிள்ளை (1885)': '/images/cover/editions/pathuppaatu_9.jpg',
+  'தொல்காப்பியம் - பொருள் – செய்யு. நச்சர். ரா. இராகவையங்கார் (1917)': '/images/cover/editions/thol_13.jpg',
+  'தொல்காப்பியம் - நன்னூல் மூலம் – எஸ். சாமுவேல் பிள்ளை - (1858)': '/images/cover/editions/thol_15.jpg',
+  'தொல்காப்பியம் - பொருள் – இளம் - மெய், உவ, செய், மரபு - வ.உ.சிதம்பரம் பிள்ளை(1935)': '/images/cover/editions/thol_15.jpg',
+  'தொல்காப்பியம் - பொருள் - பேராசிரியர் உரை, ச. பவானந்தம் பிள்ளை (1917)': '/images/cover/editions/thol_thol.porul-1917.jpg',
+  'தொல்காப்பியம் - சொல் - கல்லாடனார் உரை (1964)': '/images/cover/editions/thol_thol.porul-1917.jpg',
+  'நற்றிணை மூலமும் உரையும் – பின்னத்தூர் நாராயணசாமி ஐயங்கார் (1915)': '/images/cover/editions/ettuthokai_1.jpg',
+  'குறுந்தொகை மூலமும் உரையும் – திருக்கண்ணபுரத்து சௌரிப்பெருமாளரங்கனார் (1915)': '/images/cover/editions/ettuthokai_1.jpg',
+  'ஐங்குறுநூறு மூலமும் பழைய உரையும் – உ.வே. சாமிநாதையர் (1903)': '/images/cover/editions/ettuthokai_3.jpg',
+  'பதிற்றுப்பத்து மூலமும் பழைய உரையும் - உ.வே. சாமிநாதையர் (1904)': '/images/cover/editions/ettuthokai_3.jpg',
+  'பரிபாடல் மூலமும் பரிமேலழகர் உரையும் - உ.வே. சாமிநாதையர் ( 1918)': '/images/cover/editions/ettuthokai_5.jpg',
+  'கலித்தொகை மூலமும் நச்சினார்க்கினியர் உரையும் – சி.வை.தாமோதரம் பிள்ளை (1887)': '/images/cover/editions/ettuthokai_5.jpg',
+  'அகநானூறு மூலமும் உரையும் – கம்பர் விலாசம் வே. இராஜகோபாலையங்கார் (1918)': '/images/cover/editions/ettuthokai_7.jpg',
+  'புறநானூறு மூலமும் பழைய உரையும் - உ.வே. சாமிநாதையர் (1894)': '/images/cover/editions/ettuthokai_7.jpg',
+  'பத்துப்பாட்டு மூலமும் நச்சினார்க்கினியர் உரையும் - உ.வே. சாமிநாதையர் - (1889)': '/images/cover/editions/pathuppaatu_9.jpg',
+  'திருக்குறள் – தஞ்சை ஞானப்பிறகாசன்(1812)': '/images/cover/editions/kilkanakku_1.thirukkural.jpg',
+  'நாலடியார் – தஞ்சை ஞானப்பிறகாசன் (1812)': '/images/cover/editions/kilkanakku_1.thirukkural.jpg',
+  'இனியவை நாற்பது – முகவை இராமாநுச கவிராயர் (1844)': '/images/cover/editions/kilkanakku_iniyavai 40.jpg',
+  'ஆசாரக்கோவை – தில்லையம்பூர் சந்திசேகர கவிராஜ பண்டிதர் (1857)': '/images/cover/editions/kilkanakku_iniyavai 40.jpg',
+  'திரிகடுகம் – நல்லூர் சதாசிவப்பிள்ளை (1868)': '/images/cover/editions/kilkanakku_thirukadugam.jpg',
+  'நான்மணிக்கடிகை – தி.ஈ. ஸ்ரீநிவாசராகவாசாரியார் (1872)': '/images/cover/editions/kilkanakku_thirukadugam.jpg',
+  'பழமொழி – சோடசாவதானம் சுப்பராயசெட்டியார் (1874)': '/images/cover/editions/kilkanakku_palamoli 400.jpg',
+  'சிறுபஞ்சமூலம் – சண்முகசுந்தரமுதலியார் (1875)': '/images/cover/editions/kilkanakku_palamoli 400.jpg',
+  'களவழி நாற்பது – சண்முகசுந்தர முதலியார் (1875)': '/images/cover/editions/kilkanakku_kalavizhi 40.jpg',
+  'கார்நாற்பது – சண்முகசுந்தர முதலியார் (1875)': '/images/cover/editions/kilkanakku_kalavizhi 40.jpg',
+  'இன்னா நாற்பது – சண்முகசுந்தர முதலியார் (1881)': '/images/cover/editions/kilkanakku_inna40.jpg',
+  'முதுமொழிக் காஞ்சி – உரையூர் மதுரைநாயக முதலியார் (1895)': '/images/cover/editions/kilkanakku_inna40.jpg',
+  'ஏலாதி – ஊ. புஷ்பரத செட்டியார் (1887)': '/images/cover/editions/kilkanakku_13.elathi.jpg',
+  'ஐந்திணையைம்பது – ரா. இராகவையங்கார் (1903)': '/images/cover/editions/kilkanakku_13.elathi.jpg',
+  'திணைமாலை நூற்றைம்பது - ரா. இராகவையங்கார் (1904)': '/images/cover/editions/kilkanakku_15.thinai malai 150.jpg',
+  'ஐந்திணையெழுபது - மு. இராகவையங்கார் (1906)': '/images/cover/editions/kilkanakku_15.thinai malai 150.jpg',
+  'திணைமொழியைம்பது – ஸ்ரீ சோமசுந்தர தேசிகர் (1918)': '/images/cover/editions/kilkanakku_thinaimozhi 50.jpg',
+  'கைந்நிலை – இ.வை. அனந்தராமையர் (1931)': '/images/cover/editions/kilkanakku_thinaimozhi 50.jpg',
+  'சிலப்பதிகாரம் – வேனிற்காதை வரை – மூலம் மட்டும் - தி.ஈ. ஸ்ரீநிவாசராகவாசாரியார் (1872)': '/images/cover/editions/silappathikaram_1.1872.jpg',
+  'சிலப்பதிகாரம் – புகார் காண்டம் – மூலம் மட்டும் - தி.ஈ. ஸ்ரீநிவாசராகவாசாரியார் (1876)': '/images/cover/editions/silappathikaram_1.1872.jpg',
+  'சிலப்பதிகாரம் – புகார் காண்டம் – மூலமும் அடியார்க்கு நல்லார் உரையும், தி. க. சுப்பராய செட்டியார்(1880)': '/images/cover/editions/silappathikaram_3.1880.jpg',
+  'சிலப்பதிகார மூலமும் அடியார்க்கு நல்லார் உரையும் – உ.வே.சா. – (1892)': '/images/cover/editions/silappathikaram_3.1880.jpg',
+  'முத்தொள்ளாயிரம் - ரா. இராகவையங்கார் (1905)': '/images/cover/editions/mutholayiram_muthol_1905.jpg',
+  'மணிமேகலை மூலம் – திருமயிலை சண்முகம் பிள்ளை (1894)': '/images/cover/editions/edition_50.jpg',
+  'மணிமேகலை மூலமும் அரும்பதவுரையும் – உ.வே. சாமிநாதையர் (1898)': '/images/cover/editions/edition_51.jpg',
+  'இறையனாரகப்பொருள் மூலமும் உரையும் – சி.வை. தாமோதரம் பிள்ளை (1883)': '/images/cover/editions/edition_49.jpg',
+  // fallbacks
   'தொல்காப்பியம்': '/images/cover/Tholkappiyam.png',
-  'தொல்காப்பியம் - இளம்பூரணம்': '/images/cover/Tholkappiyam.png',
   'எட்டுத்தொகை': '/images/cover/Ettuthogai.png',
-  'குறுந்தொகை': '/images/cover/Ettuthogai.png',
   'பத்துப்பாட்டு': '/images/cover/Pathupaatu.png',
   'சிலப்பதிகாரம்': '/images/cover/silapadhikaram.png',
-  'சிலப்பதிகாரம் - அரும்பதவுரை': '/images/cover/silapadhikaram.png',
   'பதினெண் கீழ்க்கணக்கு': '/images/cover/pathinenkeezhkanaku.png',
-  'பதினெண்கீழ்க்கணக்கு': '/images/cover/pathinenkeezhkanaku.png',
-  'நாலடியார்': '/images/cover/pathinenkeezhkanaku.png',
-  'திருக்குறள் - மூலமும் உரையும்': '/images/cover/pathinenkeezhkanaku.png',
   'முத்தொள்ளாயிரம்': '/images/cover/mutholayiram.png',
+  'மணிமேகலை': '/images/cover/manimegalai.png',
+  'இறையனார் அகப்பொருள்': '/images/cover/irayanaragaporul.png'
 };
+
+/** Normalise a Tamil title: collapse all whitespace to single spaces, trim. */
+function normalise(str) {
+  return (str || '').replace(/\s+/g, ' ').trim();
+}
 
 export function getBookCover(book) {
   if (!book) return '';
-  const local = COVER_MAP[book.title_tamil];
+
+  // 1. Try exact normalised title match
+  const title = normalise(book.title_tamil);
+  const local = COVER_MAP[title];
   if (local) return local;
+
+  // 2. Try a prefix match (handles sub-books like "திருக்குறள் - பரிமேலழகர் உரை")
+  const prefixMatch = Object.keys(COVER_MAP).find(key => title.startsWith(key));
+  if (prefixMatch) return COVER_MAP[prefixMatch];
+
+  // 3. Fall back to API-served cover if present
   if (book.cover_image) return API + book.cover_image;
+
   return '';
 }

@@ -280,19 +280,20 @@ a {
 ═══════════════════════════════════════════════════════ */
 .home-hero {
   position: relative;
-  /* clamp: matches image height (vw / 2.36) at all breakpoints */
+  /* Restore the medium-height clamp to prevent excessive height */
   height: clamp(520px, calc(100vw / 2.36), 760px) !important;
   min-height: unset !important;     /* override Tailwind min-h-screen */
   background-color: #EDD9AE;        /* warm parchment fallback */
   overflow: visible !important;     /* let stat cards bleed below boundary */
+  width: 100%;
 }
 .home-hero-artwork {
   position: absolute;
   inset: 0;
-  background-image: url('/images/bg/hero-wide-bg.png');
-  background-size: 100% auto;
-  background-position: center center;  /* vertically centre within clip */
-  background-repeat: no-repeat;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
 }
 .home-hero-overlay {
   position: absolute;
@@ -316,8 +317,8 @@ a {
 
 /* ── HERO TEXT & ELEMENT OVERRIDES (light parchment bg) ── */
 .home-hero h1.tamil-heading {
-  color: #FFFFFF !important;
-  text-shadow: 0 2px 18px rgba(25,8,0,0.70), 0 1px 6px rgba(25,8,0,0.55) !important;
+  color: #6B0F0F !important;
+  text-shadow: 0 2px 18px rgba(201,151,59,0.30) !important;
 }
 .home-hero p.font-cinzel {
   color: #4A2C12 !important;
@@ -330,11 +331,18 @@ a {
 }
 
 /* ── Stat pills: overlap bottom edge of hero ── */
-.home-hero .border-t {
-  position: relative;
+.home-hero-stats {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 50%);
   z-index: 30;
-  padding-top: 0.75rem !important;  /* tighten pt-10 */
-  margin-bottom: -54px;             /* bleed into next section */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1200px; /* Prevent it from being infinitely wide, helps center wrap */
 }
 
 /* ── PRIMARY HERO BUTTON (deep maroon → gold hover) ── */
@@ -1233,6 +1241,67 @@ footer.bg-stone > div { position: relative; z-index: 2; }
   inset: 0;
   pointer-events: none;
   background: linear-gradient(100deg, rgba(15,3,1,0.55) 0%, rgba(20,5,2,0.30) 30%, rgba(20,5,2,0.08) 52%, transparent 65%);
+}
+
+/* ════════════════════════════════════════════════════════
+   E-BOOKS PAGE — hero redesign
+   Background: ebooks(hero-latest).jpg — leather-bound volumes on
+   the left, an open palm-leaf manuscript on the right, with a
+   naturally dark, empty gap in the middle for the hero copy.
+   Sized with `contain`-like full-width cover so the composition's
+   sides stay visible; only a soft, narrow vignette sits behind the
+   text column instead of darkening the whole banner.
+════════════════════════════════════════════════════════ */
+.ebooks-hero-bg {
+  background-position: center 42% !important;
+  background-size: cover !important;
+  min-height: clamp(420px, calc(100vw / 2.2), 600px) !important;
+  background-color: #170603 !important;
+}
+.ebooks-hero-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 42% 78% at center 48%, rgba(8,2,1,0.60) 0%, rgba(8,2,1,0.34) 45%, rgba(8,2,1,0.10) 75%, transparent 100%);
+}
+.ebooks-hero-bg .container {
+  max-width: clamp(320px, 48vw, 40rem) !important;
+}
+.ebooks-hero-bg p.tamil-body {
+  max-width: 26rem !important;
+}
+
+@media (max-width: 900px) {
+  .ebooks-hero-bg {
+    background-position: center 40% !important;
+    min-height: clamp(380px, calc(100vw / 1.3), 520px) !important;
+  }
+  .ebooks-hero-bg::before {
+    background: radial-gradient(ellipse 70% 85% at center 48%, rgba(8,2,1,0.62) 0%, rgba(8,2,1,0.36) 48%, rgba(8,2,1,0.12) 78%, transparent 100%);
+  }
+  .ebooks-hero-bg .container {
+    max-width: 30rem !important;
+  }
+  .ebooks-hero-bg p.tamil-body {
+    max-width: 24rem !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .ebooks-hero-bg {
+    background-position: center 38% !important;
+    min-height: clamp(360px, calc(100vw / 0.95), 480px) !important;
+  }
+  .ebooks-hero-bg::before {
+    background: radial-gradient(ellipse 92% 88% at center 48%, rgba(8,2,1,0.66) 0%, rgba(8,2,1,0.40) 50%, rgba(8,2,1,0.15) 80%, transparent 100%);
+  }
+  .ebooks-hero-bg .container {
+    max-width: 22rem !important;
+  }
+  .ebooks-hero-bg p.tamil-body {
+    max-width: 20rem !important;
+  }
 }
 
 /* ════════════════════════════════════════════════════════

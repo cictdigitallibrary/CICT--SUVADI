@@ -182,10 +182,16 @@ const Home = () => {
     queryFn: async () => (await axios.get(`${API}/api/stats`)).data,
   });
 
-  const { data: ebooks = [] } = useQuery({
+  const { data: fetchedEbooks = [] } = useQuery({
     queryKey: ['ebooks'],
     queryFn: async () => (await axios.get(`${API}/api/ebooks`)).data,
   });
+
+  const ebooks = [
+    ...fetchedEbooks,
+    { id: 17, title_tamil: 'மணிமேகலை', edition_count: 2, book_url: '/ebooks/17' },
+    { id: 15, title_tamil: 'இறையனார் அகப்பொருள்', edition_count: 1, book_url: '/ebooks/15' }
+  ];
 
   /* horizontal drag scroll for publications */
   const isDragging = useRef(false);
@@ -243,12 +249,10 @@ const Home = () => {
 
             {/* Main title */}
             <motion.div className="space-y-3" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}>
-              <h1 className="tamil-heading text-maroon italic" style={{ fontSize: 'clamp(4rem, 12vw, 8.5rem)', textShadow: '0 4px 80px rgba(201,151,59,0.30), 0 0 160px rgba(201,151,59,0.12)' }}>
-                {t('சுவடி', 'Suvadi')}
+              <h1 className="tamil-heading text-maroon italic px-4" style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)', textShadow: '0 4px 80px rgba(201,151,59,0.30), 0 0 160px rgba(201,151,59,0.12)', lineHeight: '1.2' }}>
+                {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
               </h1>
-              <p className="tamil-label text-gold/90 text-xl md:text-3xl tracking-widest font-black uppercase">
-                {t('ஆவணக் கருவூலம்', 'Heritage Archive')}
-              </p>
+
             </motion.div>
 
             {/* Ornamental separator */}
@@ -292,25 +296,6 @@ const Home = () => {
           </motion.div>
         </div>
 
-        {/* Stat cards — absolutely anchored to the hero bottom edge so they
-            straddle the hero / next-section boundary at any hero height */}
-        {stats && (
-          <motion.div
-            className="home-hero-stats"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.4, duration: 0.8 }}>
-            {[
-              { val: stats.texts,       label: t('செவ்வியல் நூல்கள்', 'Works'),   icon: '📜' },
-              { val: stats.manuscripts, label: t('சுவடி வகைகள்', 'Archives'),     icon: '🗂️' },
-              { val: stats.songs > 999 ? Math.round(stats.songs / 1000) + 'k+' : stats.songs,
-                label: t('சுவடி ஏடுகள்', 'Folios'), icon: '📚' },
-            ].map((s, i) => (
-              <div key={i} className="home-stat-pill">
-                <div className="home-stat-icon">{s.icon}</div>
-                <StatItem val={s.val} label={s.label} />
-              </div>
-            ))}
-          </motion.div>
-        )}
 
         {/* Scroll indicator */}
         <div className="absolute bottom-10 left-0 w-full flex justify-center">
@@ -562,13 +547,11 @@ const Home = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="ebook-nav-btn">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-              </button>
+
 
               <div className="flex-1 overflow-hidden">
                 <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="flex gap-4">
-                  {ebooks.slice(0, 6).map((book, idx) => (
+                  {ebooks.slice(0, 8).map((book, idx) => (
                     <motion.div key={book.id} variants={fadeUp}
                       className="group home-ebook-card flex-1 min-w-0">
                       <div className="p-3">
@@ -588,9 +571,7 @@ const Home = () => {
                 </motion.div>
               </div>
 
-              <button className="ebook-nav-btn">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-              </button>
+
             </div>
           </div>
         </section>

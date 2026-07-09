@@ -11,7 +11,7 @@ import {
 
 const API = 'http://localhost:3001/api/admin';
 const BASE = 'http://localhost:3001';
-const LIMIT = 50;
+const limit = 10;
 
 /* ─── tiny helpers ─── */
 const fmt = n => Number(n || 0).toLocaleString();
@@ -117,7 +117,7 @@ const Pager = ({ page, totalPages, onPage, total, limit }) => {
   return (
     <div className="px-6 py-4 border-t border-stone/8 flex items-center justify-between bg-stone/[0.015]">
       <span className="text-[10px] text-stone/40 font-bold">
-        Showing <span className="text-maroon">{from}–{to}</span> of <span className="text-maroon">{fmt(total)}</span>
+        Showing <span className="text-maroon">{from} to {to}</span> of <span className="text-maroon">{fmt(total)}</span> entries
       </span>
       <div className="flex items-center gap-2">
         <button onClick={() => onPage(1)} disabled={page === 1}
@@ -224,7 +224,7 @@ const AdminPortal = () => {
     { id: 'users',         name: 'Users',          icon: Shield,          label: 'உள்நுழைவு விவரங்கள்' },
   ];
 
-  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   /* ── dropdown loaders ── */
   const loadBooks = useCallback(async () => {
@@ -279,7 +279,7 @@ const AdminPortal = () => {
     try {
       const ep = activeTab === 'ebook-editions' ? 'ebook-editions'
         : activeTab === 'team' ? 'team' : activeTab;
-      const params = { page, limit: LIMIT, search: dSearch };
+      const params = { page, limit: limit, search: dSearch };
       if (activeTab === 'songs') params.trash = showTrash ? '1' : '0';
       const r = await axios.get(`${API}/${ep}`, { params });
       if (r.data.rows !== undefined) {
@@ -589,7 +589,7 @@ const AdminPortal = () => {
                   </tbody>
                 </table>
               </div>
-              <Pager page={page} totalPages={totalPages} onPage={setPage} total={total} limit={LIMIT} />
+              <Pager page={page} totalPages={totalPages} onPage={setPage} total={total} limit={limit} />
             </div>
           )}
 
@@ -606,7 +606,7 @@ const AdminPortal = () => {
 
               <div className="overflow-x-auto overflow-y-auto" style={{ maxHeight: '65vh' }}>
                 <table className="w-full text-left">
-                  <thead className="bg-stone/[0.025] sticky top-0">
+                  <thead className="bg-white sticky top-0 z-10">
                     <tr>
                       <Th>ID</Th>
                       {/* Books */}
@@ -624,11 +624,8 @@ const AdminPortal = () => {
                       </>}
                       {/* Manuscripts */}
                       {activeTab === 'songs' && <>
-                        <Th>Folio</Th>
-                        <Th>Transcription / சுவடி வரி</Th>
-                        <Th>Author</Th>
-                        <Th>Sub-Category</Th>
-                        <Th>Views</Th>
+                        <Th>துணை பிரிவு பெயர் (Sub Category Name)</Th>
+                        <Th>பாடல்கள்</Th>
                       </>}
                       {/* Ebook Editions */}
                       {activeTab === 'ebook-editions' && <>
@@ -651,7 +648,8 @@ const AdminPortal = () => {
                         <Th>Joined</Th>
                       </>}
                       <Th>Status</Th>
-                      <Th className="text-right">Actions</Th>
+                      {activeTab === 'songs' && <Th>Created At</Th>}
+                      {activeTab !== 'songs' && <Th className="text-right">Actions</Th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone/5">
@@ -683,23 +681,12 @@ const AdminPortal = () => {
 
                               {/* Manuscripts */}
                               {activeTab === 'songs' && <>
+                                <Td><span className="text-[11px] font-semibold text-maroon/80">{item.sub_cat_name || '—'}</span></Td>
                                 <Td>
-                                  <span className="font-cinzel font-black text-maroon">F{item.fid}</span>
-                                </Td>
-                                <Td>
-                                  <span className="tamil-text text-[11px] text-stone/50 max-w-[200px] truncate block"
-                                    title={stripTags(item.description)}>
-                                    {stripTags(item.description) || '—'}
+                                  <span className="tamil-text text-[11px] text-stone-600 max-w-sm truncate block" title={stripTags(item.fname)}>
+                                    {stripTags(item.fname) || '-'}
                                   </span>
                                 </Td>
-                                <Td><span className="text-[10px] text-stone/40">{item.author || '—'}</span></Td>
-                                <Td>
-                                  <div className="text-[10px]">
-                                    <div className="font-semibold text-maroon/60 truncate max-w-[120px]">{item.book_name || '—'}</div>
-                                    <div className="text-stone/40 truncate max-w-[120px] mt-0.5">{item.sub_cat_name || '—'}</div>
-                                  </div>
-                                </Td>
-                                <Td><span className="text-[10px] text-stone/35 tabular-nums">{fmt(item.view_counts)}</span></Td>
                               </>}
 
                               {/* Ebook Editions */}
@@ -758,25 +745,24 @@ const AdminPortal = () => {
 
                               <Td><StatusPill value={item.status} /></Td>
 
-                              <Td className="text-right">
-                                {showTrash && activeTab === 'songs' ? (
-                                  <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
-                                    <button onClick={() => handleRestoreSong(item.id)}
-                                      className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all" title="Restore">
-                                      <RotateCcw className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button onClick={() => handlePurgeSong(item.id)}
-                                      className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all" title="Permanently delete">
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                ) : (
+                              {activeTab === 'songs' && (
+                                <Td>
+                                  <span className="text-[10px] text-stone-500 tabular-nums">
+                                    {item.upload_date 
+                                      ? new Date(item.upload_date.replace(' ', 'T')).toLocaleString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) 
+                                      : '—'}
+                                  </span>
+                                </Td>
+                              )}
+
+                              {activeTab !== 'songs' && (
+                                <Td className="text-right">
                                   <ActionBtns
                                     onEdit={() => openEdit(item)}
-                                    onDelete={() => activeTab === 'songs' ? handleTrashSong(item.id) : handleDelete(id)}
+                                    onDelete={() => handleDelete(id)}
                                   />
-                                )}
-                              </Td>
+                                </Td>
+                              )}
                             </tr>
                           );
                         })
@@ -784,7 +770,7 @@ const AdminPortal = () => {
                   </tbody>
                 </table>
               </div>
-              <Pager page={page} totalPages={totalPages} onPage={setPage} total={total} limit={LIMIT} />
+              <Pager page={page} totalPages={totalPages} onPage={setPage} total={total} limit={limit} />
             </div>
           )}
 

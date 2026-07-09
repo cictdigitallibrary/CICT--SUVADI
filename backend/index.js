@@ -721,7 +721,7 @@ app.get('/api/admin/subcategories/select', async (req, res) => {
 // ── BOOKS CRUD ────────────────────────────────────────────────────────────────
 app.get('/api/admin/books', async (req, res) => {
   try {
-    const { page = 1, limit = 50, search = '' } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const params = [];
     const conditions = [];
@@ -761,7 +761,7 @@ app.delete('/api/admin/books/:id', async (req, res) => {
 // ── MAIN CATEGORY CRUD ────────────────────────────────────────────────────────
 app.get('/api/admin/categories', async (req, res) => {
   try {
-    const { page = 1, limit = 50, search = '', book_id } = req.query;
+    const { page = 1, limit = 10, search = '', book_id } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const params = [];
     const conditions = [];
@@ -805,7 +805,7 @@ app.delete('/api/admin/categories/:id', async (req, res) => {
 // ── SUB CATEGORY CRUD ─────────────────────────────────────────────────────────
 app.get('/api/admin/subcategories', async (req, res) => {
   try {
-    const { page = 1, limit = 50, search = '', book_id, main_category_id } = req.query;
+    const { page = 1, limit = 10, search = '', book_id, main_category_id } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const params = [];
     const conditions = [];
@@ -850,7 +850,7 @@ app.delete('/api/admin/subcategories/:id', async (req, res) => {
 // ── SONGS / MANUSCRIPTS CRUD ──────────────────────────────────────────────────
 app.get('/api/admin/songs', async (req, res) => {
   try {
-    const { page = 1, limit = 50, cid, search = '', trash = '0' } = req.query;
+    const { page = 1, limit = 10, cid, search = '', trash = '0' } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const trashVal = trash === '1' ? 1 : 0;
     const conditions = [`s.trash = ${trashVal}`];
@@ -891,7 +891,7 @@ app.post('/api/admin/songs', uploadSong.single('image'), async (req, res) => {
     const { cid, fid, description, author, status } = req.body;
     const fname = req.file ? req.file.originalname : '';
     const { rows } = await db.query(
-      'INSERT INTO sv_songs (cid, fid, fname, description, author, status) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
+      "INSERT INTO sv_songs (cid, fid, fname, description, author, status, upload_date) VALUES ($1,$2,$3,$4,$5,$6, TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS')) RETURNING id",
       [cid, fid, fname, description || '', author || 'System', status ?? 1]
     );
     const newId = rows[0].id;
@@ -945,7 +945,7 @@ app.delete('/api/admin/songs/:id/purge', async (req, res) => {
 // ── USERS CRUD ────────────────────────────────────────────────────────────────
 app.get('/api/admin/users', async (req, res) => {
   try {
-    const { page = 1, limit = 50, search = '' } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const params = [];
     const conditions = [];
@@ -995,7 +995,7 @@ app.delete('/api/admin/users/:id', async (req, res) => {
 // ── CONTACTS CRUD ─────────────────────────────────────────────────────────────
 app.get('/api/admin/contacts', async (req, res) => {
   try {
-    const { page = 1, limit = 50, search = '' } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const params = [];
     const conditions = [];
@@ -1024,7 +1024,7 @@ app.delete('/api/admin/contacts/:id', async (req, res) => {
 // ── TEAM MEMBERS CRUD ─────────────────────────────────────────────────────────
 app.get('/api/admin/team', async (req, res) => {
   try {
-    const { page = 1, limit = 50, search = '' } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const params = [];
     const conditions = [];
@@ -1067,7 +1067,7 @@ app.delete('/api/admin/team/:id', async (req, res) => {
 // ── EBOOK EDITIONS CRUD ───────────────────────────────────────────────────────
 app.get('/api/admin/ebook-editions', async (req, res) => {
   try {
-    const { page = 1, limit = 50, search = '', book_id } = req.query;
+    const { page = 1, limit = 10, search = '', book_id } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const params = [];
     const conditions = [];

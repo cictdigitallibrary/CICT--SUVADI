@@ -65,10 +65,17 @@ const TitleFlourishRight = () => (
 const EBooks = () => {
   const { t } = useLanguage();
 
-  const { data: ebooks = [], isLoading } = useQuery({
+  const { data: fetchedEbooks = [], isLoading } = useQuery({
     queryKey: ['ebooks'],
     queryFn: async () => (await axios.get(`${API}/api/ebooks`)).data,
   });
+
+  // Inject Manimekalai and Irayanar categories dynamically
+  const ebooks = [
+    ...fetchedEbooks,
+    { id: 17, title_tamil: 'மணிமேகலை', edition_count: 2, book_url: '/ebooks/17' },
+    { id: 15, title_tamil: 'இறையனார் அகப்பொருள்', edition_count: 1, book_url: '/ebooks/15' }
+  ];
 
   return (
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
@@ -80,7 +87,7 @@ const EBooks = () => {
           'செம்மொழித் தமிழுக்கு ஆதாரமான நூல்களின் முதல் அச்சுப் பதிப்புகளை ஆவணப்படுத்திச் செம்மொழி நிறுவனம் வெளியிடுகிறது.',
           'The Central Institute curates and publishes the earliest printed editions of Classical Tamil foundational texts for global scholarly access.'
         )}
-        badge={ebooks.length > 0 ? `${ebooks.length} ${t('நூல்கள்', 'Volumes Available')}` : undefined}
+        badge={undefined}
         glyphs={['முதல்', 'அச்சு', 'நூல்', 'பத்து', 'திரு', 'கலி']}
         backgroundImage="/images/bg/ebooks(hero-latest).jpg"
         heroClass="ebooks-hero-bg"
@@ -360,7 +367,7 @@ const EBooks = () => {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, amount: 0.1 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12 xl:gap-16 relative z-10 px-2 md:px-8 lg:px-20 xl:px-40 2xl:px-64"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 xl:gap-10 relative z-10 px-2 md:px-6 lg:px-10 xl:px-16 2xl:px-24"
             >
               {ebooks.map((book) => (
                 <Link
@@ -379,14 +386,13 @@ const EBooks = () => {
                     <CornerOrnament position="bottom-right" />
 
                     {/* Book Cover */}
-                    <div className="relative bg-transparent flex items-center justify-center p-8 overflow-hidden"
-                      style={{ height: 420 }}>
+                    <div className="relative bg-transparent flex items-center justify-center p-8 pb-4 pt-10 overflow-hidden">
                       {getBookCover(book) ? (
-                        <div className="h-full aspect-[3/4] shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-transform duration-300 group-hover:scale-[1.04]">
+                        <div className="w-[95%] max-w-[280px] aspect-[2/3] shadow-[0_10px_30px_rgba(0,0,0,0.15)] transition-transform duration-300 group-hover:scale-[1.04]">
                           <img
                             src={getBookCover(book)}
                             alt={book.title_tamil}
-                            className="h-full w-full object-contain pointer-events-none"
+                            className="w-full h-full object-contain pointer-events-none"
                             onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📜</span>'; }}
                           />
                         </div>
