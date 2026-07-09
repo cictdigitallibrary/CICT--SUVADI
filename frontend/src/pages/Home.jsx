@@ -340,11 +340,11 @@ const Home = () => {
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="w-1.5 h-1.5 bg-gold rounded-full" />
               <span className="tamil-label text-xs text-bronze uppercase tracking-[0.3em] font-black">
-                {t('நிறுவன அறிமுகம்', 'Institutional Charter')}
+                {'நிறுவன அறிமுகம்'}
               </span>
             </div>
             <h2 className="tamil-heading text-5xl md:text-6xl text-maroon font-black italic">
-              {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
+              {'சுவடியியல் புலம்'}
             </h2>
             <div className="w-24 h-1.5 bg-gradient-to-r from-maroon to-gold/60 mx-auto mt-6" />
           </motion.div>
@@ -362,13 +362,13 @@ const Home = () => {
                   {block.items.map((item, j) => (
                     <li key={j}>
                       <span className="faculty-article-list-num">{j + 1}.</span>
-                      <span>{t(item.ta, item.en)}</span>
+                      <span>{item.ta}</span>
                     </li>
                   ))}
                 </ol>
               ) : (
                 <p key={i} className="faculty-article-p">
-                  {t(block.ta, block.en)}
+                  {block.ta}
                 </p>
               )
             ))}
@@ -378,10 +378,10 @@ const Home = () => {
           <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.7 }}
             className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto mt-10">
             <Link to="/search" className="btn-primary flex-1 py-5 shadow-maroon/20 text-center">
-              <span className="tamil-label font-black uppercase tracking-widest">{t('தேடல் பக்கம்', 'Access Search')}</span>
+              <span className="tamil-label font-black uppercase tracking-widest">{'தேடல் பக்கம்'}</span>
             </Link>
             <Link to="/team" className="btn-outline flex-1 py-5 text-center">
-              <span className="tamil-label font-black uppercase tracking-widest">{t('அறிஞர் குழு', 'Meet Faculty')}</span>
+              <span className="tamil-label font-black uppercase tracking-widest">{'அறிஞர் குழு'}</span>
             </Link>
           </motion.div>
         </div>

@@ -17,6 +17,15 @@ const TEAM_MEMBERS = [
   },
   {
     id: 2,
+    name_tamil:  'முனைவர் ரெ. புவனேஸ்வரி',
+    name_english: 'Dr. Re. Bhuvaneswari',
+    title_tamil:  'பதிவாளர்',
+    title_english: 'Registrar',
+    photo: '/images/registrar.png',
+    localAsset: true,
+  },
+  {
+    id: 3,
     name_tamil:  'முனைவர் இரா. அருள்மணி',
     name_english: 'Dr. Ra. Arulmani',
     title_tamil:  'ஒருங்கிணைப்பாளர் & ஆராய்ச்சி அலுவலர்',
@@ -24,7 +33,7 @@ const TEAM_MEMBERS = [
     photo: 'arulmani.jpg',
   },
   {
-    id: 3,
+    id: 4,
     name_tamil:  'முனைவர் ம. தமிழ்வாணன்',
     name_english: 'Dr. M. Tamilvannan',
     title_tamil:  'இளநிலை ஆராய்ச்சி அலுவலர்',
@@ -32,7 +41,7 @@ const TEAM_MEMBERS = [
     photo: 'tamilvannan.jpg',
   },
   {
-    id: 4,
+    id: 5,
     name_tamil:  'முனைவர் சே. கரும்பாயிரம்',
     name_english: 'Dr. Se. Karumpaayiram',
     title_tamil:  'இளநிலை ஆராய்ச்சி அலுவலர்',
@@ -40,7 +49,7 @@ const TEAM_MEMBERS = [
     photo: 'karumbu.jpg',
   },
   {
-    id: 5,
+    id: 6,
     name_tamil:  'முனைவர் ம. நாகராஜன்',
     name_english: 'Dr. M. Nagarajan',
     title_tamil:  'இளநிலை ஆராய்ச்சி அலுவலர்',
@@ -48,7 +57,7 @@ const TEAM_MEMBERS = [
     photo: 'nagarajan.jpg',
   },
   {
-    id: 6,
+    id: 7,
     name_tamil:  'திரு. அ. முருக சுவாமிநாதன்',
     name_english: 'Mr. A. Muruga Swaminathan',
     title_tamil:  'நிரலாளர்',
@@ -56,7 +65,7 @@ const TEAM_MEMBERS = [
     photo: 'ams.jpg',
   },
   {
-    id: 7,
+    id: 8,
     name_tamil:  'திரு. தி.ஞா. அருள்ஒளி',
     name_english: 'Mr. Ti. Gna. Arulolli',
     title_tamil:  'தரவு உள்ளீட்டாளர்',
@@ -132,7 +141,7 @@ const Team = () => {
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 xl:gap-10"
           >
             {TEAM_MEMBERS.map((member) => {
-              const photoUrl = `${API}/images/team/${member.photo}`;
+              const photoUrl = member.localAsset ? member.photo : `${API}/images/team/${member.photo}`;
 
               return (
                 <motion.div key={member.id} variants={fadeUp} className="group">
@@ -164,12 +173,12 @@ const Team = () => {
                   {/* Meta */}
                   <div className="text-center">
                     <div className="inline-block px-3 py-1 bg-maroon/[0.04] border border-maroon/10 mb-3 group-hover:bg-gold/10 group-hover:border-gold/20 transition-all duration-300">
-                      <span className="tamil-label text-[9px] text-bronze uppercase tracking-[0.2em] font-bold">
-                        {t(member.title_tamil, member.title_english)}
+                      <span className="tamil-label text-[13px] text-bronze uppercase tracking-[0.2em] font-bold">
+                        {member.title_tamil}
                       </span>
                     </div>
                     <h3 className="tamil-label text-[15px] text-maroon font-black mb-1 group-hover:text-gold transition-colors duration-300 leading-snug">
-                      {t(member.name_tamil, member.name_english)}
+                      {member.name_tamil}
                     </h3>
                   </div>
                 </motion.div>

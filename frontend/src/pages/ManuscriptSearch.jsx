@@ -348,64 +348,55 @@ const ManuscriptSearch = () => {
           className="search-intro-card w-[92%] sm:w-[90%] max-w-[1400px] mx-auto"
         >
           <h2 className="tamil-heading text-2xl md:text-3xl text-maroon font-black mb-5">
-            {t(
-              'செவ்வியல் சுவடித் தேடல் (Online Classical Tamil Manuscripts Search Engine)',
-              'Classical Manuscript Search (Online Classical Tamil Manuscripts Search Engine)'
-            )}
+            {'செவ்வியல் சுவடித் தேடல் (Online Classical Tamil Manuscripts Search Engine)'}
           </h2>
 
           <p className="search-intro-p">
-            {t(
-              'ஆய்வாளர்கள் எளிதாகச் செவ்வியல் சுவடிகளைப் படிப்பதற்கும், பாடவேறுபாடு கண்டறிவதற்கும் ஏற்றவாறு இணைய வழிச் சுவடித் தேடலில் பாடலின் எண்ணிட்டுத் தேடும் வசதியும் பாடலின் குறிப்பிட்ட ஏதெனும் ஒரு சொல்லைக் கொண்டு தேடும் முறையும் உருவாக்கப்பட்டுள்ளது.',
-              "The online manuscript search engine has been designed so that researchers can easily read classical manuscripts and identify textual variations, with the facility to search by a poem's number and by any specific word in the poem."
-            )}
+            {'ஆய்வாளர்கள் எளிதாகச் செவ்வியல் சுவடிகளைப் படிப்பதற்கும், பாடவேறுபாடு கண்டறிவதற்கும் ஏற்றவாறு இணைய வழிச் சுவடித் தேடலில் பாடலின் எண்ணிட்டுத் தேடும் வசதியும் பாடலின் குறிப்பிட்ட ஏதெனும் ஒரு சொல்லைக் கொண்டு தேடும் முறையும் உருவாக்கப்பட்டுள்ளது.'}
           </p>
 
           <ul className="search-intro-steps">
             {SEARCH_INTRO_STEPS.map((s, i) => (
               <li key={i}>
                 <StepBadge n={i + 1} active />
-                <span>{t(s.ta, s.en)}</span>
+                <span>{s.ta}</span>
               </li>
             ))}
           </ul>
 
           <h3 className="search-intro-subheading">
-            {t('தேடல் குறிப்புகள்:', 'Search Notes:')}
+            {'தேடல் குறிப்புகள்:'}
           </h3>
 
           <div className="space-y-4 mb-8">
             {SEARCH_INTRO_NOTES.map((note, i) => (
               <p key={i} className="search-intro-p">
-                <strong className="text-maroon">{i + 1}.{t(note.ta_title, note.en_title)}</strong>
-                {' '}{t(note.ta, note.en)}
+                <strong className="text-maroon">{i + 1}.{note.ta_title}</strong>
+                {' '}{note.ta}
               </p>
             ))}
           </div>
 
           <h3 className="search-intro-subheading">
-            {t(
-              'இந்த சுவடித் தேடலில் பதிவேற்றம் செய்யப்பட்டடுள்ள ஓலைச்சுவடிகள் விபரம்:',
-              'Details of the Palm-Leaf Manuscripts Uploaded to this Search Engine:'
-            )}
+            {'இந்த சுவடித் தேடலில் பதிவேற்றம் செய்யப்பட்டடுள்ள ஓலைச்சுவடிகள் விபரம்:'}
           </h3>
 
           <div className="search-intro-table-wrap">
             <table className="search-intro-table">
               <thead>
                 <tr>
-                  <th>{t('நூல் தலைப்பு', 'Text Title')}</th>
-                  <th>{t('செவ்வியல் நூல்', 'Classical Text')}</th>
-                  <th>{t('செம்மொழி நிறுவனக் குறுந்தகடு எண்', 'CICT Compact Disc No.')}</th>
-                  <th>{t('எண்ணிக்கை', 'Count')}</th>
+                  <th>{'நூல் தலைப்பு'}</th>
+                  <th>{'செவ்வியல் நூல்'}</th>
+                  <th>{'செம்மொழி நிறுவனக் குறுந்தகடு எண்'}</th>
+                  <th>{'எண்ணிக்கை'}</th>
                 </tr>
               </thead>
               <tbody>
                 {SEARCH_TABLE_ROWS.map((row, i) => (
                   <tr key={i}>
-                    <td>{t(row.title_ta, row.title_en)}</td>
-                    <td>{t(row.text_ta, row.text_en)}</td>
-                    <td>{t(row.cd_ta, row.cd_en)}</td>
+                    <td>{row.title_ta}</td>
+                    <td>{row.text_ta}</td>
+                    <td>{row.cd_ta}</td>
                     <td>{row.count}</td>
                   </tr>
                 ))}
@@ -414,10 +405,7 @@ const ManuscriptSearch = () => {
           </div>
 
           <p className="search-intro-p mt-8 mb-0">
-            {t(
-              'மேலும் பல மின்படியாக்கப்பட்ட சுவடிகள், இத்தேடலில் பதிவேற்றம் செய்யப்படும்.',
-              'Many more digitised manuscripts will be uploaded to this search engine.'
-            )}
+            {'மேலும் பல மின்படியாக்கப்பட்ட சுவடிகள், இத்தேடலில் பதிவேற்றம் செய்யப்படும்.'}
           </p>
         </motion.div>
       </div>

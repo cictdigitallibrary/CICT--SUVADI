@@ -191,14 +191,14 @@ const ClassicalTexts = () => {
               <div className="flex items-center justify-center gap-4 mb-8">
                 <div className="h-px flex-1 max-w-[80px] bg-gradient-to-r from-transparent to-gold/50" />
                 <span className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-gold/70 font-bold">
-                  {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
+                  {'செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்'}
                 </span>
                 <div className="h-px flex-1 max-w-[80px] bg-gradient-to-l from-transparent to-gold/50" />
               </div>
 
               {/* Page title */}
               <h2 className="font-cinzel text-2xl md:text-3xl lg:text-4xl text-maroon font-bold mb-3 text-center tracking-wide">
-                {t('செம்மொழித் தமிழ் நூல்களின் முதல் அச்சுப் பதிப்புகள்', 'First Print Editions of Classical Tamil Texts')}
+                {'செம்மொழித் தமிழ் நூல்களின் முதல் அச்சுப் பதிப்புகள்'}
               </h2>
 
               {/* Gold divider */}
@@ -207,100 +207,61 @@ const ClassicalTexts = () => {
               </div>
 
               {/* ── அறிமுகம் — Introduction ── */}
-              <h3 className="font-cinzel text-base md:text-lg text-maroon font-black uppercase tracking-[0.3em] mb-5 flex items-center gap-3">
+              <h3 className="font-tamil-bold text-base md:text-lg text-maroon font-bold mb-5 flex items-center gap-3">
                 <span className="text-gold/60">◆</span>
-                {t('அறிமுகம்', 'Introduction')}
+                {'அறிமுகம்'}
               </h3>
 
               <div className="space-y-5 tamil-body text-stone/80 text-base md:text-[1.0625rem] leading-[1.9] md:leading-[2.1] font-medium text-justify">
                 <p>
-                  {t(
-                    'தமிழின் தொன்மை, தனித்தன்மை, தமிழர்களின் நாகரிகம், பண்பாடு ஆகியவற்றின் சிறப்புகளைக் கவனத்தில் கொண்டு பல்வேறு வெளியீடுகளைக் கொண்டுவருவதைச் செம்மொழி நிறுவனம் குறிக்கோளாகக் கொண்டுள்ளது. இந்த வகையில் பழந்தமிழ் நூல்களை வெளியிடுதல், செம்மொழித் தமிழ் தொடர்பான தகவல்களை வழங்குதல் முதலான பணிகளை நிறுவனம் மேற்கொண்டுள்ளது. அந்த வகையில் செம்மொழித் தமிழுக்கு ஆதாரமாக உள்ள 41 நூல்களின் முதல் அச்சுப் பதிப்புகளை ஆவணப்படுத்திச் செம்மொழித் தமிழாய்வு நிறுவனம் வெளியிடுகிறது.',
-                    'Focusing on the antiquity, uniqueness, civilisation, and culture of the Tamils, the Central Institute of Classical Tamil aims to bring out various publications. In this regard, the Institute has undertaken tasks such as publishing ancient Tamil texts and providing information related to Classical Tamil. The Institute is now documenting and publishing the first print editions of the 41 primary texts that serve as the foundation of Classical Tamil.'
-                  )}
+                  {'தமிழின் தொன்மை, தனித்தன்மை, தமிழர்களின் நாகரிகம், பண்பாடு ஆகியவற்றின் சிறப்புகளைக் கவனத்தில் கொண்டு பல்வேறு வெளியீடுகளைக் கொண்டுவருவதைச் செம்மொழி நிறுவனம் குறிக்கோளாகக் கொண்டுள்ளது. இந்த வகையில் பழந்தமிழ் நூல்களை வெளியிடுதல், செம்மொழித் தமிழ் தொடர்பான தகவல்களை வழங்குதல் முதலான பணிகளை நிறுவனம் மேற்கொண்டுள்ளது. அந்த வகையில் செம்மொழித் தமிழுக்கு ஆதாரமாக உள்ள 41 நூல்களின் முதல் அச்சுப் பதிப்புகளை ஆவணப்படுத்திச் செம்மொழித் தமிழாய்வு நிறுவனம் வெளியிடுகிறது.'}
                 </p>
                 <p>
-                  {t(
-                    'செவ்வியல் தகுதிப்பாட்டிற்கான நூல்களைப் பாதுகாத்துக் கையளித்துவந்த தமிழ்ப் புலமை மரபிற்கும், உரையாசிரியர்கள், பதிப்பாசிரியர்களுக்கும், உலகளாவிய நிலையில் தமிழ்ச் சுவடிகளையும், நூல்களையும் பாதுகாத்து வரும் நிறுவனங்களுக்கும் தமிழ்ச் சமூகம் எப்போதும் நன்றிபாராட்ட கடமைப்பட்டுள்ளது.',
-                    'The Tamil society is forever indebted to the Tamil scholarly tradition, commentators, publishers who have preserved and handed down texts of classical merit, and to the institutions worldwide that preserve Tamil manuscripts and books.'
-                  )}
+                  {'செவ்வியல் தகுதிப்பாட்டிற்கான நூல்களைப் பாதுகாத்துக் கையளித்துவந்த தமிழ்ப் புலமை மரபிற்கும், உரையாசிரியர்கள், பதிப்பாசிரியர்களுக்கும், உலகளாவிய நிலையில் தமிழ்ச் சுவடிகளையும், நூல்களையும் பாதுகாத்து வரும் நிறுவனங்களுக்கும் தமிழ்ச் சமூகம் எப்போதும் நன்றிபாராட்ட கடமைப்பட்டுள்ளது.'}
                 </p>
                 <p>
-                  {t(
-                    '41 செவ்வியல் நூல்களின் அச்சுப் பதிப்புகளைச் செம்மொழித் தமிழாய்வு மத்திய நிறுவனத்திற்கு வழங்கியுதவிய மறைமலையடிகள் நூலகம், டாக்டர் உ.வே. சாமிநாதையர் நூல்நிலையம், ரோஜா முத்தையா ஆராய்ச்சி நூலகம், தமிழ்ப் பல்கலைக்கழக நூலகம், தமிழ் இணையக் கல்விக்கழக மின்நூலகம் உள்ளிட்ட நூலகத்தார்களுக்கும், ஆய்வாளர்களுக்கும் செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் நன்றி பாராட்டி மகிழ்கிறது.',
-                    'The Central Institute of Classical Tamil expresses its profound gratitude to the libraries — including Maraimalai Adigal Library, Dr. U.V. Swaminatha Iyer Library, Roja Muthiah Research Library, Tamil University Library, and Tamil Virtual Academy Library — as well as to researchers who generously provided the first print editions of the 41 classical texts to the Institute.'
-                  )}
+                  {'41 செவ்வியல் நூல்களின் அச்சுப் பதிப்புகளைச் செம்மொழித் தமிழாய்வு மத்திய நிறுவனத்திற்கு வழங்கியுதவிய மறைமலையடிகள் நூலகம், டாக்டர் உ.வே. சாமிநாதையர் நூல்நிலையம், ரோஜா முத்தையா ஆராய்ச்சி நூலகம், தமிழ்ப் பல்கலைக்கழக நூலகம், தமிழ் இணையக் கல்விக்கழக மின்நூலகம் உள்ளிட்ட நூலகத்தார்களுக்கும், ஆய்வாளர்களுக்கும் செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் நன்றி பாராட்டி மகிழ்கிறது.'}
                 </p>
               </div>
 
               {/* ── பதிப்புக் குறிப்புகள் — Publication Notes ── */}
               <div className="my-10 border-t border-gold/20" />
 
-              <h3 className="font-cinzel text-base md:text-lg text-maroon font-black uppercase tracking-[0.3em] mb-5 flex items-center gap-3">
+              <h3 className="font-tamil-bold text-base md:text-lg text-maroon font-bold mb-5 flex items-center gap-3">
                 <span className="text-gold/60">◆</span>
-                {t('பதிப்புக் குறிப்புகள்', 'Publication Notes')}
+                {'பதிப்புக் குறிப்புகள்'}
               </h3>
 
               <div className="space-y-5 tamil-body text-stone/80 text-base md:text-[1.0625rem] leading-[1.9] md:leading-[2.1] font-medium text-justify">
                 <p>
-                  {t(
-                    'தமிழ்ச் செவ்வியல் நூல்களுள் திருக்குறள், நாலடியார் ஆகிய இரு நூல்களே முதன் முதலாக அச்சு வடிவம் பெற்றன. 1812இல் தஞ்சை நகரைச் சேர்ந்த மலையப்பப் பிள்ளையின் மகனாகிய ஞானப்பிரகாசன் எனும் அறிஞர் திருக்குறள், நாலடியார் இரண்டையும் ஒன்றாக இணைத்து அச்சிட்டு வெளியிட்டார். அதனுடன் திருவள்ளுவமாலை மூலமும் இடம்பெற்றிருந்தது.',
-                    'Among the Classical Tamil texts, Thirukkural and Naladiyar were the first to be printed. In 1812, a scholar named Gnanaprakasan — son of Malaiyappa Pillai of Thanjavur — printed and published Thirukkural and Naladiyar together as a single volume, which also included the Thiruvalluvamalai source text.'
-                  )}
+                  {'தமிழ்ச் செவ்வியல் நூல்களுள் திருக்குறள், நாலடியார் ஆகிய இரு நூல்களே முதன் முதலாக அச்சு வடிவம் பெற்றன. 1812இல் தஞ்சை நகரைச் சேர்ந்த மலையப்பப் பிள்ளையின் மகனாகிய ஞானப்பிரகாசன் எனும் அறிஞர் திருக்குறள், நாலடியார் இரண்டையும் ஒன்றாக இணைத்து அச்சிட்டு வெளியிட்டார். அதனுடன் திருவள்ளுவமாலை மூலமும் இடம்பெற்றிருந்தது.'}
                 </p>
                 <p>
-                  {t(
-                    'தொல்காப்பியத்தின் அச்சுப் பதிப்பு வரலாறு மழைவை மகாலிங்கையர் பதிப்பித்து வெளியிட்ட எழுத்ததிகார நச்சினார்க்கினியர் உரைப் பதிப்பிலிருந்து தொடங்குகிறது. 1847ஆம் ஆண்டு மகாலிங்கையரின் பதிப்பு வெளிவந்தது. நச்சினார்க்கினியர் உரைப் பதிப்பில் தொடங்கிய தொல்காப்பிய அச்சுப் பதிப்பு வரலாறு 1935ஆம் ஆண்டு வ.உ. சிதம்பரம் பிள்ளை பதிப்பித்து வெளியிட்ட தொல்காப்பிய இளம்பூரணர் உரைப் பதிப்போடு முதல் கட்ட பதிப்பு வரலாறு நிறைவுகொண்டிருக்கிறது.',
-                    'The print history of Tolkappiyam begins with the Ezhuttatikara Nacchinarkiniyar commentary edition published by Mazhaivai Mahalingaiyar in 1847. This history of Tolkappiyam print editions concludes its first phase with the Ilamporanar commentary edition published by V.O. Chidambaram Pillai in 1935.'
-                  )}
+                  {'தொல்காப்பியத்தின் அச்சுப் பதிப்பு வரலாறு மழைவை மகாலிங்கையர் பதிப்பித்து வெளியிட்ட எழுத்ததிகார நச்சினார்க்கினியர் உரைப் பதிப்பிலிருந்து தொடங்குகிறது. 1847ஆம் ஆண்டு மகாலிங்கையரின் பதிப்பு வெளிவந்தது. நச்சினார்க்கினியர் உரைப் பதிப்பில் தொடங்கிய தொல்காப்பிய அச்சுப் பதிப்பு வரலாறு 1935ஆம் ஆண்டு வ.உ. சிதம்பரம் பிள்ளை பதிப்பித்து வெளியிட்ட தொல்காப்பிய இளம்பூரணர் உரைப் பதிப்போடு முதல் கட்ட பதிப்பு வரலாறு நிறைவுகொண்டிருக்கிறது.'}
                 </p>
                 <p>
-                  {t(
-                    'சங்க இலக்கிய நூல்களுள் முதன் முதலாக அச்சு வடிவம் பெற்ற நூல் கலித்தொகை ஆகும். 1887ஆம் ஆண்டு சி.வை. தாமோதரம் பிள்ளை நச்சினார்க்கனியர் உரையுடன் கலித்தொகையைப் பதிப்பித்து வெளியிட்டதன் வழியாகச் சங்க இலக்கியப் பதிப்பு வரலாறு தொடங்குகிறது. கலித்தொகைக்கு முன்னரே பத்துப்பாட்டினுள் ஒன்றாகிய திருமுருகாற்றுப்படைக்குப் பல அச்சுப் பதிப்புகள் வெளிவந்துள்ளன. அப்பதிப்புகளைப் பத்துப்பாட்டின் முழுமையான பதிப்பாகக் கொள்ளமுடியாத நிலையில், சங்க இலக்கிய நூல்களுள் முதன் முதலாக அச்சுவடிவம் பெற்ற நூலாகக் கலித்தொகை அமைகிறது.',
-                    'Among Sangam literary texts, Kalithokai was the first to be printed. The print history of Sangam literature begins with C.V. Damodaram Pillai\'s publication of Kalithokai with Nacchinarkiniyar\'s commentary in 1887. Although Thirumurugaatruppadai (one of the Pattuppattu) had received multiple print editions before Kalithokai, since those cannot be considered a complete edition of Pattuppattu, Kalithokai stands as the first Sangam literary text to attain print form.'
-                  )}
+                  {'சங்க இலக்கிய நூல்களுள் முதன் முதலாக அச்சு வடிவம் பெற்ற நூல் கலித்தொகை ஆகும். 1887ஆம் ஆண்டு சி.வை. தாமோதரம் பிள்ளை நச்சினார்க்கனியர் உரையுடன் கலித்தொகையைப் பதிப்பித்து வெளியிட்டதன் வழியாகச் சங்க இலக்கியப் பதிப்பு வரலாறு தொடங்குகிறது. கலித்தொகைக்கு முன்னரே பத்துப்பாட்டினுள் ஒன்றாகிய திருமுருகாற்றுப்படைக்குப் பல அச்சுப் பதிப்புகள் வெளிவந்துள்ளன. அப்பதிப்புகளைப் பத்துப்பாட்டின் முழுமையான பதிப்பாகக் கொள்ளமுடியாத நிலையில், சங்க இலக்கிய நூல்களுள் முதன் முதலாக அச்சுவடிவம் பெற்ற நூலாகக் கலித்தொகை அமைகிறது.'}
                 </p>
                 <p>
-                  {t(
-                    '1872ஆம் ஆண்டில் சிலப்பதிகாரமும் 1894ஆம் ஆண்டில் மணிமேகலையும் முதன் முதலாக அச்சுவடிவம் பெற்றன. 1883இல் இறையனார் களவியலுரைக்கும், 1905இல் முத்தொள்ளாயிரத்திற்கும் முதல் அச்சுப் பதிப்பு வெளிவந்துள்ளன.',
-                    'Silappadikaram received its first print edition in 1872, and Manimekalai in 1894. The first print editions of Irayanarar Kalaviyalurai and Muthollayiram appeared in 1883 and 1905 respectively.'
-                  )}
+                  {'1872ஆம் ஆண்டில் சிலப்பதிகாரமும் 1894ஆம் ஆண்டில் மணிமேகலையும் முதன் முதலாக அச்சுவடிவம் பெற்றன. 1883இல் இறையனார் களவியலுரைக்கும், 1905இல் முத்தொள்ளாயிரத்திற்கும் முதல் அச்சுப் பதிப்பு வெளிவந்துள்ளன.'}
                 </p>
                 <p>
-                  {t(
-                    'தொல்காப்பியம், சங்க இலக்கியம், காப்பிய நூல்களுக்கான முதல் அச்சுப் பதிப்புகளைக் கண்டறிவதில் நமக்குச் சிக்கல் ஏதும் ஏற்படவில்லை. கீழ்க்கணக்கு நூல்களுள் திருக்குறள், நாலடியார் நூல்களைத் தவிர்த்து ஏனைய நூல்களின் முதல் அச்சுப் பதிப்புகளைக் கண்டறிவதில் பெருஞ்சிரமம் ஏற்படுகிறது. இதனால் கிடைத்திருக்கிற கீழ்க்கணக்கு நூல்களுக்கான அச்சுப் பதிப்புகளில் மிகவும் காலத்தால் மூத்த பதிப்புகளை முதல் பதிப்பாகக் கருதி இங்குத் தரப்பட்டுள்ளன.',
-                    'Identifying the first print editions of Tolkappiyam, Sangam literature, and epic texts posed no significant difficulty. However, tracing the first print editions of Keezhakanakku texts — other than Thirukkural and Naladiyar — has been considerably challenging. Consequently, the oldest available print editions for Keezhakanakku texts have been recorded here as the first editions.'
-                  )}
+                  {'தொல்காப்பியம், சங்க இலக்கியம், காப்பிய நூல்களுக்கான முதல் அச்சுப் பதிப்புகளைக் கண்டறிவதில் நமக்குச் சிக்கல் ஏதும் ஏற்படவில்லை. கீழ்க்கணக்கு நூல்களுள் திருக்குறள், நாலடியார் நூல்களைத் தவிர்த்து ஏனைய நூல்களின் முதல் அச்சுப் பதிப்புகளைக் கண்டறிவதில் பெருஞ்சிரமம் ஏற்படுகிறது. இதனால் கிடைத்திருக்கிற கீழ்க்கணக்கு நூல்களுக்கான அச்சுப் பதிப்புகளில் மிகவும் காலத்தால் மூத்த பதிப்புகளை முதல் பதிப்பாகக் கருதி இங்குத் தரப்பட்டுள்ளன.'}
                 </p>
                 <p>
-                  {t(
-                    'கீழ்க்கணக்கு நூல்களில் இங்குத் தரப்பட்டுள்ள அச்சுப் பதிப்புகளுக்கும் காலத்தால் முன்னரான பதிப்புகள் இருப்பதாகத் தகவல்கள் மட்டும் கிடைக்கின்றன; அச்சுப் பதிப்புகள் எங்கும் கிடைக்கப்பெறவில்லை. அதனால் அதற்கடுத்தடுத்த நிலையில் வெளிவந்த அச்சுப் பதிப்புகள் இங்குத் தரப்பட்டுள்ளன.',
-                    'For some Keezhakanakku texts listed here, there is only historical information indicating earlier print editions existed; the actual copies are no longer traceable. In such cases, the next earliest available print editions have been recorded.'
-                  )}
+                  {'கீழ்க்கணக்கு நூல்களில் இங்குத் தரப்பட்டுள்ள அச்சுப் பதிப்புகளுக்கும் காலத்தால் முன்னரான பதிப்புகள் இருப்பதாகத் தகவல்கள் மட்டும் கிடைக்கின்றன; அச்சுப் பதிப்புகள் எங்கும் கிடைக்கப்பெறவில்லை. அதனால் அதற்கடுத்தடுத்த நிலையில் வெளிவந்த அச்சுப் பதிப்புகள் இங்குத் தரப்பட்டுள்ளன.'}
                 </p>
                 <p>
-                  {t(
-                    'ஐந்திணையெழுபது நூல் பழையுரையுள்ள 26 பாடல்களை மட்டும் மு. இராகவையங்கார் 1906இல் செந்தமிழில் வெளியிட்டிருக்கிறார். அவை முழுமையான பதிப்பாகக் கருதமுடியாத நிலையில் அதன் பின்னர் 1926இல் வெளிவந்த சோமசுந்தர தேசிகர் பதிப்பை முதல் பதிப்பாகக் கொண்டு இங்குத் தரப்பட்டுள்ளது.',
-                    'M. Ragavaiyengar published only 26 songs of Ainthanaiyezhupathu with old commentary in Senthamizh in 1906. Since that cannot be considered a complete edition, the Somasundara Desika edition published in 1926 has been recorded here as the first edition.'
-                  )}
+                  {'ஐந்திணையெழுபது நூல் பழையுரையுள்ள 26 பாடல்களை மட்டும் மு. இராகவையங்கார் 1906இல் செந்தமிழில் வெளியிட்டிருக்கிறார். அவை முழுமையான பதிப்பாகக் கருதமுடியாத நிலையில் அதன் பின்னர் 1926இல் வெளிவந்த சோமசுந்தர தேசிகர் பதிப்பை முதல் பதிப்பாகக் கொண்டு இங்குத் தரப்பட்டுள்ளது.'}
                 </p>
                 <p>
-                  {t(
-                    'இனியவை நாற்பது முகவை இராமாநுச கவிராயரால் 1844இல் அச்சிட்டு வெளியிட்டிருப்பதாக ஒரு தகவலுண்டு. அந்த அச்சுப் பதிப்பு எங்கும் கிடைக்கப்பெறாமையால் 1903இல் வெளிவந்த ரா. இராகவையங்கார் பதிப்பு இங்குத் தரப்பட்டுள்ளது.',
-                    'There is a record that Iniyavai Narpathu was printed and published by Mukavai Ramanuja Kavirayar in 1844. Since that edition is not traceable anywhere, the 1903 edition by Ra. Ragavaiyengar has been recorded here.'
-                  )}
+                  {'இனியவை நாற்பது முகவை இராமாநுச கவிராயரால் 1844இல் அச்சிட்டு வெளியிட்டிருப்பதாக ஒரு தகவலுண்டு. அந்த அச்சுப் பதிப்பு எங்கும் கிடைக்கப்பெறாமையால் 1903இல் வெளிவந்த ரா. இராகவையங்கார் பதிப்பு இங்குத் தரப்பட்டுள்ளது.'}
                 </p>
                 <p>
-                  {t(
-                    'பழமொழி நானூற்றை 1874இல் சோடசாவதானம் சுப்பராயசெட்டியார் பதிப்பித்து வெளியிட்டதாகத் தகவல் உள்ளது; இப்போது அப்பதிப்பு கிடைக்கப்பெறாமையால் 1917இல் வெளிவந்த தி. செல்வகேசவராயர் பதிப்பும், ஆசாரக்கோவைக்குத் தில்லையம்பூர் சந்திசேகர கவிராஜ பண்டிதர் 1857இல் அச்சுப் பதிப்பை வெளியிட்டிருக்கிறார் என்ற தகவல் மட்டும் உள்ள நிலையில், 1883இல் வெளிவந்த அச்சுப் பதிப்பும் இங்குத் தரப்பட்டுள்ளன.',
-                    'Pazhamozhi Nanuru was reportedly published by Sodasavadhanam Subbarayasettiyar in 1874; since that edition is no longer available, the 1917 edition by T. Selvakesavarayar has been recorded. Similarly, for Asarakkovai, there is only a record that Thillayambur Chandrasekhara Kaviraja Pandithar published an edition in 1857; in its absence, the 1883 edition has been recorded here.'
-                  )}
+                  {'பழமொழி நானூற்றை 1874இல் சோடசாவதானம் சுப்பராயசெட்டியார் பதிப்பித்து வெளியிட்டதாகத் தகவல் உள்ளது; இப்போது அப்பதிப்பு கிடைக்கப்பெறாமையால் 1917இல் வெளிவந்த தி. செல்வகேசவராயர் பதிப்பும், ஆசாரக்கோவைக்குத் தில்லையம்பூர் சந்திசேகர கவிராஜ பண்டிதர் 1857இல் அச்சுப் பதிப்பை வெளியிட்டிருக்கிறார் என்ற தகவல் மட்டும் உள்ள நிலையில், 1883இல் வெளிவந்த அச்சுப் பதிப்பும் இங்குத் தரப்பட்டுள்ளன.'}
                 </p>
                 <p>
-                  {t(
-                    'ஏனைய கீழ்க்கணக்கு நூல்களின் அச்சுப் பதிப்புகள் முதல் பதிப்பாகக் கருதத்தக்கனவாகும். இந்த அச்சுப் பதிப்புகளுக்கும் மேலான பழைய அச்சுப் பதிப்புகளை வைத்திருப்பவர்களாயினும், அறிந்திருப்பவர்களாயினும் அவை பற்றிய தகவலைச் செம்மொழித் தமிழாய்வு நிறுவனத்திற்குத் தெரிவித்து உதவினால் இப்பதிப்புப் பட்டியலை மேம்படுத்த உதவியாக இருக்கும்.',
-                    'The print editions of the remaining Keezhakanakku texts may be considered as their first editions. If anyone possesses or has knowledge of earlier print editions of any of these texts, sharing that information with the Central Institute of Classical Tamil would greatly help in improving this publication list.'
-                  )}
+                  {'ஏனைய கீழ்க்கணக்கு நூல்களின் அச்சுப் பதிப்புகள் முதல் பதிப்பாகக் கருதத்தக்கனவாகும். இந்த அச்சுப் பதிப்புகளுக்கும் மேலான பழைய அச்சுப் பதிப்புகளை வைத்திருப்பவர்களாயினும், அறிந்திருப்பவர்களாயினும் அவை பற்றிய தகவலைச் செம்மொழித் தமிழாய்வு நிறுவனத்திற்குத் தெரிவித்து உதவினால் இப்பதிப்புப் பட்டியலை மேம்படுத்த உதவியாக இருக்கும்.'}
                 </p>
               </div>
 
@@ -312,7 +273,7 @@ const ClassicalTexts = () => {
               {/* Action Button */}
               <div className="flex justify-center pb-4">
                 <Link to="/ebooks" onClick={() => window.scrollTo(0, 0)} className="inline-flex items-center gap-3 bg-gradient-to-r from-maroon to-[#4A0A0A] text-white px-8 py-3.5 rounded border border-gold/40 shadow-lg hover:shadow-gold/20 hover:-translate-y-1 transition-all duration-300 font-cinzel font-bold tracking-widest text-sm uppercase group">
-                  {t('மின்நூல்களை ஆராய்க', 'Explore E-Books')} 
+                  {'மின்நூல்களை ஆராய்க'} 
                   <span className="text-gold text-lg group-hover:translate-x-1 transition-transform">→</span>
                 </Link>
               </div>
