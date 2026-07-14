@@ -348,7 +348,7 @@ const Home = () => {
                   {block.items.map((item, idx) => (
                     <li key={idx}>
                       {item.id ? (
-                        <Link to={`/publication/${item.id}`} className="hover:text-maroon transition-colors hover:underline">
+                        <Link to={`/publication/${item.id}`} className="faculty-article-link">
                           <span className="faculty-article-list-num">{idx + 1}.</span>
                           <span>{item.ta}</span>
                         </Link>
