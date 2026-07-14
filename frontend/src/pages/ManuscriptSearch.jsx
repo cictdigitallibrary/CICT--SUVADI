@@ -172,6 +172,7 @@ const ManuscriptSearch = () => {
   /* UI state */
   const [activeView, setActiveView]       = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);
+  const [isSearchVisible, setIsSearchVisible]   = useState(false);
 
   /* Transliteration state */
   const [transSugs, setTransSugs]         = useState([]);
@@ -345,9 +346,18 @@ const ManuscriptSearch = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="search-intro-card w-[92%] sm:w-[90%] max-w-[1400px] mx-auto"
+          className="search-intro-card w-[92%] sm:w-[90%] max-w-[1400px] mx-auto min-h-[500px]"
         >
-          <h2 className="tamil-heading text-2xl md:text-3xl text-maroon font-black mb-5">
+          <AnimatePresence mode="wait">
+            {!isSearchVisible ? (
+              <motion.div
+                key="description"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.4 }}
+              >
+                <h2 className="tamil-heading text-2xl md:text-3xl text-maroon font-black mb-5">
             {'செவ்வியல் சுவடித் தேடல் (Online Classical Tamil Manuscripts Search Engine)'}
           </h2>
 
@@ -407,18 +417,43 @@ const ManuscriptSearch = () => {
           <p className="search-intro-p mt-8 mb-0">
             {'மேலும் பல மின்படியாக்கப்பட்ட சுவடிகள், இத்தேடலில் பதிவேற்றம் செய்யப்படும்.'}
           </p>
+
+          <div className="mt-12 text-center pb-4">
+            <button
+              onClick={() => setIsSearchVisible(true)}
+              className="inline-flex items-center gap-3 bg-maroon text-white px-8 py-3.5 rounded-sm hover:bg-maroon-dark transition-all duration-300 shadow-xl shadow-maroon/20 hover:shadow-maroon/30 hover:-translate-y-1 font-black uppercase tracking-wider text-sm tamil-label"
+            >
+              <Search className="w-4 h-4" />
+              {t('சுவடிகளைத் தேடுங்கள்', 'Search Manuscripts')}
+            </button>
+          </div>
         </motion.div>
-      </div>
-
-      <div className="container mx-auto px-4 sm:px-6 max-w-6xl py-10">
-
-        {/* ══════════════════════════════════════════════════
-            SEARCH PANEL — mirrors main site: search.php
-        ══════════════════════════════════════════════════ */}
+      ) : (
         <motion.div
-          variants={fadeUp} initial="hidden" animate="show"
-          className="bg-white border border-maroon/10 shadow-lg rounded-sm mb-6 overflow-hidden"
+          key="search"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -15 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-5xl mx-auto"
         >
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="tamil-heading text-xl md:text-2xl text-maroon font-black">
+              {t('சுவடித் தேடல்', 'Manuscript Search')}
+            </h2>
+            <button
+              onClick={() => setIsSearchVisible(false)}
+              className="flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-maroon hover:text-gold transition-colors px-4 py-2 border border-maroon/10 hover:border-gold/30 rounded-sm bg-white"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              {t('விளக்கத்திற்குத் திரும்ப', 'Back to Description')}
+            </button>
+          </div>
+
+          {/* ══════════════════════════════════════════════════
+              SEARCH PANEL 
+          ══════════════════════════════════════════════════ */}
+          <div className="bg-white border border-maroon/10 shadow-lg rounded-sm mb-6 overflow-hidden text-left">
           {/* Panel header */}
           <div className="flex items-center justify-between px-5 py-3.5 bg-maroon/[0.03] border-b border-maroon/8">
             <div className="flex items-center gap-2.5">
@@ -771,7 +806,14 @@ const ManuscriptSearch = () => {
               )}
             </div>
           </form>
+          </div>
         </motion.div>
+        )}
+        </AnimatePresence>
+        </motion.div>
+      </div>
+
+      <div className="container mx-auto px-4 sm:px-6 max-w-6xl py-4 pb-10">
 
         {/* ── Empty state (manuscript selected but nothing searched) ── */}
         <AnimatePresence>

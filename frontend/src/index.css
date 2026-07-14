@@ -1231,9 +1231,11 @@ footer.bg-stone > div { position: relative; z-index: 2; }
    Content is left-anchored to clear the manuscript artwork on the right.
 ════════════════════════════════════════════════════════ */
 .search-hero-bg {
-  background-position: center 40% !important;
-  min-height: clamp(420px, calc(100vw / 1.95), 620px) !important;
+  background-position: center top !important;
+  background-size: cover !important;
+  min-height: clamp(460px, calc(100vw / 1.8), 680px) !important;
   background-color: #23090A !important;
+  overflow: visible;
 }
 .search-hero-bg::before {
   content: '';

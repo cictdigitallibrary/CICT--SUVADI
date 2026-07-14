@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="imagetoolbar" content="no" />
+<title>செம்பதிப்பு சுவடி - தேடல் பக்கம்</title>
+<link rel="stylesheet" type="text/css" href="https://suvadi.cict.in/suvadi/store/styles/common.css" />
+<link rel="stylesheet" type="text/css" href="https://suvadi.cict.in/suvadi/store/styles/jquery.autocomplete.css" />
+<script language="javascript" type="text/javascript" src="https://suvadi.cict.in/suvadi/store/scripts/jquery-1.4.2.min.js" /></script>
+<script language="javascript" type="text/javascript" src="https://suvadi.cict.in/suvadi/store/scripts/jquery.autocomplete.min.js" /></script>
+<script language="javascript" type="text/javascript" src="https://suvadi.cict.in/suvadi/store/scripts/jquery.bgiframe.min.js" /></script>
+<script language="javascript" type="text/javascript"> 
+$(document).ready(function(){ $('#sbox').autocomplete('sdata.php',{ width:385, selectFirst:false, extraParams: { 
+  book_id: function() { return $('.cmainlist').val(); },
+  category_id: function() { return $('.category_id').val(); },
+  sub_category_id: function() { return $('.sub_category_id').val(); },
+
+} });  }); </script>	<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+</head>
+<body>
+<div id="wrapper">
+	<div id="header">
+	<img src="https://suvadi.cict.in/suvadi/store/images/Sempathipu_Banner.jpg" width="960px" height="112px"/>
+    </div>
+<script type="application/javascript">
+document.onmousedown=disableclick;
+var status="Right Click Disabled";
+function disableclick(e)
+{
+  if(e.button==2)
+   {
+     alert(status);
+     return false;
+   }
+}
+</script>
+<link rel="shortcut icon" href="images/favicon.ico"  type="image/x-icon" />
+<body oncontextmenu="return false">
+
+<div id="mainpage">
+    	<div id="content">
+            <div id="search">
+            <form name="frmSearch" onSubmit="" method="post"   enctype="multipart/form-data">
+            <input type="hidden" name="do" value="search" />
+            <table border="0" width="850px">
+
+      <tr>
+       <td align="right"> <strong>நூல் தலைப்பு:</strong></td>
+        <td>
+            <select class="cmainlist" name="book_id" tabindex="3"  onchange="getCategory(this);"><option value="0">-- நூல் தலைப்பு --</option><option value="16">முத்தொள்ளாயிரம்</option><option value="13"> பதினெண் கீழ்க்கணக்கு</option><option value="12">சிலப்பதிகாரம்</option><option value="11">பத்துப்பாட்டு</option><option value="10">எட்டுத்தொகை</option><option value="9">தொல்காப்பியம்</option></select>          </td>
+      </tr>
+
+        <tr>
+           <td align="right"> <strong>செவ்வியல் நூல் :</strong></td>
+
+              <td>
+                  <select class="form-control category_id" name="category_id" tabindex="3" id="category_id" onchange="getSubCategory(this);">
+                    <option value="0">--செவ்வியல் நூல் --</option>
+                  </select>                
+               </td>
+        </tr>
+
+        <tr>  
+           <td align="right"> <strong>சுவடித் தேர்வு:</strong></td>
+
+               <td>
+                <select name="sub_category_id" class="sub_category_id" tabindex="4" id="sub_category">
+                	<option value="0">--  சுவடித் தேர்வு --</option>
+                </select>
+            </td>
+			</tr>
+			<tr>
+            <td align="right"><strong> எண்/பாடலின் குறிப்பிட்ட சொல்:</strong> </td>
+            <td align="left" valign="top">
+                        <input type="text" name="sfind" id="sbox" class="searchbox" value="1" size="60" maxlength="120" tabindex="1" autocomplete="off" />
+            <input type="submit" name="iSearch" value="தேடுக" class="sbutton" tabindex="2" />
+            </td>
+      </tr>
+            </table>
+            </form>
+            </div>
+            <div id="results">
+	 ﻿<div id="breadcrumb">எட்டுத்தொகை<strong>&raquo;</strong>ஐங்குறுநூறு<strong>&raquo;</strong>செம்மொழி நிறுவனக் குறுந்தகடு எண்:8A</div><div align="center"><input type="button" name="iZoomIn" value="பெரியதாக்க(+)" onClick="iZoomIn();"/>&nbsp;<input type="button" name="iNormal" value="இயல்பு(=)" onClick="iNormal();"/>&nbsp;<input type="button" name="iZoomOut" value="சிறியதாக்க(-)" onClick="iZoomOut();"/></div><div align="center" id="preview" style="margin:10px;width:940px;height:250px;overflow:auto;"><div style="background-image: url(../images/blank.gif);height:250px; width:940px;"><img name="iFile" id="iFile" src="https://suvadi.cict.in/suvadi/store/uploads/songs/17/17266_41.jpg" alt="" width="850" height="200" onClick="iZoomIn();" /></div></div><div align="center"><input type="button" name="iZoomIn" value="பெரியதாக்க(+)" onClick="iZoomIn();"/>&nbsp;<input type="button" name="iNormal" value="இயல்பு(=)" onClick="iNormal();"/>&nbsp;<input type="button" name="iZoomOut" value="சிறியதாக்க(-)" onClick="iZoomOut();"/></div><table border="0" align="center" style="margin:10px auto;\width:80%;"><tr><th colspan="3"><u>கோப்பின் தகவல்கள்:</u></th></tr><tr><td><strong> எண்</strong></td><td>:</td><td>1</td></tr><br/><br/><tr><td><strong>பாடல்</strong></td><td>:</td><td>வாழி யாதன் வாழி யவினி<br/>
+நெற்பல பொலிக பொன்பெரிது சிறக்க<br/>
+வெனவேட் டோளே யாயே யாமே<br/>
+நனைய காஞ்சிச் சினைய சிறுமீன்<br/>
+யாண ரூரன் வாழ்க<br/>
+பாணனும் வாழ்க வெனவேட் டேமே</td></tr></table><div align="center" style="margin:20px;"><a href="search.php?do=view&sfind=1&filters=17" title="முந்தைய பாடல்"/><strong>&laquo; முன்</strong></a>&nbsp;&nbsp;&nbsp;<a href="search.php?do=view&sfind=2&filters=17" title="அடுத்த பாடல்"/><strong>பின் &raquo;</strong></a></div><script language="javascript" type="text/javascript" src="https://suvadi.cict.in/suvadi/store/scripts/iViewer.js"></script>            </div>
+        </div>
+</div>
+</body>
+
+<script type="text/javascript">
+
+        function getCategory(category)
+        {
+
+              var baseURL = 'https://suvadi.cict.in/suvadi/admin/';
+              var category_id = category.value;
+              $.ajax({
+                  url: baseURL + 'controller/frontend.php',
+                  type: 'POST',
+                  data: {'type':'frontend_cat_dependent_dropdown','category_id':category_id},
+                  success: function (response) {                      
+                    $("#category_id").html(response);
+                  }
+            });
+
+        }
+
+        function getSubCategory(sub_category)
+        {
+
+              var baseURL = 'https://suvadi.cict.in/suvadi/admin/';
+              var sub_category_id = sub_category.value;
+              $.ajax({
+                  url: baseURL + 'controller/frontend.php',
+                  type: 'POST',
+                  data: {'type':'frontend_sub_cat_dependent_dropdown','sub_category_id':sub_category_id},
+                  success: function (response) {                      
+                    $("#sub_category").html(response);
+                  }
+            });
+
+        }
+  
+</script>
+   <div id="footer">
+		<div id="credentials">
+
+&copy; செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்.
+        </div>
+   </div>
+</div>
+</body>
+</html>

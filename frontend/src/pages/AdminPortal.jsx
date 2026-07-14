@@ -2,12 +2,20 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  Chart as ChartJS,
+  CategoryScale, LinearScale, PointElement, LineElement,
+  BarElement, Title, Tooltip, Legend, Filler,
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+import {
   Plus, Edit, Trash2, Save, X, Book, Layers, FileText, Users,
   ChevronRight, LayoutDashboard, Search, Mail, UserCheck,
-  BookOpen, MessageSquare, Eye, RefreshCw, TrendingUp, Database,
+  BookOpen, MessageSquare, Eye, TrendingUp, Database,
   Scroll, Shield, ChevronDown, ChevronUp, RotateCcw,
   ExternalLink, FileIcon, Info,
 } from 'lucide-react';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
 const API = 'http://localhost:3001/api/admin';
 const BASE = 'http://localhost:3001';
@@ -18,7 +26,7 @@ const fmt = n => Number(n || 0).toLocaleString();
 const stripTags = s => (s || '').replace(/<[^>]+>/g, '').replace(/\r?\n/g, ' ');
 
 /* ─── debounce hook ─── */
-function useDebounce(value, delay = 400) {
+function useDebounce(value, delay = 300) {
   const [dv, setDv] = useState(value);
   useEffect(() => {
     const t = setTimeout(() => setDv(value), delay);
@@ -29,13 +37,15 @@ function useDebounce(value, delay = 400) {
 
 /* ─── reusable UI atoms ─── */
 const StatCard = ({ label, value, icon: Icon, color = 'maroon', sub }) => (
-  <div className="bg-white rounded-2xl shadow-sm border border-stone/5 p-6 flex items-center justify-between group hover:border-gold/30 hover:shadow-md transition-all">
-    <div>
-      <div className="text-[10px] text-stone/40 font-bold uppercase tracking-widest mb-1">{label}</div>
-      <div className="text-3xl font-black text-maroon tabular-nums">{fmt(value)}</div>
-      {sub && <div className="text-[10px] text-stone/30 mt-1">{sub}</div>}
+  <div className="bg-white rounded-2xl shadow-sm border border-stone/5 p-6 flex h-full group hover:border-gold/30 hover:shadow-md transition-all justify-between items-start gap-4">
+    <div className="flex flex-col h-full justify-between">
+      <div>
+        <div className="text-[10px] text-stone/40 font-bold uppercase tracking-widest mb-1">{label}</div>
+        <div className="text-3xl font-black text-maroon tabular-nums">{fmt(value)}</div>
+      </div>
+      {sub && <div className="text-[10px] text-stone/30 mt-2">{sub}</div>}
     </div>
-    <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all
+    <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center transition-all
       ${color === 'gold'   ? 'bg-gold/10 text-gold group-hover:bg-gold group-hover:text-maroon'
       : color === 'green'  ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white'
       : color === 'blue'   ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'
@@ -195,10 +205,21 @@ const AdminPortal = () => {
   /* Dashboard */
   const [dashStats, setDashStats] = useState(null);
 
+  /* Upload Stats Chart */
+  const [chartYear, setChartYear]     = useState('all');
+  const [chartData, setChartData]     = useState(null);
+  const [chartLoading, setChartLoading] = useState(false);
+
   /* Dropdown option lists for forms */
   const [books, setBooks]     = useState([]);
   const [cats, setCats]       = useState([]);
   const [subcats, setSubcats] = useState([]);
+
+  /* All sub-categories flat list — for the songs form dropdown */
+  const [allSubcats, setAllSubcats] = useState([]);
+
+  /* Multi-row song entries for Add New form (+ சேர்) */
+  const [songRows, setSongRows] = useState([{ fid: '', fname: '' }]);
 
   /* Cascade state inside the form */
   const [fmBookId, setFmBookId] = useState('');
@@ -245,7 +266,12 @@ const AdminPortal = () => {
     } catch {}
   }, []);
 
-  useEffect(() => { loadBooks(); }, [loadBooks]);
+  /* Load flat sub-category list for the songs form */
+  const loadAllSubcats = useCallback(async () => {
+    try { const r = await axios.get(`${API}/subcategories/select`); setAllSubcats(r.data); } catch {}
+  }, []);
+
+  useEffect(() => { loadBooks(); loadAllSubcats(); }, [loadBooks, loadAllSubcats]);
 
   /* cascade: book → cats */
   useEffect(() => {
@@ -273,6 +299,21 @@ const AdminPortal = () => {
   const fetchDashStats = async () => {
     try { const r = await axios.get(`${API}/dashboard-stats`); setDashStats(r.data); } catch {}
   };
+
+  const fetchChartData = useCallback(async () => {
+    setChartLoading(true);
+    try {
+      // We only need the monthly aggregation from the backend now
+      const r = await axios.get(`http://localhost:3001/api/admin/dashboard/upload-stats?view=monthly`);
+      setChartData(r.data);
+    } catch {}
+    finally { setChartLoading(false); }
+  }, []);
+
+  // Re-fetch chart whenever the dashboard is open
+  useEffect(() => {
+    if (activeTab === 'dashboard') fetchChartData();
+  }, [activeTab, fetchChartData]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -302,6 +343,7 @@ const AdminPortal = () => {
     setEditingItem(null);
     setFd({ status: 1 });
     setFmBookId(''); setFmCatId('');
+    setSongRows([{ fid: '', fname: '' }]);
     setModalOpen(true);
   };
 
@@ -316,8 +358,8 @@ const AdminPortal = () => {
       setTimeout(() => setFmCatId(String(item.main_category_id || '')), 120);
     }
     if (activeTab === 'songs') {
-      setFmBookId(String(item.book_id || ''));
-      setTimeout(() => setFmCatId(String(item.main_category_id || '')), 120);
+      // Songs use flat sub-category dropdown — no book/category cascade needed
+      setSongRows([{ fid: String(item.fid || ''), fname: item.fname || '' }]);
     }
     if (activeTab === 'ebook-editions') {
       setFmBookId(String(item.book_id || ''));
@@ -336,23 +378,50 @@ const AdminPortal = () => {
       const ep = activeTab === 'ebook-editions' ? 'ebook-editions'
         : activeTab === 'team' ? 'team' : activeTab;
 
-      let payload;
-      if (activeTab === 'songs' && fd.imageFile) {
-        payload = new FormData();
-        Object.entries(fd).forEach(([k, v]) => { if (k !== 'imageFile') payload.append(k, v ?? ''); });
-        payload.append('image', fd.imageFile);
+      if (activeTab === 'songs') {
+        // Songs always use FormData (image upload possible)
+        const formData = new FormData();
+        formData.append('cid',    fd.cid    ?? '');
+        formData.append('status', fd.status ?? 1);
+        if (fd.imageFile) formData.append('image', fd.imageFile);
+
+        if (editingItem) {
+          // Edit: update single row only
+          const row = songRows[0] || { fid: '', fname: '' };
+          formData.append('fid',   row.fid   ?? '');
+          formData.append('fname', row.fname  ?? '');
+          await axios.put(`${API}/songs/${rowId(editingItem)}`, formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } });
+        } else {
+          // Create: each songRow → separate DB record sharing the same image
+          songRows.forEach(row => {
+            formData.append('fid',   row.fid   ?? '');
+            formData.append('fname', row.fname  ?? '');
+          });
+          await axios.post(`${API}/songs`, formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } });
+        }
       } else {
-        payload = { ...fd };
-        delete payload.imageFile;
+        // All other tabs
+        let payload;
+        if (fd.imageFile) {
+          payload = new FormData();
+          Object.entries(fd).forEach(([k, v]) => { if (k !== 'imageFile') payload.append(k, v ?? ''); });
+          payload.append('image', fd.imageFile);
+        } else {
+          payload = { ...fd };
+          delete payload.imageFile;
+        }
+        const cfg = payload instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+        if (editingItem) {
+          await axios.put(`${API}/${ep}/${rowId(editingItem)}`, payload, cfg);
+        } else {
+          await axios.post(`${API}/${ep}`, payload, cfg);
+        }
       }
 
-      const cfg = payload instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
-      if (editingItem) {
-        await axios.put(`${API}/${ep}/${rowId(editingItem)}`, payload, cfg);
-      } else {
-        await axios.post(`${API}/${ep}`, payload, cfg);
-      }
       setModalOpen(false); setEditingItem(null); setFd({ status: 1 });
+      setSongRows([{ fid: '', fname: '' }]);
       refresh();
     } catch (err) { console.error('Submit error:', err); }
   };
@@ -382,7 +451,7 @@ const AdminPortal = () => {
 
   /* ═══════════════════════════════ RENDER ═══════════════════════════════ */
   return (
-    <div className="min-h-screen bg-[#F0F2F5] flex">
+    <div className="h-screen overflow-hidden bg-[#F0F2F5] flex">
 
       {/* ── Sidebar ── */}
       <aside className="w-72 bg-maroon text-white flex flex-col shadow-2xl z-20 shrink-0">
@@ -428,10 +497,10 @@ const AdminPortal = () => {
       </aside>
 
       {/* ── Main ── */}
-      <main className="flex-1 overflow-y-auto min-w-0">
+      <main className="flex-1 overflow-y-auto min-w-0 flex flex-col">
 
         {/* Header */}
-        <header className="bg-white/90 backdrop-blur-md border-b border-stone/8 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <header className="bg-white/90 backdrop-blur-md border-b border-stone/8 px-8 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm shrink-0">
           <h2 className="text-xl font-cinzel font-black text-maroon flex items-center gap-3">
             <activeMeta.icon className="w-5 h-5 text-gold" />
             {activeMeta.name}
@@ -457,18 +526,15 @@ const AdminPortal = () => {
                 <span className="font-bold text-[11px] uppercase tracking-widest">Add New</span>
               </button>
             )}
-            <button onClick={activeTab === 'dashboard' ? fetchDashStats : refresh}
-              className="p-2.5 border border-stone/10 rounded-xl text-stone/40 hover:text-maroon hover:border-maroon/20 transition-all">
-              <RefreshCw className="w-4 h-4" />
-            </button>
           </div>
         </header>
 
-        <div className="p-8 max-w-[1500px] mx-auto space-y-6">
+        <div className="p-8 max-w-[1500px] w-full mx-auto flex-1 flex flex-col">
 
           {/* ══ DASHBOARD ══ */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-6">
+            <div className="flex-1 flex flex-col gap-6">
+              {/* ── Stat cards ── */}
               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                 <StatCard label="Books / நூல்கள்"            value={dashStats?.books}           icon={Book}     color="maroon" />
                 <StatCard label="Main Cat / முதல் பிரிவு"   value={dashStats?.main_categories}  icon={Layers}   color="gold" />
@@ -478,60 +544,168 @@ const AdminPortal = () => {
                 <StatCard label="Users / உள்நுழைவு"          value={dashStats?.users}            icon={Shield}   color="green" />
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Module summary */}
-                <div className="bg-white rounded-2xl shadow-sm border border-stone/5 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-stone/8">
-                    <h3 className="font-cinzel font-black text-sm text-maroon flex items-center gap-2">
-                      <Database className="w-4 h-4 text-gold" /> Data Summary
-                    </h3>
+              {/* ── Upload Statistics Chart ── */}
+              <div className="bg-white rounded-2xl shadow-sm border border-stone/5 overflow-hidden flex-1 flex flex-col">
+                {/* Chart header with toggle */}
+                <div className="px-6 py-4 border-b border-stone/8 flex items-center justify-between gap-4 flex-wrap shrink-0">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-gold" />
+                    <h3 className="font-cinzel font-black text-sm text-maroon">Upload Activity</h3>
+                    <span className="text-[9px] text-stone/30 font-cinzel">/ பாடல் பதிவேற்றங்கள்</span>
+                    {chartData && (
+                      <span className="ml-2 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[9px] font-black rounded-full border border-emerald-100">
+                        {chartData.total.toLocaleString()} total
+                      </span>
+                    )}
                   </div>
-                  <div className="divide-y divide-stone/5">
-                    {[
-                      { label: 'Books / நூல்கள்',           value: dashStats?.books,           icon: Book,     tab: 'books' },
-                      { label: 'Main Categories / முதல் பிரிவு', value: dashStats?.main_categories, icon: Layers, tab: 'categories' },
-                      { label: 'Sub-Categories / துணை பிரிவு',value: dashStats?.sub_categories,  icon: Scroll,  tab: 'subcategories' },
-                      { label: 'Manuscripts / பாடல்கள்',    value: dashStats?.songs,           icon: FileText, tab: 'songs' },
-                      { label: 'Users / உள்நுழைவு விவரங்கள்', value: dashStats?.users,          icon: Shield,  tab: 'users' },
-                    ].map(({ label, value, icon: Icon, tab }) => (
-                      <button key={tab} onClick={() => setActiveTab(tab)}
-                        className="w-full px-6 py-3.5 flex items-center gap-3 hover:bg-gold/[0.025] transition-colors text-left">
-                        <Icon className="w-4 h-4 text-maroon/30 shrink-0" />
-                        <span className="text-xs text-maroon flex-1">{label}</span>
-                        <span className="font-black text-sm text-maroon tabular-nums">{fmt(value)}</span>
-                        <ChevronRight className="w-3 h-3 text-stone/20" />
-                      </button>
-                    ))}
+                  {/* Year toggle */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {(() => {
+                      if (!chartData || !chartData.data) return null;
+                      const years = new Set(chartData.data.map(d => d.period.split('-')[0]));
+                      const yearArr = ['all', ...Array.from(years).sort()];
+                      return yearArr.map(y => (
+                        <button
+                          key={y}
+                          onClick={() => setChartYear(y)}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${
+                            chartYear === y
+                              ? 'bg-maroon text-white shadow-sm'
+                              : 'bg-stone/5 text-stone/50 hover:bg-stone/10 hover:text-maroon'
+                          }`}
+                        >
+                          {y === 'all' ? 'All' : y}
+                        </button>
+                      ));
+                    })()}
                   </div>
                 </div>
 
-                {/* Quick nav */}
-                <div className="bg-white rounded-2xl shadow-sm border border-stone/5 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-stone/8">
-                    <h3 className="font-cinzel font-black text-sm text-maroon flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-gold" /> Quick Navigation
-                    </h3>
-                  </div>
-                  <div className="p-4 grid grid-cols-2 gap-2.5">
-                    {tabs.filter(t => t.id !== 'dashboard').map(t => (
-                      <button key={t.id} onClick={() => setActiveTab(t.id)}
-                        className="flex items-center gap-2.5 p-3 rounded-xl border border-stone/8 hover:border-gold/30 hover:bg-gold/[0.025] transition-all group text-left">
-                        <t.icon className="w-4 h-4 text-maroon/30 group-hover:text-gold transition-colors shrink-0" />
-                        <div>
-                          <div className="text-[11px] font-bold text-maroon leading-tight">{t.name}</div>
-                          <div className="text-[9px] tamil-text text-stone/35">{t.label}</div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                {/* Chart body */}
+                <div className="px-6 pt-6 pb-6 flex-1 min-h-[300px]">
+                  {chartLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-8 h-8 rounded-full border-2 border-gold/30 border-t-gold animate-spin" />
+                        <span className="text-[11px] text-stone/40 font-cinzel italic">Loading chart data…</span>
+                      </div>
+                    </div>
+                  ) : !chartData || chartData.data.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <FileText className="w-10 h-10 text-stone/15 mx-auto mb-3" />
+                        <p className="text-sm text-stone/30 font-cinzel italic">No upload data available yet</p>
+                      </div>
+                    </div>
+                  ) : (() => {
+                    
+                    let labels = [];
+                    let plotData = [];
+
+                    if (chartYear === 'all') {
+                      labels = chartData.data.map(d => {
+                        const [y, m] = d.period.split('-');
+                        return new Date(+y, +m - 1).toLocaleString('en-IN', { month: 'short', year: '2-digit' });
+                      });
+                      plotData = chartData.data.map(d => d.count);
+                    } else {
+                      // Filter for specific year and pad with 0s for missing months
+                      const yearData = chartData.data.filter(d => d.period.startsWith(chartYear));
+                      for (let m = 1; m <= 12; m++) {
+                        const monthStr = m.toString().padStart(2, '0');
+                        const periodStr = `${chartYear}-${monthStr}`;
+                        const match = yearData.find(d => d.period === periodStr);
+                        labels.push(new Date(+chartYear, m - 1).toLocaleString('en-IN', { month: 'short' }));
+                        plotData.push(match ? match.count : 0);
+                      }
+                    }
+
+                    return (
+                      <Bar
+                        data={{
+                          labels,
+                          datasets: [{
+                            label: 'Manuscripts Uploaded',
+                            data: plotData,
+                            backgroundColor: 'rgba(107,15,15,0.82)',
+                            hoverBackgroundColor: 'rgba(107,15,15,1)',
+                            borderColor: 'rgba(107,15,15,0)',
+                            hoverBorderColor: '#C79A2B',
+                            borderWidth: 0,
+                            hoverBorderWidth: 2,
+                            borderRadius: 5,
+                            borderSkipped: false,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8
+                          }],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          animation: { duration: 500, easing: 'easeOutQuart' },
+                          plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                              backgroundColor: '#1A0505',
+                              titleColor: '#C79A2B',
+                              bodyColor: '#F5E6D3',
+                              borderColor: '#C79A2B',
+                              borderWidth: 1,
+                              padding: 12,
+                              cornerRadius: 10,
+                              callbacks: {
+                                title: items => items[0].label,
+                                label: item => ` ${item.raw.toLocaleString()} manuscript${item.raw !== 1 ? 's' : ''} uploaded`,
+                              },
+                            },
+                          },
+                          scales: {
+                            x: {
+                              grid: { display: false },
+                              border: { display: false },
+                              ticks: {
+                                color: '#9B7B6B',
+                                font: { size: 10, family: 'Cinzel, serif' },
+                                maxRotation: 0,
+                                minRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 20,
+                              },
+                            },
+                            y: {
+                              beginAtZero: true,
+                              border: { display: false },
+                              grid: { color: 'rgba(107,15,15,0.06)', drawBorder: false },
+                              ticks: {
+                                color: '#9B7B6B',
+                                font: { size: 10, family: 'Cinzel, serif' },
+                                callback: val => val.toLocaleString(),
+                              },
+                            },
+                          },
+                        }}
+                      />
+                    );
+                  })()}
                 </div>
+
+                {/* Footer verification strip */}
+                {chartData && (
+                  <div className="px-6 py-3 bg-stone/[0.025] border-t border-stone/5 flex items-center justify-between text-[10px] text-stone/35 shrink-0">
+                    <span>Source: <code className="font-mono">sv_songs.upload_date</code> · DATE_TRUNC grouping · live PostgreSQL</span>
+                    <span className="font-black text-emerald-600">
+                      ✓ {chartData.data.reduce((s, d) => s + d.count, 0).toLocaleString()} / {chartData.total.toLocaleString()} total records
+                    </span>
+                  </div>
+                )}
               </div>
+
 
               <div className="bg-white rounded-2xl shadow-sm border border-stone/5 px-6 py-4 flex items-center gap-3">
                 <Database className="w-4 h-4 text-gold shrink-0" />
                 <span className="text-[11px] font-bold text-maroon">PostgreSQL</span>
                 <span className="text-[10px] text-stone/30">·</span>
-                <span className="text-[10px] text-stone/40">suvadi database · 5 modules · 6,026 manuscripts</span>
+                <span className="text-[10px] text-stone/40">suvadi database · 5 modules · {dashStats?.songs?.toLocaleString() || '6,026'} manuscripts</span>
                 <div className="ml-auto flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">Connected</span>
@@ -596,7 +770,10 @@ const AdminPortal = () => {
           {/* ══ ALL OTHER TABS ══ */}
           {activeTab !== 'dashboard' && activeTab !== 'contacts' && (
             <div className="bg-white rounded-2xl shadow-sm border border-stone/5 overflow-hidden">
-              <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder={`Search ${activeMeta.name.toLowerCase()}…`}>
+              <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }}
+                placeholder={activeTab === 'songs'
+                  ? 'Search by ID, sub-category name (துணை பிரிவு), or description (பாடல்கள்)…'
+                  : `Search ${activeMeta.name.toLowerCase()}…`}>
                 <div className="ml-auto text-[10px] text-stone/35 font-bold uppercase tracking-widest flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-emerald-500" />
                   {fmt(total)} records
@@ -613,14 +790,14 @@ const AdminPortal = () => {
                       {activeTab === 'books' && <Th>Book Title (Tamil) / நூல் தலைப்பு</Th>}
                       {/* Categories */}
                       {activeTab === 'categories' && <>
-                        <Th>Category Name / முதல் பிரிவு பெயர்</Th>
-                        <Th>Parent Book</Th>
+                        <Th>பிரிவு பெயர்</Th>
+                        <Th>நூல் பெயர்</Th>
                       </>}
                       {/* Sub-Categories */}
                       {activeTab === 'subcategories' && <>
-                        <Th>Sub-Category Name / துணைப் பிரிவு பெயர்</Th>
-                        <Th>Category</Th>
-                        <Th>Book</Th>
+                        <Th>நூல் பெயர்</Th>
+                        <Th>பிரிவு பெயர்</Th>
+                        <Th>துணை பிரிவு பெயர்</Th>
                       </>}
                       {/* Manuscripts */}
                       {activeTab === 'songs' && <>
@@ -648,8 +825,8 @@ const AdminPortal = () => {
                         <Th>Joined</Th>
                       </>}
                       <Th>Status</Th>
-                      {activeTab === 'songs' && <Th>Created At</Th>}
-                      {activeTab !== 'songs' && <Th className="text-right">Actions</Th>}
+                      {(activeTab === 'songs' || activeTab === 'subcategories' || activeTab === 'categories') && <Th>Created At</Th>}
+                      <Th className="text-right">Actions</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone/5">
@@ -669,14 +846,14 @@ const AdminPortal = () => {
                               {/* Categories */}
                               {activeTab === 'categories' && <>
                                 <Td><span className="tamil-text font-bold text-maroon">{item.cname}</span></Td>
-                                <Td><span className="text-[11px] text-stone/40 font-bold italic">{item.book_name}</span></Td>
+                                <Td><span className="tamil-text font-semibold text-stone/70">{item.book_name}</span></Td>
                               </>}
 
                               {/* Sub-Categories */}
                               {activeTab === 'subcategories' && <>
-                                <Td><span className="tamil-text font-semibold text-maroon">{item.sub_cat_name}</span></Td>
-                                <Td><span className="text-[11px] text-stone/50">{item.category_name}</span></Td>
-                                <Td><span className="text-[11px] text-stone/40 italic">{item.book_name}</span></Td>
+                                <Td><span className="tamil-text font-semibold text-stone/70">{item.book_name}</span></Td>
+                                <Td><span className="tamil-text font-semibold text-stone/70">{item.category_name}</span></Td>
+                                <Td><span className="tamil-text font-bold text-maroon">{item.sub_cat_name}</span></Td>
                               </>}
 
                               {/* Manuscripts */}
@@ -684,7 +861,7 @@ const AdminPortal = () => {
                                 <Td><span className="text-[11px] font-semibold text-maroon/80">{item.sub_cat_name || '—'}</span></Td>
                                 <Td>
                                   <span className="tamil-text text-[11px] text-stone-600 max-w-sm truncate block" title={stripTags(item.fname)}>
-                                    {stripTags(item.fname) || '-'}
+                                    {stripTags(item.fname) || '—'}
                                   </span>
                                 </Td>
                               </>}
@@ -754,15 +931,48 @@ const AdminPortal = () => {
                                   </span>
                                 </Td>
                               )}
+                              
+                              {(activeTab === 'subcategories' || activeTab === 'categories') && (
+                                <Td>
+                                  <span className="text-[10.5px] font-mono text-stone-500 tabular-nums">
+                                    {item.formatted_created_at || '—'}
+                                  </span>
+                                </Td>
+                              )}
 
-                              {activeTab !== 'songs' && (
-                                <Td className="text-right">
+                              {/* Actions column for all tabs including songs */}
+                              <Td className="text-right">
+                                {activeTab === 'songs' ? (
+                                  <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                                    <button onClick={() => openEdit(item)}
+                                      className="p-2 bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all" title="Edit">
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    {showTrash ? (
+                                      <>
+                                        <button onClick={() => handleRestoreSong(id)}
+                                          className="p-2 bg-emerald-50 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-all" title="Restore">
+                                          <RotateCcw className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button onClick={() => handlePurgeSong(id)}
+                                          className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all" title="Permanently delete">
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <button onClick={() => handleTrashSong(id)}
+                                        className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all" title="Move to trash">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                ) : (
                                   <ActionBtns
                                     onEdit={() => openEdit(item)}
                                     onDelete={() => handleDelete(id)}
                                   />
-                                </Td>
-                              )}
+                                )}
+                              </Td>
                             </tr>
                           );
                         })
@@ -896,49 +1106,97 @@ const AdminPortal = () => {
 
                 {/* ─ MANUSCRIPTS / SONGS ─ */}
                 {activeTab === 'songs' && (
-                  <div className="grid grid-cols-2 gap-5">
-                    <div className="col-span-2">
-                      <Field label="Parent Book / நூல்">
-                        <BookSelect books={books} value={fmBookId}
-                          onChange={v => { setFmBookId(v); set('book_id', v); }} />
-                      </Field>
-                    </div>
-                    <div className="col-span-2">
-                      <Field label="Category / முதல் பிரிவு">
-                        <CatSelect cats={cats} value={fmCatId} onChange={v => { setFmCatId(v); }}
-                          placeholder={fmBookId ? '— Select Category —' : '— Select a book first —'} />
-                      </Field>
-                    </div>
-                    <div className="col-span-2">
-                      <Field label="Sub-Category / துணைப் பிரிவு">
-                        <SubCatSelect required subcats={subcats} value={fd.cid} onChange={v => set('cid', v)}
-                          placeholder={fmCatId ? '— Select Sub-Category —' : '— Select a category first —'} />
-                      </Field>
-                    </div>
-                    <Field label="Folio / பாடல் எண் (fid)">
-                      <input required type="number" min={1} value={fd.fid || ''} onChange={e => set('fid', e.target.value)}
-                        className={InputCls} />
+                  <div className="space-y-6">
+
+                    {/* 1. கோப்பினை தேர்ந்தெடு / Select a File */}
+                    <Field label="கோப்பினை தேர்ந்தெடு / Select a File">
+                      <input type="file" accept="image/*"
+                        onChange={e => set('imageFile', e.target.files[0])}
+                        className="w-full text-xs text-stone/50 cursor-pointer
+                          file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0
+                          file:text-xs file:font-black file:uppercase file:tracking-wide
+                          file:bg-maroon/8 file:text-maroon hover:file:bg-maroon/15 file:transition-all" />
+                      {editingItem?.filename && (
+                        <p className="text-[10px] text-stone/40 mt-1.5 flex items-center gap-1.5">
+                          <FileIcon className="w-3 h-3 shrink-0" />
+                          Current: <span className="font-mono text-maroon/60">{editingItem.filename}</span>
+                          <span className="text-stone/30">— leave blank to keep</span>
+                        </p>
+                      )}
                     </Field>
-                    <Field label="Author / ஆசிரியர்">
-                      <input type="text" value={fd.author || ''} onChange={e => set('author', e.target.value)}
-                        placeholder="System" className={InputCls} />
-                    </Field>
-                    <div className="col-span-2">
-                      <Field label="Upload Folio Image / சுவடிப் படம்" hint="JPG or PNG. File is renamed to {id}_{filename} and cached automatically.">
-                        <input type="file" accept="image/*" onChange={e => set('imageFile', e.target.files[0])}
-                          className="w-full text-xs text-stone/40 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-maroon/5 file:text-maroon hover:file:bg-maroon/10" />
-                        {editingItem?.fname && (
-                          <p className="text-[10px] text-stone/40 mt-1">Current: <span className="font-mono">{editingItem.fname}</span> (leave blank to keep)</p>
+
+                    {/* File Details section */}
+                    <div className="border border-stone/10 rounded-xl p-5 space-y-4 bg-stone/[0.015]">
+                      <p className="text-[10px] font-black text-maroon/50 uppercase tracking-[0.2em]">
+                        கோப்பின் தகவல்கள் / File Details
+                      </p>
+
+                      {/* 2. துணை பிரிவு / Sub Category — flat dropdown (all sub-categories) */}
+                      <Field label="துணை பிரிவு / Sub Category">
+                        <select required value={fd.cid || ''}
+                          onChange={e => set('cid', e.target.value)}
+                          className={InputCls + ' font-bold'}>
+                          <option value="">--ஒரு பிரிவினை தேர்வு செய்--</option>
+                          {allSubcats.map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
+
+                    {/* 3+4. Song rows — each row = பாடல் எண் + முழுப்பாடல்கள் */}
+                    {songRows.map((row, i) => (
+                      <div key={i} className={`space-y-4 ${i > 0 ? 'border-t-2 border-dashed border-stone/10 pt-5' : ''}`}>
+                        {i > 0 && (
+                          <p className="text-[10px] font-black text-gold/70 uppercase tracking-widest flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-gold/10 text-gold flex items-center justify-center text-[9px]">{i + 1}</span>
+                            குறிப்பு / Note {i + 1}
+                          </p>
                         )}
-                      </Field>
-                    </div>
-                    <div className="col-span-2">
-                      <Field label="Scholarly Transcription / சுவடி வரி உரை (Tamil)">
-                        <textarea rows={5} value={fd.description || ''} onChange={e => set('description', e.target.value)}
-                          className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 tamil-body text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none resize-none"
-                          placeholder="சுவடி வரி உரை இங்கே உள்ளிடவும்…" />
-                      </Field>
-                    </div>
+                        <Field label="பாடல் எண் / Song No.">
+                          <input required type="text" value={row.fid}
+                            onChange={e => setSongRows(prev =>
+                              prev.map((r, idx) => idx === i ? { ...r, fid: e.target.value } : r)
+                            )}
+                            className={InputCls}
+                            placeholder="பாடல் எண் உள்ளிடவும்…" />
+                        </Field>
+                        <Field label="முழுப்பாடல்கள் / Full Song">
+                          <textarea required rows={4} value={row.fname}
+                            onChange={e => setSongRows(prev =>
+                              prev.map((r, idx) => idx === i ? { ...r, fname: e.target.value } : r)
+                            )}
+                            className="w-full bg-stone/5 border border-stone/10 rounded-xl px-4 py-3 tamil-body text-maroon focus:ring-2 focus:ring-maroon/20 focus:outline-none resize-y text-sm"
+                            placeholder="முழுப்பாடல்களை இங்கே உள்ளிடவும்…" />
+                        </Field>
+                      </div>
+                    ))}
+
+                    {/* 5. புதிய குறிப்பு சேர்க்க/நீக்க — only on Add New */}
+                    {!editingItem && (
+                      <div className="flex flex-wrap items-center gap-3 py-3 border-t border-stone/8">
+                        <span className="text-[10px] font-black text-stone/40 uppercase tracking-widest whitespace-nowrap">
+                          புதிய குறிப்பு சேர்க்க/நீக்க:
+                        </span>
+                        <button type="button"
+                          disabled={songRows.length >= 10}
+                          onClick={() => setSongRows(prev => [...prev, { fid: '', fname: '' }])}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white rounded-lg text-[11px] font-black hover:bg-emerald-600 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
+                          <Plus className="w-3.5 h-3.5" /> சேர்
+                        </button>
+                        <button type="button"
+                          disabled={songRows.length <= 1}
+                          onClick={() => setSongRows(prev => prev.slice(0, -1))}
+                          className="flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white rounded-lg text-[11px] font-black hover:bg-red-600 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
+                          <X className="w-3.5 h-3.5" /> நீக்கு
+                        </button>
+                        {songRows.length > 1 && (
+                          <span className="ml-auto text-[10px] text-stone/35 font-bold">
+                            {songRows.length} பாடல்கள் சேமிக்கப்படும் / {songRows.length} rows will be saved
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

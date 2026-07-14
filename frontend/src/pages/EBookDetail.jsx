@@ -3,12 +3,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BookOpen, FileText } from 'lucide-react';
+import { ArrowLeft, BookOpen } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 import { getBookCover } from '../utils/bookCovers';
 
-const API = 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const stagger = {
   hidden: {},
@@ -163,13 +163,6 @@ const EBookDetail = () => {
                         </div>
                       )}
 
-                      {/* Flipbook available chip */}
-                      {edition.image_folder && (
-                        <div className="inline-flex items-center gap-1 mb-3 px-2 py-0.5 bg-gold/10 border border-gold/25 rounded-sm">
-                          <span className="text-gold text-[8px] font-bold tracking-widest uppercase">✦ FLIPBOOK</span>
-                        </div>
-                      )}
-
                       {/* Title */}
                       <h3 className="tamil-label text-base text-black font-extrabold leading-relaxed mb-2 group-hover:text-maroon transition-colors duration-300">
                         {edition.title_tamil}
@@ -200,23 +193,14 @@ const EBookDetail = () => {
                     {/* Footer / Read Action */}
                     <div className="mt-6 pt-6 border-t border-maroon/5 flex items-center justify-between">
                       <span className="text-[9px] text-stone/40 font-cinzel font-bold">
-                        {edition.image_folder ? 'FLIPBOOK' : 'PDF FLIPBOOK'}
+                        {'PDF READER'}
                       </span>
                       <button
                         onClick={() => {
-                          const back = encodeURIComponent(`/ebooks/${id}`);
-                          const title = encodeURIComponent(edition.title_tamil);
-                          if (edition.image_folder && edition.total_pages) {
-                            // Fast image-based flipbook
-                            const imageBase = encodeURIComponent(
-                              `https://suvadi.cict.in/asp/ebooks/${edition.image_folder}/files/mobile/`
-                            );
-                            navigate(`/ebooks/${id}/read?imageBase=${imageBase}&pages=${edition.total_pages}&title=${title}&back=${back}`);
-                          } else {
-                            // PDF-based flipbook via backend proxy
-                            const pdfUrl = encodeURIComponent(edition.pdf_url);
-                            navigate(`/ebooks/${id}/read?pdfUrl=${pdfUrl}&title=${title}&back=${back}`);
-                          }
+                          // All editions read from local storage via backend PDF proxy
+                          const back   = encodeURIComponent(`/ebooks/${id}`);
+                          const title  = encodeURIComponent(edition.title_tamil);
+                          navigate(`/ebooks/${id}/read?edition=${edition.id}&title=${title}&back=${back}`);
                         }}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-maroon text-white hover:bg-gold hover:text-maroon text-[10px] font-bold uppercase tracking-widest transition-all shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
                       >

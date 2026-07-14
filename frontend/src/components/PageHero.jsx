@@ -47,15 +47,16 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
 
   return (
     <header
-      className={`relative pt-40 pb-24 overflow-hidden selection:bg-white selection:text-maroon${heroClass ? ` ${heroClass}` : ''}`}
+      className={`relative pt-40 pb-24 selection:bg-white selection:text-maroon${heroClass ? ` ${heroClass}` : ''}`}
       style={backgroundImage ? {
         backgroundImage: `url('${backgroundImage}')`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center 30%',
+        backgroundPosition: 'center top',
         backgroundRepeat: 'no-repeat',
         backgroundColor: '#1A0303',
         minHeight: 'calc(100vw / 2.332)',
-      } : {}}
+        overflow: 'hidden',
+      } : { overflow: 'hidden' }}
     >
       {/* Background elements — suppressed when a custom bg image or class is active */}
       {!backgroundImage && !heroClass && (

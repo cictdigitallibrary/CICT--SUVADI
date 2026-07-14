@@ -9,12 +9,12 @@ import { getBookCover } from '../utils/bookCovers';
 const API = 'http://localhost:3001';
 
 const CRITICAL_EDITIONS = [
-  { ta: 'இறையனார் களவியல்',       en: 'Irayanar Kalviyar',       year: '2013', img: '/images/edition/1.png' },
-  { ta: 'ஐங்குறுநூறு – மருதம்',   en: 'Aingurunuru – Marutam',   year: '2017', img: '/images/edition/2.png' },
-  { ta: 'ஐங்குறுநூறு – நெய்தல்',  en: 'Aingurunuru – Neital',    year: '2017', img: '/images/edition/3.png' },
-  { ta: 'ஐங்குறுநூறு – குறிஞ்சி', en: 'Aingurunuru – Kurinji',   year: '2021', img: '/images/edition/4.png' },
-  { ta: 'ஐங்குறுநூறு – பாலை',     en: 'Aingurunuru – Palai',     year: '2021', img: '/images/edition/5.png' },
-  { ta: 'கைந்நிலை',               en: 'Kainnilai',               year: '2024', img: '/images/edition/6.png' },
+  { ta: 'இறையனார் களவியல்',       en: 'Irayanar Kalviyar',       year: '2013', img: '/images/publications/opt_25.jpg' },
+  { ta: 'ஐங்குறுநூறு – மருதம்',   en: 'Aingurunuru – Marutam',   year: '2017', img: '/images/publications/opt_30.jpg' },
+  { ta: 'ஐங்குறுநூறு – நெய்தல்',  en: 'Aingurunuru – Neital',    year: '2017', img: '/images/publications/opt_31.jpg' },
+  { ta: 'ஐங்குறுநூறு – குறிஞ்சி', en: 'Aingurunuru – Kurinji',   year: '2021', img: '/images/publications/opt_46.jpg' },
+  { ta: 'ஐங்குறுநூறு – பாலை',     en: 'Aingurunuru – Palai',     year: '2021', img: '/images/publications/opt_47.jpg' },
+  { ta: 'கைந்நிலை',               en: 'Kainnilai',               year: '2024', img: '/images/publications/opt_147.jpg' },
   { ta: 'ஐங்குறுநூறு – முல்லை',   en: 'Aingurunuru – Mullai',    year: 'Press', img: '/images/edition/7.png' },
 ];
 
@@ -43,12 +43,12 @@ const FACULTY_CONTENT = [
   {
     type: 'list',
     items: [
-      { ta: 'இறையனார் களவியல் (2013)', en: 'Iraiyanar Kalaviyal (2013)' },
-      { ta: 'ஐங்குறுநூறு – மருதம் (2017)', en: 'Ainkurunuru – Marutham (2017)' },
-      { ta: 'ஐங்குறுநூறு – நெய்தல் (2017)', en: 'Ainkurunuru – Neithal (2017)' },
-      { ta: 'ஐங்குறுநூறு – குறிஞ்சி (2021)', en: 'Ainkurunuru – Kurinji (2021)' },
-      { ta: 'ஐங்குறுநூறு – பாலை (2021)', en: 'Ainkurunuru – Paalai (2021)' },
-      { ta: 'கைந்நிலை (2024)', en: 'Kainnilai (2024)' },
+      { id: 25, ta: 'இறையனார் களவியல் (2013)', en: 'Iraiyanar Kalaviyal (2013)' },
+      { id: 30, ta: 'ஐங்குறுநூறு – மருதம் (2017)', en: 'Ainkurunuru – Marutham (2017)' },
+      { id: 31, ta: 'ஐங்குறுநூறு – நெய்தல் (2017)', en: 'Ainkurunuru – Neithal (2017)' },
+      { id: 46, ta: 'ஐங்குறுநூறு – குறிஞ்சி (2021)', en: 'Ainkurunuru – Kurinji (2021)' },
+      { id: 47, ta: 'ஐங்குறுநூறு – பாலை (2021)', en: 'Ainkurunuru – Paalai (2021)' },
+      { id: 147, ta: 'கைந்நிலை (2024)', en: 'Kainnilai (2024)' },
       { ta: 'ஐங்குறுநூறு – முல்லை (அச்சில்)', en: 'Ainkurunuru – Mullai (In press)' },
     ],
   },
@@ -219,23 +219,24 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 1 ▸ HERO
       ══════════════════════════════════════════ */}
-      <section className="home-hero relative w-full flex flex-col items-center justify-center overflow-hidden min-h-screen">
+      <section 
+        className="home-hero relative w-full flex flex-col items-center justify-center overflow-hidden min-h-[50vh] md:min-h-[60vh] lg:min-h-[68vh]"
+        style={{
+          backgroundImage: 'url(/images/hero_bg_attached.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
 
-        {/* Manuscript artwork background — full-width img drives section height */}
-        <img
-          src="/images/bg/hero-wide-bg-new.jpg"
-          alt=""
-          aria-hidden="true"
-          className="home-hero-artwork"
-        />
-        {/* Warm amber overlay */}
-        <div className="home-hero-overlay" />
+        {/* Subtle light overlay to improve text readability without darkening the banner */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/5 to-transparent" />
 
         {/* Bottom gold divider */}
         <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
 
         {/* Hero content */}
-        <div className="relative z-10 container mx-auto px-6 text-center max-w-5xl py-40">
+        <div className="relative z-10 container mx-auto px-6 text-center max-w-5xl py-12 md:py-20">
           <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }} className="space-y-10">
 
             {/* Institutional label */}
@@ -344,10 +345,19 @@ const Home = () => {
             {FACULTY_CONTENT.map((block, i) => (
               block.type === 'list' ? (
                 <ol key={i} className="faculty-article-list">
-                  {block.items.map((item, j) => (
-                    <li key={j}>
-                      <span className="faculty-article-list-num">{j + 1}.</span>
-                      <span>{item.ta}</span>
+                  {block.items.map((item, idx) => (
+                    <li key={idx}>
+                      {item.id ? (
+                        <Link to={`/publication/${item.id}`} className="hover:text-maroon transition-colors hover:underline">
+                          <span className="faculty-article-list-num">{idx + 1}.</span>
+                          <span>{item.ta}</span>
+                        </Link>
+                      ) : (
+                        <span>
+                          <span className="faculty-article-list-num">{idx + 1}.</span>
+                          {item.ta}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ol>
@@ -476,7 +486,7 @@ const Home = () => {
                 >
                   <div className="relative aspect-[3/4] bg-stone/5 flex items-center justify-center overflow-hidden">
                     <img
-                      src={`${API}${ed.img}`}
+                      src={ed.img.startsWith('/images/publications') ? ed.img : `${API}${ed.img}`}
                       alt={ed.ta}
                       className="h-full w-full object-contain p-2 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
                       onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📚</span>'; }}

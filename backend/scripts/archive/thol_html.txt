@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1VM8S85SST"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1VM8S85SST');
+</script>
+
+    <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon" /><link rel="stylesheet" href="../css/style.css?v=0" type="text/css" /><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><meta name="description" content="CICT" /><meta name="author" content="muruga swaminathan" /><meta name="keywords" content="critical edition" /><meta name="keywords" content="செம்பதிப்பு" /><meta name="keywords" content="palmleaf manuscripts" /><meta name="keywords" content="manucriptology" /><meta name="keywords" content="chemmozhi" /><meta name="keywords" content="செம்மொழி" /><title>
+	மின் நூல்கள் - தொல்காப்பியம்
+</title></head>
+<body>
+    <form method="post" action="./thol.aspx" id="form1">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="Y6sG4UguE9iA1Zl6ZtiIxM5AXyJfFKCbusQMIefpHftH8OJp8oqKOV+t3FNirdObWTH5v/N8bZxdVgYH6iYGvaaTFSx4eJz95kj79TgYstU=" />
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="85F6F412" />
+        <!-- header -->
+        <div id="header">
+            <div class="container">
+                <div class="menu clear clearfix">
+                    <div class="left-part"></div>
+                    <div class="middle-part" align="center">
+                        <ul class="clearfix">
+                            <li><a href="../Default.aspx">முகப்பு</a></li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li><a href="#">செம்பதிப்பு</a>
+                                <ul>
+                                    <li><a href="../asp/list41.aspx">செவ்வியல் நூல்கள்</a></li>
+                                    <li><a href="../asp/cedition.aspx">செம்பதிப்பின் தேவை</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li><a href="../asp/ebookintro.aspx">மின் நூல்கள்</a></li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+
+                            <li><a href="../asp/suvadisearch.aspx">சுவடித் தேடல்</a></li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li><a href="../asp/team.aspx">உருவாக்கம்</a></li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+
+                            <li><a href="../asp/contactus.aspx">தொடர்புக்கு</a></li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                            <li>&nbsp;</li>
+                        </ul>
+                    </div>
+                    <div class="right-part"></div>
+                </div>
+                <!-- menu -->
+                <div class="banner-info">
+                    <img src="../images/Untitled.png" alt="CICT" width="969" height="169"
+                        title="Department of Manuscriptology, CICT" />
+                </div>
+                <!-- banner info -->
+            </div>
+            <!-- container -->
+        </div>
+        <!-- header -->
+        <div id="container">
+            <div class="container">
+                <div class="container-top"></div>
+                <!-- container top-->
+
+                <div class="innercontainer clearfix">
+                    
+    <h1 class="title">
+        <center>
+            செவ்வியல் நூல்களின் முதல் அச்சுப் பதிப்புகள்<br />
+			<strong> தொல்காப்பியம் </strong>
+        </center>
+    </h1>
+    <table border="0" width="100%" cellpadding="0" cellspacing="0" class="box">
+        <tr>
+            <td colspan="4">
+                <h1 class="title"></h1>
+            </td>
+        </tr>
+        <tr>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/1.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">தொல்காப்பியம் - எழுத்து – நச்சர். – மழைவை மகாலிங்கையர் (1847)<br />
+                    &nbsp;&nbsp;<a href="ebooks/thol_1847/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/1.1847.pdf">*பதிவிறக்க </a>
+                    <br />
+					
+                </p>
+            </td>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/2.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p class="left">தொல்காப்பியம்  - எழுத்து – இளம். – சுப்பராய செட்டியார் (1868) <br/>
+                      &nbsp;&nbsp;<a href="ebooks/thol_1868/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/2.1868.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h1 class="title"></h1>
+            </td>
+        </tr>
+        <tr>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/3.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - சொல். சேனா. – கோமளபுரம் இராசகோபால பிள்ளை ( 1868) <br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_sola_sena/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/3.1868.pdf">*பதிவிறக்க </a>
+                    <br />
+
+                </p>
+            </td>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/5.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - சொல் – இளம் – கா. நமச்சிவாய முதலியார் (1927)<br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_1927/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/5.1927.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h1 class="title"></h1>
+            </td>
+        </tr>
+        <tr>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/6.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - சொல் – நச்சர். – சி.வை. தாமோதரம் பிள்ளை (1892)<br/>
+					&nbsp;&nbsp;<a href="ebooks/thol_sol/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/6.1982.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/7.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - சொல் – தெய்வ. - அரங்க வேங்கடாசலம் (1929) 
+					<br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_1929/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/7.1929.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h1 class="title"></h1>
+            </td>
+        </tr>
+        <tr>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/9.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp;  தொல்காப்பியம் - பொருள் – இளம் – அகம், புறம் – கா. நமச்சிவாய முதலியார்  (1920)
+					<br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_1920/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/9.1920.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/10.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp;  தொல்காப்பியம் - பொருள் – இளம் - களவு, கற்பு, பொருளியல் – வ.உ. சிதம்பரம் பிள்ளை (1933)
+					<br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_1933/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/10.1933.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h1 class="title"></h1>
+            </td>
+        </tr>
+        <tr>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/11.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - பொருள் – இளம் - மெய், உவ, செய், மரபு - வ.உ. சிதம்பரம் பிள்ளை (1935)
+					<br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_1935/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/11.1935.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/12.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - பொருள் – நச்சர். - சி.வை. தாமோதரம் பிள்ளை (1885)<br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_1985/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/12.1985.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h1 class="title"></h1>
+            </td>
+        </tr>
+        <tr>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/13.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - பொருள் – பின்னான்கு இயல், பேரா. சி.வை. தாமோதரம் பிள்ளை (1885)
+					<br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_1985/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/12.1985.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/14.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - பொருள் – செய்யு. நச்சர். ரா. இராகவையங்கார் (1917)	<br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_1917/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/14.1917.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h1 class="title"></h1>
+            </td>
+        </tr>
+        <tr>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/15.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - நன்னூல் மூலம் – எஸ். சாமுவேல் பிள்ளை - (1858)
+					 <br/> &nbsp;&nbsp;<a href="ebooks/thol_1858/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/15.1858.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/thol.va.u.si-1935.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - பொருள் – இளம் - மெய், உவ, செய், மரபு - வ.உ.சிதம்பரம் பிள்ளை(1935)  <br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_porul_1935/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/thol_1935.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <h1 class="title"></h1>
+            </td>
+        </tr>
+        <tr>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/thol.porul-1917.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp;  தொல்காப்பியம் - பொருள் - பேராசிரியர் உரை, ச. பவானந்தம் பிள்ளை (1917) <br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_porul_1917/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/thol_porul_1917.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+            <td width="131">
+                <img src="../images/thol-cvr-sl/thol_kal.jpg" width="133" height="136" alt="தொல்காப்பியம்"></td>
+            <td width="337">
+                <p align="left">
+                    &nbsp;&nbsp; தொல்காப்பியம் - சொல் - கல்லாடனார் உரை (1964)<br/>
+					  &nbsp;&nbsp;<a href="ebooks/thol_sol_kal/index.html">*படிக்க </a>
+                    <br />
+					 &nbsp;&nbsp;<a href="pdf/thol/thol_sol_kal.pdf">*பதிவிறக்க </a>
+                    <br />
+                </p>
+            </td>
+        </tr>
+    </table>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+
+                </div>
+ <span ><a class="rite" href="#" onclick="goBack()">பின் செல்க</a></span>
+                <!--footer section-->
+                <div class="container-bottom"></div>
+                <!-- container bottom-->
+            </div>
+            <!-- container -->
+        </div>
+        <!-- container -->
+        <div id="footer">
+            <div class="container">
+                <p>&copy; <span id="year"></span> செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்</p>
+            </div>
+        </div>
+        <script>
+            function goBack() {
+                window.history.back();
+            };
+            document.getElementById("year").innerHTML = new Date().getFullYear(); </script>
+        <script type="text/javascript" src="../js/jquery-1.8.3.min.js"></script>
+        <script type="text/javascript" src="../js/jquery.lightbox-0.5.js"></script>
+        <link rel="stylesheet" type="text/css" href="../css/jquery.lightbox-0.5.css" media="screen" />
+        <script type="text/javascript" src="../js/custom.js"></script>
+        <!--footer section-->
+		
+    </form>
+</body>
+</html>

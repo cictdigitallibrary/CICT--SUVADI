@@ -41,9 +41,9 @@ pool.query('SELECT NOW()')
 
 // ── Static paths ─────────────────────────────────────────────────────────────
 const IMAGES_PATH  = path.join(__dirname, '..', 'images');
-const SONGS_PATH   = path.join(__dirname, '..', 'songs');
+const SONGS_PATH   = process.env.SONGS_PATH || path.join(__dirname, '..', 'songs');
 const WEBINC_PATH  = path.join(__dirname, '..', 'webinc');
-const STORAGE_PATH = path.join(__dirname, '..', 'storage');
+const STORAGE_PATH = process.env.STORAGE_PATH || path.join(__dirname, '..', 'storage');
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors());
@@ -84,80 +84,41 @@ function buildImageCache() {
       const dirPath = path.join(SONGS_PATH, dir);
       if (!fs.statSync(dirPath).isDirectory()) continue;
       for (const file of fs.readdirSync(dirPath)) {
-        const sep = file.indexOf('_');
-        if (sep > 0) {
-          const key = `${dir}/${file.substring(sep + 1)}`;
-          if (!IMAGE_CACHE[key]) IMAGE_CACHE[key] = `/songs/${dir}/${file}`;
-        }
+        if (!isRealScan(path.join(dirPath, file))) continue;
+        IMAGE_CACHE[`${dir}/${file}`] = `/songs/${dir}/${file}`;
       }
     }
     console.log(`✅ Image cache: ${Object.keys(IMAGE_CACHE).length} folio images indexed`);
   } catch (e) { console.warn('⚠️  Image cache build warning:', e.message); }
 }
-function getImageUrl(cid, id, fname) {
-  if (!fname) return null;
-  const exactKey = `${cid}/${fname}`;
-  if (IMAGE_CACHE[exactKey]) return IMAGE_CACHE[exactKey];
-  const spaceKey = `${cid}/${fname.replace(/\+/g, ' ')}`;
-  if (IMAGE_CACHE[spaceKey]) return IMAGE_CACHE[spaceKey];
-  try {
-    const decodedKey = `${cid}/${decodeURIComponent(fname)}`;
-    if (IMAGE_CACHE[decodedKey]) return IMAGE_CACHE[decodedKey];
-  } catch (e) {}
-  return `/songs/${cid}/${id}_${fname}`;
+function getImageUrl(cid, id, filename) {
+  if (cid && filename) {
+    const key = `${cid}/${filename}`;
+    if (IMAGE_CACHE[key]) return IMAGE_CACHE[key];
+  }
+  return null;
 }
 buildImageCache();
 
 // Reads the first 4 bytes of a file and returns false if it is a PNG.
-// The original PHP server returns the Indian emblem (a PNG) as a placeholder
-// when a real scan is unavailable. Such files must be treated as missing.
 function isRealScan(filePath) {
   try {
     const buf = Buffer.alloc(4);
     const fd2 = fs.openSync(filePath, 'r');
     fs.readSync(fd2, buf, 0, 4, 0);
     fs.closeSync(fd2);
-    // PNG magic: 89 50 4E 47
     return !(buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47);
   } catch { return false; }
 }
 
-// resolveAdminImage: strict 1:1 mapping for admin panel only.
-// Uses group_id from sv_songs to identify the physical file owner deterministically.
-//   group_id = 0  → this record owns the scan page; file = {id}_{fname}
-//   group_id > 0  → scan page owned by that song; file = {group_id}_{fname}
-// Handles + ↔ space encoding: some fnames were stored as "c+2.jpg" when the
-// actual file on disk is "c 2.jpg" (URL-encoded space from the original import).
-// Never uses IMAGE_CACHE — no random file selection, no mismatched images.
-function resolveAdminImage(cid, id, fname, group_id) {
-  if (!fname) return { url: null, actual_filename: null, is_missing: true };
-  const ownerId = (group_id > 0) ? group_id : id;
-  const cidStr  = String(cid);
-  // Candidate fnames: exact DB value, + decoded to space, and URL decoded
-  const fnameCandidates = [...new Set([
-    fname,
-    fname.replace(/\+/g, ' '),
-    (() => { try { return decodeURIComponent(fname); } catch { return null; } })(),
-  ].filter(Boolean))];
-
-  for (const fn of fnameCandidates) {
-    const ownerFile = `${ownerId}_${fn}`;
-    const ownerPath = path.join(SONGS_PATH, cidStr, ownerFile);
-    if (fs.existsSync(ownerPath) && isRealScan(ownerPath)) {
-      return { url: `/songs/${cidStr}/${ownerFile}`, actual_filename: ownerFile, is_missing: false };
-    }
-    // Fallback: own file when ownerId differs (some records have individual files)
-    if (ownerId !== id) {
-      const ownFile = `${id}_${fn}`;
-      const ownPath = path.join(SONGS_PATH, cidStr, ownFile);
-      if (fs.existsSync(ownPath) && isRealScan(ownPath)) {
-        return { url: `/songs/${cidStr}/${ownFile}`, actual_filename: ownFile, is_missing: false };
-      }
-    }
+function resolveAdminImage(cid, id, filename, group_id) {
+  if (!filename) return { url: null, actual_filename: null, is_missing: true };
+  const cidStr = String(cid);
+  const filePath = require('path').join(__dirname, '..', 'songs', cidStr, filename);
+  if (fs.existsSync(filePath) && isRealScan(filePath)) {
+    return { url: `/songs/${cidStr}/${filename}`, actual_filename: filename, is_missing: false };
   }
-  // No file found — report canonical expected filename (space-decoded for readability)
-  const displayFname = fname.replace(/\+/g, ' ');
-  return { url: null, actual_filename: `${ownerId}_${displayFname}`, is_missing: true };
+  return { url: null, actual_filename: null, is_missing: true };
 }
 
 // ── Book image / English name maps ───────────────────────────────────────────
@@ -296,7 +257,7 @@ app.get('/api/manuscripts/search', async (req, res) => {
       const pageNum = parseInt(q, 10);
       if (isNaN(pageNum)) return res.json({ count: 0, results: [] });
       const r = await db.query(
-        `SELECT id, fid as page_number, fname as image_file, description as text_content,
+        `SELECT id, fid as page_number, filename as image_file, description as text_content,
                 group_id, view_counts, cid
          FROM sv_songs
          WHERE cid = $1 AND fid = $2 AND status = 1 AND trash = 0
@@ -306,7 +267,7 @@ app.get('/api/manuscripts/search', async (req, res) => {
       rows = r.rows;
     } else {
       const r = await db.query(
-        `SELECT id, fid as page_number, fname as image_file, description as text_content,
+        `SELECT id, fid as page_number, filename as image_file, description as text_content,
                 group_id, view_counts, cid
          FROM sv_songs
          WHERE cid = $1 AND description ILIKE $2 AND status = 1 AND trash = 0
@@ -370,7 +331,7 @@ app.get('/api/search', async (req, res) => {
 
     // Fetch paginated results
     const dataQ = await db.query(
-      `SELECT s.id, s.fid as page_number, s.fname as image_file,
+      `SELECT s.id, s.fid as page_number, s.filename as image_file,
               s.description as text_content, s.cid, s.group_id, s.view_counts,
               sc.sub_cat_name as manuscript_name, mc.cname as category_name,
               b.name as book_name, b.book_id
@@ -412,7 +373,7 @@ app.get('/api/songs', async (req, res) => {
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const { rows } = await db.query(
-      `SELECT id, fid as page_number, fname as image_file, description as text_content, group_id, cid
+      `SELECT id, fid as page_number, filename as image_file, description as text_content, group_id, cid
        FROM sv_songs
        WHERE cid = $1 AND status = 1 AND trash = 0
        ORDER BY fid
@@ -475,7 +436,8 @@ app.get('/api/ebooks/:id', async (req, res) => {
 app.get('/api/ebooks/:id/editions', async (req, res) => {
   try {
     const { rows } = await db.query(
-      `SELECT e.id, e.title_tamil, e.pdf_url, e.local_pdf_url
+      `SELECT e.id, e.title_tamil, e.title_english, e.pdf_url, e.local_pdf_url,
+              e.image_folder, e.total_pages, e.editor, e.publisher, e.year_published
        FROM sv_ebook_editions e
        WHERE e.book_id = $1 AND e.status = 1
        ORDER BY e.id ASC`,
@@ -564,7 +526,42 @@ app.get('/api/proxy/transliterate', (req, res) => {
   }).on('error', () => res.json({ suggestions: [] }));
 });
 
-// PDF server — serves PDFs exclusively from local storage (self-contained, no remote dependency)
+
+// NEW PDF server — looks up by edition ID
+app.get('/api/proxy/pdf/:editionId', async (req, res) => {
+  const { editionId } = req.params;
+  try {
+    const { rows } = await db.query(
+      'SELECT local_pdf_url FROM sv_ebook_editions WHERE id = $1 LIMIT 1',
+      [parseInt(editionId, 10)]
+    );
+    const edition = rows[0];
+
+    if (!edition || !edition.local_pdf_url) {
+      return res.status(404).json({ error: 'Edition not found' });
+    }
+
+    const filename = require('path').basename(edition.local_pdf_url);
+    const localPath = require('path').join(STORAGE_PATH, 'pdfs', filename);
+
+    try {
+      const stats = await fs.promises.stat(localPath);
+      if (!stats.isFile() || stats.size < 1024) throw new Error('File missing or too small');
+    } catch (err) {
+      console.error(`[PDF PROXY] Network Share / Filesystem error: ${err.message} | Path: ${localPath}`);
+      return res.status(404).json({ error: 'PDF not accessible on the network share', details: err.message, path: localPath });
+    }
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Range, Content-Length, Content-Type');
+    return res.sendFile(localPath);
+  } catch (err) {
+    console.error('[PDF NEW] Error:', err.message);
+    if (!res.headersSent) res.status(500).json({ error: err.message });
+  }
+});
+
+// DEPRECATED PDF server — serves PDFs exclusively from local storage (self-contained, no remote dependency)
 app.get('/api/proxy/pdf', async (req, res) => {
   const { url } = req.query;
   if (!url) {
@@ -585,7 +582,8 @@ app.get('/api/proxy/pdf', async (req, res) => {
     }
 
     // Resolve the absolute path to the locally stored PDF
-    const localPath = path.join(__dirname, '..', edition.local_pdf_url);
+    const filename = path.basename(edition.local_pdf_url);
+    const localPath = path.join(STORAGE_PATH, 'pdfs', filename);
 
     // Verify the file actually exists and is non-empty before serving
     try {
@@ -652,6 +650,21 @@ async function ensureTables() {
   for (const q of queries) {
     await pool.query(q).catch(e => console.error('Table ensure error:', e.message));
   }
+
+  // ── Migrate sv_ebook_editions: add columns missing from older deployments ──
+  // Safe to run every startup (IF NOT EXISTS is idempotent in PostgreSQL 9.6+)
+  const editionColumns = [
+    `ALTER TABLE sv_ebook_editions ADD COLUMN IF NOT EXISTS image_folder    TEXT`,
+    `ALTER TABLE sv_ebook_editions ADD COLUMN IF NOT EXISTS total_pages     INTEGER`,
+    `ALTER TABLE sv_ebook_editions ADD COLUMN IF NOT EXISTS title_english   TEXT`,
+    `ALTER TABLE sv_ebook_editions ADD COLUMN IF NOT EXISTS editor          TEXT`,
+    `ALTER TABLE sv_ebook_editions ADD COLUMN IF NOT EXISTS publisher       TEXT`,
+    `ALTER TABLE sv_ebook_editions ADD COLUMN IF NOT EXISTS year_published  INTEGER`,
+  ];
+  for (const q of editionColumns) {
+    await pool.query(q).catch(e => console.error('Edition column migration:', e.message));
+  }
+
   console.log('✅ Support tables verified');
 }
 ensureTables();
@@ -689,6 +702,45 @@ app.get('/api/admin/dashboard-stats', async (req, res) => {
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+// ── UPLOAD STATISTICS (for dashboard chart) ───────────────────────────────────
+app.get('/api/admin/dashboard/upload-stats', async (req, res) => {
+  try {
+    const view = (req.query.view || 'monthly').toLowerCase();
+
+    let rows;
+    if (view === 'daily') {
+      // Group by calendar day using DATE_TRUNC for correctness regardless of time format
+      const result = await db.query(`
+        SELECT
+          TO_CHAR(DATE_TRUNC('day', upload_date::timestamp), 'YYYY-MM-DD') AS period,
+          COUNT(*)::int AS count
+        FROM sv_songs
+        GROUP BY DATE_TRUNC('day', upload_date::timestamp)
+        ORDER BY DATE_TRUNC('day', upload_date::timestamp) ASC
+      `);
+      rows = result.rows;
+    } else {
+      // Monthly view — group by year+month
+      const result = await db.query(`
+        SELECT
+          TO_CHAR(DATE_TRUNC('month', upload_date::timestamp), 'YYYY-MM') AS period,
+          COUNT(*)::int AS count
+        FROM sv_songs
+        GROUP BY DATE_TRUNC('month', upload_date::timestamp)
+        ORDER BY DATE_TRUNC('month', upload_date::timestamp) ASC
+      `);
+      rows = result.rows;
+    }
+
+    // Also return the grand total so the frontend can cross-check
+    const totalResult = await db.query(`SELECT COUNT(*)::int AS total FROM sv_songs`);
+    const total = totalResult.rows[0].total;
+
+    res.json({ view, data: rows, total });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 
 // ── SELECT ENDPOINTS (for dropdowns) ─────────────────────────────────────────
 app.get('/api/admin/books/select', async (req, res) => {
@@ -769,7 +821,7 @@ app.get('/api/admin/categories', async (req, res) => {
     if (search) { params.push(`%${search}%`); conditions.push(`mc.cname ILIKE $${params.length}`); }
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const [rows, count] = await Promise.all([
-      db.query(`SELECT mc.*, b.name as book_name FROM sv_main_category mc JOIN sv_book b ON b.book_id = mc.book_id ${where} ORDER BY mc.cid DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
+      db.query(`SELECT mc.*, b.name as book_name, TO_CHAR(mc.created_at, 'DD-MM-YYYY HH24:MI') as formatted_created_at FROM sv_main_category mc JOIN sv_book b ON b.book_id = mc.book_id ${where} ORDER BY mc.cid DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
       db.query(`SELECT COUNT(*) as c FROM sv_main_category mc ${where}`, params),
     ]);
     res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
@@ -814,7 +866,7 @@ app.get('/api/admin/subcategories', async (req, res) => {
     if (search) { params.push(`%${search}%`); conditions.push(`sc.sub_cat_name ILIKE $${params.length}`); }
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const [rows, count] = await Promise.all([
-      db.query(`SELECT sc.*, mc.cname as category_name, b.name as book_name FROM sv_sub_category sc JOIN sv_main_category mc ON mc.cid = sc.main_category_id JOIN sv_book b ON b.book_id = sc.book_id ${where} ORDER BY sc.id DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
+      db.query(`SELECT sc.*, mc.cname as category_name, b.name as book_name, TO_CHAR(sc.created_at, 'DD-MM-YYYY HH24:MI') as formatted_created_at FROM sv_sub_category sc JOIN sv_main_category mc ON mc.cid = sc.main_category_id JOIN sv_book b ON b.book_id = sc.book_id ${where} ORDER BY sc.id DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
       db.query(`SELECT COUNT(*) as c FROM sv_sub_category sc ${where}`, params),
     ]);
     res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
@@ -859,26 +911,41 @@ app.get('/api/admin/songs', async (req, res) => {
     if (search) {
       params.push(`%${search}%`);
       const sn = params.length;
-      conditions.push(`(s.fname ILIKE $${sn} OR s.description ILIKE $${sn} OR CAST(s.fid AS TEXT) ILIKE $${sn} OR s.author ILIKE $${sn})`);
+      // Global search across: id, sub_category_name, song description, folio number, image filename, author
+      conditions.push(
+        `(CAST(s.id AS TEXT) ILIKE $${sn}` +
+        ` OR sc.sub_cat_name ILIKE $${sn}` +
+        ` OR s.description ILIKE $${sn}` +
+        ` OR CAST(s.fid AS TEXT) ILIKE $${sn}` +
+        ` OR s.fname ILIKE $${sn}` +
+        ` OR s.author ILIKE $${sn})`
+      );
     }
     const where = conditions.join(' AND ');
+    // Both data and count queries include LEFT JOINs so sc.sub_cat_name is resolvable in WHERE
+    const joinClause = `FROM sv_songs s
+         LEFT JOIN sv_sub_category sc ON sc.id = s.cid
+         LEFT JOIN sv_main_category mc ON mc.cid = sc.main_category_id
+         LEFT JOIN sv_book b ON b.book_id = mc.book_id`;
     const [rows, count] = await Promise.all([
       db.query(
         `SELECT s.id, s.fid, s.fname, s.filename, s.filetype, s.cid, s.group_id, s.description, s.author,
                 s.upload_date, s.view_counts, s.down_counts, s.status, s.trash,
                 sc.sub_cat_name, mc.cid as main_category_id, b.book_id, b.name as book_name
-         FROM sv_songs s
-         LEFT JOIN sv_sub_category sc ON sc.id = s.cid
-         LEFT JOIN sv_main_category mc ON mc.cid = sc.main_category_id
-         LEFT JOIN sv_book b ON b.book_id = mc.book_id
+         ${joinClause}
          WHERE ${where}
          ORDER BY s.id DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
         [...params, parseInt(limit), offset]
       ),
-      db.query(`SELECT COUNT(*) as c FROM sv_songs s WHERE ${where}`, params),
+      db.query(
+        `SELECT COUNT(*) as c ${joinClause} WHERE ${where}`,
+        params
+      ),
     ]);
     rows.rows.forEach(r => {
-      const { url, actual_filename, is_missing } = resolveAdminImage(r.cid, r.id, r.fname, r.group_id);
+      // Use `filename` (new records) for image lookup; fall back to `fname` for legacy imported data
+      const imageFile = r.filename || r.fname;
+      const { url, actual_filename, is_missing } = resolveAdminImage(r.cid, r.id, imageFile, r.group_id);
       r.image_url       = url;
       r.actual_filename = actual_filename;
       r.is_missing      = is_missing;
@@ -888,36 +955,65 @@ app.get('/api/admin/songs', async (req, res) => {
 });
 app.post('/api/admin/songs', uploadSong.single('image'), async (req, res) => {
   try {
-    const { cid, fid, description, author, status } = req.body;
-    const fname = req.file ? req.file.originalname : '';
-    const { rows } = await db.query(
-      "INSERT INTO sv_songs (cid, fid, fname, description, author, status, upload_date) VALUES ($1,$2,$3,$4,$5,$6, TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS')) RETURNING id",
-      [cid, fid, fname, description || '', author || 'System', status ?? 1]
-    );
-    const newId = rows[0].id;
-    if (req.file) {
-      const newName = `${newId}_${fname}`;
-      fs.renameSync(req.file.path, path.join(path.dirname(req.file.path), newName));
-      buildImageCache();
+    const { cid, status } = req.body;
+    if (!cid) return res.status(400).json({ error: 'cid is required' });
+
+    // Support multiple fid/fname pairs — each pair → separate DB row (original CICT behavior)
+    const rawFids   = [].concat(req.body.fid   || []);
+    const rawFnames = [].concat(req.body.fname  || []);
+    if (!rawFids.length) return res.status(400).json({ error: 'At least one fid/fname pair required' });
+
+    const imageOriginalName = req.file ? req.file.originalname : '';
+    const insertedIds = [];
+    let primaryId = null;  // first row owns the physical file
+
+    for (let i = 0; i < rawFids.length; i++) {
+      const fid   = rawFids[i]   || '';
+      const fname = rawFnames[i] || '';
+      // Rows after the first point to the first row's file via group_id
+      const groupId = (i === 0) ? 0 : primaryId;
+
+      const { rows } = await db.query(
+        `INSERT INTO sv_songs (cid, fid, fname, filename, description, author, group_id, status, upload_date)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8, TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'))
+         RETURNING id`,
+        [cid, fid, fname, imageOriginalName, fname, 'System', groupId, status ?? 1]
+      );
+      const newId = rows[0].id;
+      insertedIds.push(newId);
+
+      if (i === 0) {
+        primaryId = newId;
+        // Rename the uploaded file to {primaryId}_{originalname}
+        if (req.file) {
+          const newPath = path.join(path.dirname(req.file.path), `${primaryId}_${imageOriginalName}`);
+          fs.renameSync(req.file.path, newPath);
+        }
+      }
     }
-    res.json({ id: newId });
+
+    if (req.file) buildImageCache();
+    res.json({ ids: insertedIds, id: insertedIds[0] });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.put('/api/admin/songs/:id', uploadSong.single('image'), async (req, res) => {
   try {
-    const { cid, fid, description, author, status } = req.body;
+    const { cid, fid, fname, status } = req.body;
+    const songId = req.params.id;
     if (req.file) {
-      const fname = req.file.originalname;
+      const imageOriginalName = req.file.originalname;
       await db.query(
-        'UPDATE sv_songs SET cid=$1, fid=$2, fname=$3, description=$4, author=$5, status=$6 WHERE id=$7',
-        [cid, fid, fname, description, author || 'System', status, req.params.id]
+        'UPDATE sv_songs SET cid=$1, fid=$2, fname=$3, filename=$4, description=$5, status=$6 WHERE id=$7',
+        [cid, fid, fname || '', imageOriginalName, fname || '', status, songId]
       );
-      fs.renameSync(req.file.path, path.join(path.dirname(req.file.path), `${req.params.id}_${fname}`));
+      const newPath = path.join(path.dirname(req.file.path), `${songId}_${imageOriginalName}`);
+      fs.renameSync(req.file.path, newPath);
       buildImageCache();
     } else {
+      // No new file — keep existing filename, only update text fields
       await db.query(
-        'UPDATE sv_songs SET cid=$1, fid=$2, description=$3, author=$4, status=$5 WHERE id=$6',
-        [cid, fid, description, author || 'System', status, req.params.id]
+        'UPDATE sv_songs SET cid=$1, fid=$2, fname=$3, description=$4, status=$5 WHERE id=$6',
+        [cid, fid, fname || '', fname || '', status, songId]
       );
     }
     res.json({ success: true });
@@ -937,6 +1033,19 @@ app.put('/api/admin/songs/:id/restore', async (req, res) => {
 });
 app.delete('/api/admin/songs/:id/purge', async (req, res) => {
   try {
+    // Fetch before deleting so we can clean up the physical image file
+    const { rows: songRows } = await db.query(
+      'SELECT id, cid, filename, group_id FROM sv_songs WHERE id=$1', [req.params.id]
+    );
+    if (songRows[0]) {
+      const song = songRows[0];
+      // Only delete the physical file if this record owns it (group_id = 0 or null)
+      const ownsFile = !song.group_id || parseInt(song.group_id) === 0;
+      if (ownsFile && song.filename) {
+        const imgPath = path.join(SONGS_PATH, String(song.cid), `${song.id}_${song.filename}`);
+        try { if (fs.existsSync(imgPath)) { fs.unlinkSync(imgPath); buildImageCache(); } } catch {}
+      }
+    }
     await db.query('DELETE FROM sv_songs WHERE id=$1', [req.params.id]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -1078,9 +1187,9 @@ app.get('/api/admin/ebook-editions', async (req, res) => {
       db.query(`SELECT e.*, b.name as book_name FROM sv_ebook_editions e LEFT JOIN sv_book b ON b.book_id = e.book_id ${where} ORDER BY e.book_id, e.id LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
       db.query(`SELECT COUNT(*) as c FROM sv_ebook_editions e LEFT JOIN sv_book b ON b.book_id = e.book_id ${where}`, params),
     ]);
-    const ROOT = path.join(__dirname, '..');
+    
     rows.rows.forEach(r => {
-      r.is_missing = r.local_pdf_url ? !fs.existsSync(path.join(ROOT, r.local_pdf_url)) : true;
+      r.is_missing = r.local_pdf_url ? !fs.existsSync(require('path').join(STORAGE_PATH, 'pdfs', require('path').basename(r.local_pdf_url))) : true;
     });
     res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
   } catch (e) { res.status(500).json({ error: e.message }); }

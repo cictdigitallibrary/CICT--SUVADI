@@ -14,6 +14,7 @@ import CriticalEditionNeed from './pages/CriticalEditionNeed';
 import Contact from './pages/Contact';
 import Feedback from './pages/Feedback';
 import AdminPortal from './pages/AdminPortal';
+import Publication from './pages/Publication';
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ function App() {
               <Route path="/contact" element={<Contact />} />
               <Route path="/feedback" element={<Feedback />} />
               <Route path="/admin" element={<AdminPortal />} />
+              <Route path="/publication/:id" element={<Publication />} />
             </Routes>
           </Layout>
         </Router>
