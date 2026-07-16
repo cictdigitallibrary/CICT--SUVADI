@@ -219,90 +219,142 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 1 ▸ HERO
       ══════════════════════════════════════════ */}
-      <section 
-        className="home-hero relative w-full flex flex-col items-center justify-center overflow-hidden min-h-[50vh] md:min-h-[60vh] lg:min-h-[68vh]"
-        style={{
-          backgroundImage: 'url(/images/hero_bg_attached.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      >
+      <section className="home-hero relative w-full">
 
-        {/* Subtle light overlay to improve text readability without darkening the banner */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/5 to-transparent" />
+        {/* Banner image — full-width responsive img, no cropping, no zoom.
+            The section height is driven entirely by the image's natural height. */}
+        <img
+          src="/images/bg/hero-latest.png"
+          alt=""
+          aria-hidden="true"
+          style={{
+            display: 'block',
+            width: '100%',
+            height: 'auto',
+            userSelect: 'none',
+            pointerEvents: 'none',
+          }}
+        />
 
-        {/* Bottom gold divider */}
+        {/* Gold accent line at the bottom edge */}
         <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
 
-        {/* Hero content */}
-        <div className="relative z-10 container mx-auto px-6 text-center max-w-5xl py-12 md:py-20">
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }} className="space-y-10">
+        {/* ── Hero text & buttons ──────────────────────────────────────────
+            Absolutely covers the same space as the image.
+            Content is constrained to the clean parchment centre zone
+            (between the two palm-leaf manuscripts on left/right).         */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+          }}
+        >
+          <div
+            style={{
+              /* The manuscripts start at roughly 22% from each edge.
+                 Keep content inside the safe 56% centre band, capped at 660px. */
+              width: '100%',
+              maxWidth: 'min(56%, 660px)',
+              textAlign: 'center',
+              pointerEvents: 'auto',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}
+            >
+              {/* Institutional label */}
+              <motion.div
+                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }}
+              >
+                <div className="h-px w-12 bg-gradient-to-r from-transparent to-gold/70" />
+                <p className="font-cinzel uppercase font-bold text-maroon/75"
+                   style={{ fontSize: 'clamp(7px, 0.9vw, 11px)', letterSpacing: '0.45em', whiteSpace: 'nowrap' }}>
+                  {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
+                </p>
+                <div className="h-px w-12 bg-gradient-to-l from-transparent to-gold/70" />
+              </motion.div>
 
-            {/* Institutional label */}
-            <motion.div className="flex items-center justify-center gap-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }}>
-              <div className="h-px w-20 bg-gradient-to-r from-transparent to-gold/70" />
-              <p className="font-cinzel text-[10px] md:text-xs uppercase tracking-[0.6em] text-gold/80 font-bold">
-                {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
-              </p>
-              <div className="h-px w-20 bg-gradient-to-l from-transparent to-gold/70" />
-            </motion.div>
-
-            {/* Main title */}
-            <motion.div className="space-y-3" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}>
-              <h1 className="tamil-heading text-maroon italic px-4" style={{ fontSize: 'clamp(2.5rem, 7vw, 5rem)', textShadow: '0 4px 80px rgba(201,151,59,0.30), 0 0 160px rgba(201,151,59,0.12)', lineHeight: '1.2' }}>
+              {/* Main title */}
+              <motion.h1
+                className="tamil-heading text-maroon italic"
+                style={{
+                  fontSize: 'clamp(1.4rem, 4vw, 3.6rem)',
+                  textShadow: '0 2px 20px rgba(201,151,59,0.15)',
+                  lineHeight: '1.2',
+                  margin: 0,
+                }}
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}
+              >
                 {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
-              </h1>
+              </motion.h1>
+
+              {/* Ornamental separator */}
+              <motion.div
+                style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}
+                initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }} transition={{ delay: 0.7, duration: 0.8 }}
+              >
+                <div className="w-1.5 h-1.5 rounded-full border border-gold/50" />
+                <div className="h-px w-14 bg-gold/30" />
+                <div className="w-2 h-2 rounded-full bg-gold/40" />
+                <div className="h-px w-14 bg-gold/30" />
+                <div className="w-1.5 h-1.5 rounded-full border border-gold/50" />
+              </motion.div>
+
+              {/* Tagline */}
+              <motion.p
+                className="tamil-body text-maroon/65 leading-loose font-medium"
+                style={{ fontSize: 'clamp(0.65rem, 1.1vw, 0.95rem)', margin: 0 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
+              >
+                {t(
+                  'ஓலைச்சுவடிகளிலிருந்து செம்பதிப்புகள் வரை — தமிழ் செவ்வியல் இலக்கியத்தின் மின்னணு ஆவணக் கருவூலம்.',
+                  'From sacred palm-leaf manuscripts to modern critical editions — preserving the eternal voice of Classical Tamil civilization.'
+                )}
+              </motion.p>
+
+              {/* CTA buttons */}
+              <motion.div
+                style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem', paddingTop: '0.25rem' }}
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.8 }}
+              >
+                <Link to="/search" id="hero-search-btn" className="group relative overflow-hidden shadow-lg shadow-gold/20 rounded-lg"
+                  style={{ padding: '0.6rem 1.8rem' }}>
+                  <div className="absolute inset-0 bg-gold transition-all duration-500 group-hover:bg-gold-light rounded-lg" />
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg"
+                    style={{ background: 'linear-gradient(135deg, #E8B86D, #C9973B)' }} />
+                  <div className="relative flex items-center gap-2 text-maroon font-black uppercase tracking-widest transition-transform group-hover:translate-x-1"
+                    style={{ fontSize: 'clamp(9px, 0.75vw, 11px)' }}>
+                    <span className="tamil-label">{t('சுவடிகளை தேடுக', 'Explore Archives')}</span>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </Link>
+                <Link to="/ebooks" id="hero-ebooks-btn"
+                  className="group border-2 border-gold/50 text-maroon/80 font-cinzel font-black uppercase tracking-widest hover:bg-gold/10 hover:border-gold transition-all duration-300 relative overflow-hidden rounded-lg"
+                  style={{ padding: '0.6rem 1.8rem', fontSize: 'clamp(9px, 0.75vw, 11px)' }}>
+                  <span className="relative z-10">{t('மின் நூலகம்', 'Digital Library')}</span>
+                </Link>
+              </motion.div>
 
             </motion.div>
-
-            {/* Ornamental separator */}
-            <motion.div className="flex items-center justify-center gap-4" initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }} transition={{ delay: 0.7, duration: 0.8 }}>
-              <div className="w-1.5 h-1.5 rounded-full border border-gold/50" />
-              <div className="h-px w-24 bg-gold/30" />
-              <div className="w-2 h-2 rounded-full bg-gold/40" />
-              <div className="h-px w-24 bg-gold/30" />
-              <div className="w-1.5 h-1.5 rounded-full border border-gold/50" />
-            </motion.div>
-
-            {/* Tagline */}
-            <motion.p className="tamil-body text-white/70 max-w-2xl mx-auto leading-loose text-lg md:text-xl font-medium"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}>
-              {t(
-                'ஓலைச்சுவடிகளிலிருந்து செம்பதிப்புகள் வரை — தமிழ் செவ்வியல் இலக்கியத்தின் மின்னணு ஆவணக் கருவூலம்.',
-                'From sacred palm-leaf manuscripts to modern critical editions — preserving the eternal voice of Classical Tamil civilization.'
-              )}
-            </motion.p>
-
-            {/* CTA buttons */}
-            <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6"
-              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.8 }}>
-              <Link to="/search" id="hero-search-btn" className="group relative px-12 py-5 overflow-hidden shadow-xl shadow-gold/20 rounded-lg">
-                <div className="absolute inset-0 bg-gold transition-all duration-500 group-hover:bg-gold-light rounded-lg" />
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg"
-                  style={{ background: 'linear-gradient(135deg, #E8B86D, #C9973B)' }} />
-                <div className="relative flex items-center gap-3 text-maroon font-black uppercase tracking-widest text-sm transition-transform group-hover:translate-x-1">
-                  <span className="tamil-label">{t('சுவடிகளை தேடுக', 'Explore Archives')}</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </Link>
-              <Link to="/ebooks" id="hero-ebooks-btn"
-                className="group px-12 py-5 border-2 border-gold/50 text-gold font-cinzel font-black uppercase tracking-widest text-sm hover:bg-gold/12 hover:border-gold transition-all duration-300 relative overflow-hidden rounded-lg">
-                <span className="relative z-10">{t('மின் நூலகம்', 'Digital Library')}</span>
-              </Link>
-            </motion.div>
-
-          </motion.div>
+          </div>
         </div>
 
-
         {/* Scroll indicator */}
-        <div className="absolute bottom-10 left-0 w-full flex justify-center">
+        <div className="absolute bottom-4 left-0 w-full flex justify-center" style={{ pointerEvents: 'none' }}>
           <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 2.5 }} className="flex flex-col items-center gap-2">
             <span className="font-cinzel text-[8px] tracking-[0.6em] uppercase font-bold text-gold/40">Scroll</span>
-            <motion.div className="w-[1px] h-10 bg-gradient-to-b from-gold/60 to-transparent" />
+            <motion.div className="w-[1px] h-8 bg-gradient-to-b from-gold/60 to-transparent" />
           </motion.div>
         </div>
       </section>
@@ -310,6 +362,7 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 2 ▸ INSTITUTIONAL INTRODUCTION
       ══════════════════════════════════════════ */}
+
       <section className="home-faculty-section py-24">
         {/* Generated parchment artwork background */}
         <div className="home-faculty-artwork" />

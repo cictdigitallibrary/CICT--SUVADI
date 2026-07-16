@@ -15,5 +15,9 @@
   "type": "commonjs",
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "image-size": "^2.0.2",
+    "puppeteer": "^25.3.0"
   }
 }

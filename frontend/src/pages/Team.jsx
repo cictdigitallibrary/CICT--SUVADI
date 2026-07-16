@@ -9,78 +9,78 @@ const API = 'http://localhost:3001';
 const TEAM_MEMBERS = [
   {
     id: 1,
-    name_tamil:  'பேராசிரியர் இரா. சந்திரசேகரன்',
+    name_tamil: 'பேராசிரியர் இரா. சந்திரசேகரன்',
     name_english: 'Prof. Ra. Chandrasekaran',
-    title_tamil:  'இயக்குநர்',
+    title_tamil: 'இயக்குநர்',
     title_english: 'Director',
     photo: 'director.jpg',
   },
   {
     id: 2,
-    name_tamil:  'முனைவர் ரெ. புவனேஸ்வரி',
+    name_tamil: 'முனைவர் ரெ. புவனேஸ்வரி',
     name_english: 'Dr. Re. Bhuvaneswari',
-    title_tamil:  'பதிவாளர்',
+    title_tamil: 'பதிவாளர்',
     title_english: 'Registrar',
     photo: '/images/registrar.png',
     localAsset: true,
   },
   {
     id: 3,
-    name_tamil:  'முனைவர் இரா. அருள்மணி',
+    name_tamil: 'முனைவர் இரா. அருள்மணி',
     name_english: 'Dr. Ra. Arulmani',
-    title_tamil:  'ஒருங்கிணைப்பாளர் & ஆராய்ச்சி அலுவலர்',
+    title_tamil: 'ஒருங்கிணைப்பாளர் & ஆராய்ச்சி அலுவலர்',
     title_english: 'Coordinator & Research Officer',
     photo: 'arulmani.jpg',
   },
   {
     id: 4,
-    name_tamil:  'முனைவர் ம. தமிழ்வாணன்',
+    name_tamil: 'முனைவர் ம. தமிழ்வாணன்',
     name_english: 'Dr. M. Tamilvannan',
-    title_tamil:  'இளநிலை ஆராய்ச்சி அலுவலர்',
+    title_tamil: 'இளநிலை ஆராய்ச்சி அலுவலர்',
     title_english: 'Junior Research Officer',
     photo: 'tamilvannan.jpg',
   },
   {
     id: 5,
-    name_tamil:  'முனைவர் சே. கரும்பாயிரம்',
+    name_tamil: 'முனைவர் சே. கரும்பாயிரம்',
     name_english: 'Dr. Se. Karumpaayiram',
-    title_tamil:  'இளநிலை ஆராய்ச்சி அலுவலர்',
+    title_tamil: 'இளநிலை ஆராய்ச்சி அலுவலர்',
     title_english: 'Junior Research Officer',
     photo: 'karumbu.jpg',
   },
   {
     id: 6,
-    name_tamil:  'முனைவர் ம. நாகராஜன்',
+    name_tamil: 'முனைவர் ம. நாகராஜன்',
     name_english: 'Dr. M. Nagarajan',
-    title_tamil:  'இளநிலை ஆராய்ச்சி அலுவலர்',
+    title_tamil: 'இளநிலை ஆராய்ச்சி அலுவலர்',
     title_english: 'Junior Research Officer',
     photo: 'nagarajan.jpg',
   },
   {
     id: 7,
-    name_tamil:  'திரு. அ. முருக சுவாமிநாதன்',
+    name_tamil: 'திரு. அ. முருக சுவாமிநாதன்',
     name_english: 'Mr. A. Muruga Swaminathan',
-    title_tamil:  'நிரலாளர்',
+    title_tamil: 'நிரலாளர்',
     title_english: 'Programmer',
     photo: 'ams.jpg',
   },
   {
     id: 8,
-    name_tamil:  'திரு. தி.ஞா. அருள்ஒளி',
+    name_tamil: 'திரு. தி.ஞா. அருள்ஒளி',
     name_english: 'Mr. Ti. Gna. Arulolli',
-    title_tamil:  'தரவு உள்ளீட்டாளர்',
+    title_tamil: 'தரவு உள்ளீட்டாளர்',
     title_english: 'Data Entry Operator',
     photo: 'aruloli.jpg',
   },
 ];
 
 const EDITIONS = [
-  { ta: 'இறையனார் களவியல்',       en: 'Irayanar Kalv.',     yr: '2013' },
-  { ta: 'ஐங்குறுநூறு — மருதம்',   en: 'Aingurunuru',        yr: '2017' },
-  { ta: 'ஐங்குறுநூறு — நெய்தல்',  en: 'Aingurunuru',        yr: '2017' },
-  { ta: 'ஐங்குறுநூறு — குறிஞ்சி', en: 'Aingurunuru',        yr: '2021' },
-  { ta: 'ஐங்குறுநூறு — பாலை',     en: 'Aingurunuru',        yr: '2021' },
-  { ta: 'கைந்நிலை',               en: 'Kainnilai',          yr: '2024' },
+  { ta: 'இறையனார் களவியல்', en: 'Irayanar Kalv.', yr: '2013' },
+  { ta: 'ஐங்குறுநூறு — மருதம்', en: 'Aingurunuru', yr: '2017' },
+  { ta: 'ஐங்குறுநூறு — நெய்தல்', en: 'Aingurunuru', yr: '2017' },
+  { ta: 'ஐங்குறுநூறு — குறிஞ்சி', en: 'Aingurunuru', yr: '2021' },
+  { ta: 'ஐங்குறுநூறு — பாலை', en: 'Aingurunuru', yr: '2021' },
+  { ta: 'கைந்நிலை', en: 'Kainnilai', yr: '2024' },
 ];
 
 const stagger = {
@@ -89,7 +89,7 @@ const stagger = {
 };
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
 };
 
 const Team = () => {

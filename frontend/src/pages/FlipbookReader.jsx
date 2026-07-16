@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import HTMLFlipBook from 'react-pageflip';
 import { Document, Page, pdfjs } from 'react-pdf';
@@ -10,11 +10,8 @@ import {
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-
-// Resolve backend base from env — no hardcoded localhost
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 const BACKEND = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const RENDER_WIN = 6; // render pages within ±N of current page
@@ -48,7 +45,7 @@ const PDFPage = React.forwardRef(({ pageNum, currentPage, pageHeight }, ref) => 
 PDFPage.displayName = 'PDFPage';
 
 const PDF_OPTIONS = {
-  cMapUrl: 'https://unpkg.com/pdfjs-dist/cmaps/',
+  cMapUrl: '/cmaps/',   // served locally from public/cmaps/ — no external CDN needed
   cMapPacked: true,
 };
 
@@ -73,20 +70,72 @@ export default function FlipbookReader() {
     : null;
 
   /* state */
-  const [page,        setPage]        = useState(1);
+  const [page, setPage] = useState(parseInt(params.get('page') || '1', 10));
+
   const [pdfTotal,    setPdfTotal]    = useState(0);
   const [pdfReady,    setPdfReady]    = useState(false);
-  const [pdfErr,      setPdfErr]      = useState(false);
+  const [pdfErr,      setPdfErr]      = useState(null);
   const [pdfProgress, setPdfProgress] = useState(0);
   const [isFS,        setIsFS]        = useState(false);
+  const [fallbackMode, setFallbackMode] = useState(false);
+  const [retryKey, setRetryKey] = useState(Date.now());
+
   const [zoom,        setZoom]        = useState(1.0);
   const [portrait,    setPortrait]    = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [dlError,     setDlError]     = useState(false);
-
+  
   const bookRef = useRef(null);
-  const ready   = pdfReady || pdfErr;
-  const total   = pdfTotal;
+  const ready = pdfReady || pdfErr !== null;
+  const total = pdfTotal;
+
+  // Memoize options so <Document> doesn't re-render and abort on every state change
+  const documentOptions = useMemo(() => ({
+    ...PDF_OPTIONS,
+    disableStream: fallbackMode,
+    disableAutoFetch: fallbackMode
+  }), [fallbackMode]);
+
+  const onDocumentLoadSuccess = useCallback(({ numPages }) => {
+    console.log('[FlipbookReader] Document load success. Pages:', numPages);
+    setPdfTotal(numPages);
+    setPdfReady(true);
+  }, []);
+
+  const onDocumentLoadError = useCallback((err) => {
+    console.error('[FlipbookReader] PDF Error:', err); 
+    
+    // Intelligent retry logic
+    if (!fallbackMode) {
+      console.log('[FlipbookReader] Attempting fallback load strategy...');
+      setFallbackMode(true);
+      setRetryKey(Date.now());
+      return;
+    }
+
+    // If fallback also fails, log robust diagnostics
+    const diagId = `ERR-PDF-${editionId || 'NA'}-${Date.now()}`;
+    let message = err.message || 'Unknown error';
+    let reason = 'Parser Failure';
+    if (message.includes('Invalid string length') || message.includes('RangeError')) {
+       reason = 'Structural Limitation (Missing EOF)';
+    } else if (message.includes('fetch') || message.includes('network')) {
+       reason = 'Network or Proxy Failure';
+    } else if (err.name === 'AbortException' || err.name === 'AbortError') {
+       reason = 'Load Cancelled';
+    }
+
+    setPdfErr({ id: diagId, message, reason, stack: err.stack }); 
+  }, [fallbackMode, editionId]);
+
+  const onDocumentLoadProgress = useCallback(({ loaded, total }) => {
+    if (total > 0) setPdfProgress(loaded / total);
+  }, []);
+
+  useEffect(() => {
+    console.log('[FlipbookReader] Mounted. Target edition:', editionId);
+    return () => console.log('[FlipbookReader] Unmounted. Cleaning up edition:', editionId);
+  }, [editionId]);
 
   /* Download handler */
   const handleDownload = useCallback(async () => {
@@ -292,21 +341,38 @@ export default function FlipbookReader() {
             position: 'relative', width: bookTotalW, height: scaledH, overflow: 'hidden',
           }}>
             <Document
+              key={retryKey}
               file={proxyUrl}
-              onLoadSuccess={({ numPages }) => { setPdfTotal(numPages); setPdfReady(true); }}
-              onLoadError={err => { console.error('PDF Error:', err); setPdfErr(true); }}
-              onLoadProgress={({ loaded, total }) => { if (total > 0) setPdfProgress(loaded / total); }}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              onLoadProgress={onDocumentLoadProgress}
               loading={null}
-              options={PDF_OPTIONS}
+              options={documentOptions}
             >
               {pdfErr ? (
-                <div style={{ width: bookTotalW, height: scaledH, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: '#fff' }}>
-                  <AlertCircle color="#8B1C1C" size={32} />
-                  <p style={{ fontFamily: 'Cinzel,serif', fontSize: 12, color: '#555', margin: 0 }}>Could not load PDF.</p>
-                  <p style={{ fontFamily: 'Cinzel,serif', fontSize: 10, color: '#888', margin: 0 }}>
-                    Ensure the backend is running and the PDF is downloaded locally.
+                <div style={{ width: bookTotalW, height: scaledH, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, background: '#140202', border: '1px solid rgba(201,151,59,0.3)', padding: 24, textAlign: 'center', boxSizing: 'border-box' }}>
+                  <AlertCircle color="#C9973B" size={48} />
+                  <p style={{ fontFamily: 'Cinzel,serif', fontSize: 14, color: '#C9973B', margin: 0, fontWeight: 'bold', letterSpacing: '0.1em' }}>
+                    PREVIEW UNAVAILABLE
                   </p>
-                  <button onClick={() => navigate(backTo)} style={{ ...sBtn, marginTop: 8 }}>Back to Library</button>
+                  <p style={{ fontFamily: '"Baloo Thambi 2",sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: '8px 0', maxWidth: 400 }}>
+                    This manuscript cannot be previewed in the browser due to an archival structural limitation. Please download the file to view it in a native PDF reader.
+                  </p>
+                  
+                  <div style={{ background: 'rgba(0,0,0,0.5)', padding: '12px 16px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)', textAlign: 'left', width: '100%', maxWidth: 500 }}>
+                    <p style={{ margin: 0, fontSize: 10, color: '#888', fontFamily: 'monospace' }}>Diagnostic ID: {pdfErr.id}</p>
+                    <p style={{ margin: '4px 0 0', fontSize: 10, color: '#888', fontFamily: 'monospace' }}>Reason: {pdfErr.reason}</p>
+                    <p style={{ margin: '4px 0 0', fontSize: 10, color: '#888', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Exception: {pdfErr.message}</p>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                    <button onClick={handleDownload} style={{ ...hBtn, background: '#C9973B', color: '#140202' }}>
+                      <Download size={14} /> Download PDF
+                    </button>
+                    <button onClick={() => navigate(backTo)} style={hBtn}>
+                      Back to Library
+                    </button>
+                  </div>
                 </div>
               ) : pdfTotal > 0 ? (
                 <HTMLFlipBook {...fbProps}>

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
+import CategoryBanner from '../components/CategoryBanner';
 import { getBookCover } from '../utils/bookCovers';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -68,25 +69,44 @@ const EBookDetail = () => {
 
   return (
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
-      <PageHero
-        label={t('மின் நூலகம் · பதிப்புகள்', 'DIGITAL LIBRARY · EDITIONS')}
-        title={book.title_tamil}
-        subtitle={book.title_english}
-        badge={editions.length > 0 ? `${editions.length} ${t('பதிப்புகள்', 'Editions Available')}` : t('பதிப்புகள் இல்லை', 'No Editions')}
-        glyphs={['நூல்', 'அச்சு', 'எழுத்து', 'சொல்', 'பொருள்']}
-      />
+      {id === '9' ? (
+        <section className="relative w-full overflow-hidden bg-[#1A0303]">
+          <div 
+            className="w-full relative"
+            style={{
+              backgroundImage: "url('/images/bg/hero_ebook_9_panoramic.png')",
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              aspectRatio: '1920 / 555'
+            }}
+          />
+        </section>
+      ) : id === '10' ? (
+        <CategoryBanner src="/hero_ebook_10.jpg" alt="Ettuthogai Banner" />
+      ) : (
+        <PageHero
+          label={t('மின் நூலகம் · பதிப்புகள்', 'DIGITAL LIBRARY · EDITIONS')}
+          title={book.title_tamil}
+          subtitle={book.title_english}
+          badge={editions.length > 0 ? `${editions.length} ${t('பதிப்புகள்', 'Editions Available')}` : t('பதிப்புகள் இல்லை', 'No Editions')}
+          glyphs={['நூல்', 'அச்சு', 'எழுத்து', 'சொல்', 'பொருள்']}
+        />
+      )}
 
-      <div className="container mx-auto px-6 max-w-6xl py-16">
+      <div className={`container mx-auto px-6 max-w-6xl ${id === '10' ? 'pt-[24px] pb-16' : 'py-16'}`}>
         {/* Back Link */}
-        <div className="mb-12">
-          <Link
-            to="/ebooks"
-            className="inline-flex items-center gap-2 group text-stone/50 hover:text-maroon font-cinzel text-[10px] font-bold uppercase tracking-[0.3em] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            {t('நூலகத்திற்குத் திரும்புக', 'BACK TO LIBRARY')}
-          </Link>
-        </div>
+        {id !== '10' && (
+          <div className="mb-12">
+            <Link
+              to="/ebooks"
+              className="inline-flex items-center gap-2 group text-stone/50 hover:text-maroon font-cinzel text-[10px] font-bold uppercase tracking-[0.3em] transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              {t('நூலகத்திற்குத் திரும்புக', 'BACK TO LIBRARY')}
+            </Link>
+          </div>
+        )}
 
         {/* Editions Listing */}
         <div className="mb-20">

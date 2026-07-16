@@ -40,15 +40,46 @@ pool.query('SELECT NOW()')
   .catch(e => console.error('❌ PostgreSQL connection failed:', e.message));
 
 // ── Static paths ─────────────────────────────────────────────────────────────
-const IMAGES_PATH  = path.join(__dirname, '..', 'images');
-const SONGS_PATH   = process.env.SONGS_PATH || path.join(__dirname, '..', 'songs');
-const WEBINC_PATH  = path.join(__dirname, '..', 'webinc');
+// PDFs and manuscript scans are on the UNC server share (set in .env).
+// Website images and webinc resources are always served from the local project.
 const STORAGE_PATH = process.env.STORAGE_PATH || path.join(__dirname, '..', 'storage');
+const SONGS_PATH   = process.env.SONGS_PATH   || path.join(__dirname, '..', 'songs');
+const IMAGES_PATH  = path.join(__dirname, '..', 'images');
+const WEBINC_PATH  = path.join(__dirname, '..', 'webinc');
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+
+// ── Asset Logging Middleware ──────────────────────────────────────────────────
+const fsSync = require('fs');
+app.use((req, res, next) => {
+  const isAsset = req.path.startsWith('/images') || req.path.startsWith('/songs') || 
+                  req.path.startsWith('/webinc') || req.path.startsWith('/storage');
+  if (isAsset) {
+    let targetRoot;
+    if (req.path.startsWith('/images')) targetRoot = IMAGES_PATH;
+    else if (req.path.startsWith('/songs')) targetRoot = SONGS_PATH;
+    else if (req.path.startsWith('/webinc')) targetRoot = WEBINC_PATH;
+    else if (req.path.startsWith('/storage')) targetRoot = STORAGE_PATH;
+
+    const mountPrefix = req.path.split('/')[1]; 
+    const relPath = req.path.replace(`/${mountPrefix}`, '') || '/';
+    const resolvedPath = path.join(targetRoot, decodeURIComponent(relPath));
+
+    try {
+      if (fsSync.existsSync(resolvedPath)) {
+        console.log(`[ASSET] ✅ SUCCESS | URL: ${req.url} | PATH: ${resolvedPath}`);
+      } else {
+        console.log(`[ASSET] ❌ NOT FOUND | URL: ${req.url} | PATH: ${resolvedPath}`);
+      }
+    } catch (err) {
+      console.log(`[ASSET] 💥 FS ERROR | URL: ${req.url} | PATH: ${resolvedPath} | REASON: ${err.message}`);
+    }
+  }
+  next();
+});
 
 app.use('/images',  express.static(IMAGES_PATH));
 app.use('/songs',   express.static(SONGS_PATH));
@@ -114,7 +145,7 @@ function isRealScan(filePath) {
 function resolveAdminImage(cid, id, filename, group_id) {
   if (!filename) return { url: null, actual_filename: null, is_missing: true };
   const cidStr = String(cid);
-  const filePath = require('path').join(__dirname, '..', 'songs', cidStr, filename);
+  const filePath = path.join(SONGS_PATH, cidStr, filename);
   if (fs.existsSync(filePath) && isRealScan(filePath)) {
     return { url: `/songs/${cidStr}/${filename}`, actual_filename: filename, is_missing: false };
   }
