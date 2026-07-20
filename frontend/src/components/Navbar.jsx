@@ -19,10 +19,13 @@ const Navbar = () => {
   useEffect(() => { setMobileMenuOpen(false); }, [location.pathname]);
 
   const isScrolled = scrollY > 40;
-  const isHomePage = location.pathname === '/';
-  
-  // Navbar should be solid if we've scrolled OR if we aren't on the home page (to avoid white-on-ivory clash)
-  const shouldBeSolid = isScrolled || !isHomePage;
+
+  // Navbar is always solid maroon theme now.
+  const navBg = 'bg-[#1A0505]/95 backdrop-blur-lg shadow-2xl';
+  const logoTextColor  = 'text-white';
+  const subTextColor   = 'text-gold/80';
+  const linkColor      = 'text-white/85 hover:text-gold';
+  const activeColor    = 'text-gold';
 
   const navLinks = [
     { nameTa: 'முகப்பு',          nameEn: 'Home',              path: '/' },
@@ -33,34 +36,20 @@ const Navbar = () => {
     { nameTa: 'தொடர்புக்கு',      nameEn: 'Contact',           path: '/contact' },
   ];
 
-  /* ─── Styles based on state ─── */
-  const navBg = shouldBeSolid
-    ? 'bg-[#1A0505]/95 backdrop-blur-lg shadow-2xl'
-    : 'bg-transparent';
-
-  const logoTextColor  = shouldBeSolid ? 'text-white'       : 'text-[#5C0A0A]';
-  const subTextColor   = shouldBeSolid ? 'text-gold/80'     : 'text-[#5C0A0A]/75';
-  const linkColor      = shouldBeSolid ? 'text-white/85 hover:text-gold' : 'text-[#5C0A0A] hover:text-gold';
-  const activeColor    = 'text-gold';
-
   return (
-    <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ease-in-out ${navBg} ${shouldBeSolid ? 'py-3' : 'py-6'}`}>
-      {/* Decorative top gold line on scroll */}
-      {shouldBeSolid && (
-        <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-transparent via-gold to-transparent opacity-80" />
-      )}
+    <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ease-in-out ${navBg} ${isScrolled ? 'py-4' : 'py-6'}`}>
+      {/* Decorative top gold line */}
+      <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-transparent via-gold to-transparent opacity-80" />
       
       {/* Bottom border line */}
-      {shouldBeSolid && (
-        <div className="absolute bottom-0 left-0 w-full h-[1px]"
-          style={{ background: 'linear-gradient(90deg, transparent, #C9973B40, transparent)' }} />
-      )}
+      <div className="absolute bottom-0 left-0 w-full h-[1px]"
+        style={{ background: 'linear-gradient(90deg, transparent, #C9973B40, transparent)' }} />
 
       <div className="container mx-auto px-6 flex justify-between items-center">
 
         {/* ── Logo ── */}
-        <Link to="/" className="flex items-center gap-4 group flex-shrink-0">
-          <div className="w-14 h-14 flex items-center justify-center transition-transform duration-500 flex-shrink-0 group-hover:scale-105">
+        <Link to="/" className="flex items-center gap-5 group flex-shrink-0">
+          <div className="w-[72px] h-[72px] flex items-center justify-center transition-transform duration-500 flex-shrink-0 group-hover:scale-105">
             <img src="/images/cict_emblem.png" alt="CICT Emblem"
               className="w-full h-full object-contain drop-shadow-md"
               onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-white text-xs font-bold">CICT</span>'; }}
@@ -68,13 +57,13 @@ const Navbar = () => {
           </div>
           <div className="flex flex-col leading-none">
             <span
-              className={`font-black tracking-[0.25em] text-lg uppercase transition-colors duration-500 ${logoTextColor}`}
+              className={`font-black tracking-[0.25em] text-xl uppercase transition-colors duration-500 ${logoTextColor}`}
               style={{ fontFamily: '"Cinzel", serif' }}
             >
               SUVADI
             </span>
             <span
-              className={`text-[9.5px] uppercase tracking-[0.2em] font-bold mt-1 transition-colors duration-500 ${subTextColor}`}
+              className={`text-[10.5px] uppercase tracking-[0.2em] font-bold mt-1.5 transition-colors duration-500 ${subTextColor}`}
               style={{ fontFamily: '"Cinzel", serif' }}
             >
               {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
@@ -93,7 +82,7 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 className={`relative text-[11px] font-black uppercase tracking-[0.18em] transition-all duration-300 ${isActive ? activeColor : linkColor} group py-2`}
-                style={{ fontFamily: '"Cinzel", sans-serif' }}
+                style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Cinzel", sans-serif' }}
               >
                 {t(link.nameTa, link.nameEn)}
                 {/* Visual indicator for active link */}
@@ -112,11 +101,7 @@ const Navbar = () => {
           <button
             onClick={toggleLanguage}
             id="lang-toggle-btn"
-            className={`flex items-center gap-2 px-5 py-2 text-[11px] font-black uppercase tracking-[0.2em] border-2 transition-all duration-300 shadow-lg ${
-              shouldBeSolid
-                ? 'border-gold/30 text-gold hover:bg-gold hover:text-maroon'
-                : 'border-[#5C0A0A]/35 text-[#5C0A0A] hover:border-gold hover:text-gold hover:bg-[#5C0A0A]/5'
-            }`}
+            className="flex items-center gap-2 px-6 py-2.5 text-[12px] font-black uppercase tracking-[0.2em] border-2 transition-all duration-300 shadow-lg border-gold/30 text-gold hover:bg-gold hover:text-maroon"
             style={{ fontFamily: '"Cinzel", serif' }}
           >
             <span className="text-sm">🌐</span>
@@ -131,14 +116,14 @@ const Navbar = () => {
           aria-label="Menu"
         >
           <div className="flex flex-col gap-[6px]">
-            <span className={`block w-6 h-[2.5px] transition-all duration-500 ease-out ${shouldBeSolid ? 'bg-white' : 'bg-[#5C0A0A]'} ${mobileMenuOpen ? 'rotate-45 translate-y-[8.5px] bg-gold' : ''}`} />
-            <span className={`block w-5 h-[2.5px] transition-all duration-300 ${shouldBeSolid ? 'bg-white' : 'bg-[#5C0A0A]'} ${mobileMenuOpen ? 'opacity-0 -translate-x-4' : ''}`} />
-            <span className={`block w-6 h-[2.5px] transition-all duration-500 ease-out ${shouldBeSolid ? 'bg-white' : 'bg-[#5C0A0A]'} ${mobileMenuOpen ? '-rotate-45 -translate-y-[8.5px] bg-gold' : ''}`} />
+            <span className={`block w-6 h-[2.5px] transition-all duration-500 ease-out bg-white ${mobileMenuOpen ? 'rotate-45 translate-y-[8.5px] bg-gold' : ''}`} />
+            <span className={`block w-5 h-[2.5px] transition-all duration-300 bg-white ${mobileMenuOpen ? 'opacity-0 -translate-x-4' : ''}`} />
+            <span className={`block w-6 h-[2.5px] transition-all duration-500 ease-out bg-white ${mobileMenuOpen ? '-rotate-45 -translate-y-[8.5px] bg-gold' : ''}`} />
           </div>
         </button>
 
         {/* ── New Right Emblem ── */}
-        <div className="w-12 h-12 lg:w-14 lg:h-14 flex items-center justify-center bg-white rounded-full p-[2px] ml-2 flex-shrink-0 shadow-md border border-gray-200">
+        <div className="w-14 h-14 lg:w-[68px] lg:h-[68px] flex items-center justify-center bg-white rounded-full p-[2px] ml-2 flex-shrink-0 shadow-md border border-gray-200">
           <img src="/images/emblem_right.png" alt="Institutional Emblem" className="w-full h-full object-contain rounded-full" />
         </div>
       </div>

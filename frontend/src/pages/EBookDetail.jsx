@@ -82,6 +82,84 @@ const EBookDetail = () => {
             }}
           />
         </section>
+      ) : id === '13' ? (
+        <section className="relative w-full overflow-hidden bg-[#1A0303]">
+          <div 
+            className="w-full relative"
+            style={{
+              backgroundImage: "url('/images/bg/hero_ebook_13_panoramic.png')",
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              aspectRatio: '1920 / 555'
+            }}
+          />
+        </section>
+      ) : id === '11' ? (
+        <section className="relative w-full overflow-hidden bg-[#1A0303]">
+          <div 
+            className="w-full relative"
+            style={{
+              backgroundImage: "url('/images/bg/hero_ebook_11_panoramic.png')",
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              aspectRatio: '1920 / 555'
+            }}
+          />
+        </section>
+      ) : id === '15' ? (
+        <section className="relative w-full overflow-hidden bg-[#1A0303]">
+          <div 
+            className="w-full relative"
+            style={{
+              backgroundImage: "url('/images/bg/hero_ebook_15_panoramic.png')",
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              aspectRatio: '1920 / 555'
+            }}
+          />
+        </section>
+      ) : id === '16' ? (
+        <section className="relative w-full overflow-hidden bg-[#1A0303]">
+          <div 
+            className="w-full relative"
+            style={{
+              backgroundImage: "url('/images/bg/hero_ebook_16_panoramic.png')",
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              aspectRatio: '1920 / 555'
+            }}
+          />
+        </section>
+      ) : id === '17' ? (
+        <section className="relative w-full overflow-hidden bg-[#1A0303]">
+          <div 
+            className="w-full relative"
+            style={{
+              backgroundImage: "url('/images/bg/hero_ebook_17_panoramic.png')",
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              aspectRatio: '1920 / 555'
+            }}
+          />
+        </section>
+      ) : id === '12' ? (
+        <section className="relative w-full overflow-hidden bg-[#1A0303]">
+          <div 
+            className="w-full relative"
+            style={{
+              backgroundImage: "url('/images/bg/hero_panoramic_12.png')",
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              aspectRatio: '1920 / 555'
+            }}
+          />
+        </section>
       ) : id === '10' ? (
         <CategoryBanner src="/hero_ebook_10.jpg" alt="Ettuthogai Banner" />
       ) : (

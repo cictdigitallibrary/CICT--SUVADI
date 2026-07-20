@@ -8,10 +8,15 @@ const Layout = ({ children }) => {
   const isAdmin  = location.pathname.startsWith('/admin');
   const isReader = location.pathname.includes('/read');
 
+  const isHomePage = location.pathname === '/';
+  
+  // Navbar height: Solid un-scrolled = 124px
+  const mainPadding = isAdmin || isReader ? '' : 'pt-[124px]';
+
   return (
     <div className="min-h-screen flex flex-col">
       {!isAdmin && !isReader && <Navbar />}
-      <main className={`flex-grow ${isAdmin ? 'h-screen overflow-hidden' : ''}`}>
+      <main className={`flex-grow ${isAdmin ? 'h-screen overflow-hidden' : mainPadding}`}>
         {children}
       </main>
       {!isAdmin && !isReader && <Footer />}

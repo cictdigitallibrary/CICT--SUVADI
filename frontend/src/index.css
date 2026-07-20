@@ -59,27 +59,27 @@ a {
 }
 
 .tamil-heading {
-  font-family: "Baloo Thambi 2", "Noto Sans Tamil", sans-serif;
+  font-family: "Noto Sans Tamil", sans-serif;
   font-weight: 900;
   line-height: 1.25;
   letter-spacing: -0.02em;
 }
 
 .tamil-label {
-  font-family: "Baloo Thambi 2", "Noto Sans Tamil", sans-serif;
+  font-family: "Noto Sans Tamil", sans-serif;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
 .tamil-elegant {
-  font-family: "Tiro Tamil", "Noto Sans Tamil", serif;
+  font-family: "Noto Sans Tamil", sans-serif;
   font-weight: 400;
   font-style: italic;
   line-height: 2;
 }
 
 .tamil-body {
-  font-family: "Baloo Thambi 2", "Noto Sans Tamil", sans-serif;
+  font-family: "Noto Sans Tamil", sans-serif;
   font-weight: 500;
   line-height: 2;
   font-size: 1rem;
@@ -88,7 +88,15 @@ a {
 /* ── NAV ─────────────────────────────────────────────── */
 .nav-link {
   @apply relative text-[11px] uppercase tracking-[0.12em] font-bold transition-all duration-300 hover:text-gold;
-  font-family: "Baloo Thambi 2", "Cinzel", sans-serif;
+}
+
+/* Language specific font switching for nav-links */
+:lang(en) .nav-link {
+  font-family: "Cinzel", sans-serif;
+}
+
+:lang(ta) .nav-link {
+  font-family: "Noto Sans Tamil", sans-serif;
 }
 
 .nav-link::after {
@@ -1225,7 +1233,9 @@ footer.bg-stone>div {
 ════════════════════════════════════════════════════════ */
 .contact-hero-bg {
   background-position: center 42% !important;
-  min-height: clamp(440px, calc(100vw / 1.95), 660px) !important;
+  min-height: clamp(320px, calc(100vw / 2.6), 480px) !important;
+  padding-top: 7rem !important;
+  padding-bottom: 4rem !important;
   background-color: #2A0D04 !important;
 }
 

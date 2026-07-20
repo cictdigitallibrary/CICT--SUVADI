@@ -260,7 +260,7 @@ export default function FlipbookReader() {
           <div style={{ color: 'rgba(201,151,59,0.45)', fontSize: 7, fontFamily: 'Cinzel,serif', letterSpacing: '0.45em', textTransform: 'uppercase' }}>
             READING EDITION
           </div>
-          <div style={{ color: '#fff', fontSize: 13, fontFamily: '"Baloo Thambi 2",sans-serif', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ color: '#fff', fontSize: 13, fontFamily: '"Noto Sans Tamil",sans-serif', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {decodeURIComponent(bookTitle)}
           </div>
         </div>
@@ -355,7 +355,7 @@ export default function FlipbookReader() {
                   <p style={{ fontFamily: 'Cinzel,serif', fontSize: 14, color: '#C9973B', margin: 0, fontWeight: 'bold', letterSpacing: '0.1em' }}>
                     PREVIEW UNAVAILABLE
                   </p>
-                  <p style={{ fontFamily: '"Baloo Thambi 2",sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: '8px 0', maxWidth: 400 }}>
+                  <p style={{ fontFamily: '"Noto Sans Tamil",sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.7)', margin: '8px 0', maxWidth: 400 }}>
                     This manuscript cannot be previewed in the browser due to an archival structural limitation. Please download the file to view it in a native PDF reader.
                   </p>
                   

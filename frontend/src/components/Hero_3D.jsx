@@ -58,7 +58,7 @@ const Particles = ({ count = 40 }) => {
 };
 
 const Hero_3D = () => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <div className="canvas-container h-[90vh] md:h-screen w-full relative bg-ivory">
@@ -112,15 +112,15 @@ const Hero_3D = () => {
             </div>
 
             {/* Main Tamil Heading */}
-            <h1 className="tamil-heading text-5xl md:text-7xl lg:text-8xl leading-none" style={{ fontFamily: '"Baloo Thambi 2", sans-serif', fontWeight: 800 }}>
+            <h1 className="tamil-heading text-5xl md:text-7xl lg:text-8xl leading-none" style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Cinzel", serif', fontWeight: 800 }}>
               <span className="block text-maroon">சுவடி</span>
-              <span className="block text-shimmer text-3xl md:text-4xl mt-2" style={{ fontFamily: '"Cormorant Garamond", serif', fontStyle: 'italic', fontWeight: 600 }}>
+              <span className="block text-shimmer text-3xl md:text-4xl mt-2" style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Cormorant Garamond", serif', fontStyle: 'italic', fontWeight: 600 }}>
                 {t('செவ்வியல் ஆவணக் கருவூலம்', 'Classical Heritage Archive')}
               </span>
             </h1>
 
             {/* Tamil Subtitle */}
-            <p className="tamil-body text-base md:text-lg text-stone/75 max-w-xl mx-auto leading-loose" style={{ fontFamily: '"Baloo Thambi 2", "Noto Sans Tamil", sans-serif', fontWeight: 500 }}>
+            <p className="tamil-body text-base md:text-lg text-stone/75 max-w-xl mx-auto leading-loose" style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif', fontWeight: 500 }}>
               {t(
                 'ஓலைச்சுவடிகளிலிருந்து செம்பதிப்புகள் வரை — தமிழ் செவ்வியல் இலக்கியத்தின் மின்னணு ஆவணக் கருவூலம்.',
                 'From palm-leaf manuscripts to critical editions — preserving Classical Tamil civilization.'

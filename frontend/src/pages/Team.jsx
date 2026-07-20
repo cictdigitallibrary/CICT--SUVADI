@@ -97,16 +97,20 @@ const Team = () => {
 
   return (
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
-
-      <PageHero
-        label={t('உருவாக்கம்', 'THE SCHOLARLY TEAM')}
-        title={t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
-        subtitle={t(
-          'ஓலைச்சுவடிகளை ஆய்ந்து செம்பதிப்புகளை வெளியிடும் சுவடியியல் புலத்தின் அறிஞர் குழு.',
-          'A dedicated group of researchers and scholars at CICT committed to preserving Classical Tamil heritage through critical scholarship.'
-        )}
-        glyphs={['அறி', 'வேல்', 'பண்', 'நூல்', 'ஆய்', 'செம்']}
-      />
+      {/* Override only the Team hero height via padding, preserving the original background */}
+      <style>{`
+        .team-hero-override header {
+          padding-top: 8rem !important;
+          padding-bottom: 6rem !important;
+        }
+      `}</style>
+      <div className="team-hero-override">
+        <PageHero
+          title={t('எங்கள் குழு', 'Our Team')}
+          glyphs={['அறி', 'வேல்', 'பண்', 'நூல்', 'ஆய்', 'செம்']}
+          headingStyle={{ fontSize: 'clamp(2rem, 4vw, 3rem)', lineHeight: 1.2 }}
+        />
+      </div>
 
       <div className="container mx-auto px-6 max-w-6xl py-20">
 
@@ -187,55 +191,6 @@ const Team = () => {
           </motion.div>
         </div>
 
-        {/* ── Mission Banner ── */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="bg-maroon text-white relative overflow-hidden"
-        >
-          <div className="absolute inset-0 opacity-[0.05]"
-            style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/dark-leather.png')" }} />
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/50 to-transparent" />
-
-          <div className="absolute -left-32 -bottom-32 w-96 h-96 rounded-full border border-gold/5" />
-          <div className="absolute -left-20 -bottom-20 w-64 h-64 rounded-full border border-gold/5" />
-          <div className="absolute -right-32 -top-32 w-80 h-80 rounded-full border border-gold/5" />
-
-          <div className="relative z-10 p-10 md:p-16 max-w-3xl mx-auto text-center">
-            <div className="text-gold text-2xl mb-8 opacity-40 select-none">❦</div>
-            <h2 className="tamil-heading text-3xl text-gold mb-8">
-              {t('நிறுவனக் குறிக்கோள்', 'Strategic Mission')}
-            </h2>
-            <p className="tamil-body text-white/70 text-lg md:text-xl font-medium leading-loose mb-12">
-              {t(
-                'உலகெங்கிலுமிருந்து கிடைக்கப் பெற்ற எல்லாச் சுவடிகள், பதிப்புகளை ஆய்ந்து, பாடங்களை உறுதிசெய்து செம்பதிப்பாகக் கொண்டு வருவதைச் சுவடியியல் புலத்தின் தலையாய பணியாகக் கொண்டுள்ளது.',
-                'We strive to collect every available manuscript across the globe, meticulously analyze textual variations, and establish authoritative Critical Editions that serve as the definitive standard for Classical Tamil scholarship.'
-              )}
-            </p>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {EDITIONS.map((ed, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.07 }}
-                  className="bg-white/5 border border-gold/10 p-4 text-center hover:bg-white/10 hover:border-gold/25 transition-all duration-300 group"
-                >
-                  <div className="text-gold font-cinzel text-xs font-bold mb-1 group-hover:text-gold-light transition-colors">{ed.yr}</div>
-                  <div className="tamil-label text-[10px] text-white/80 font-bold">{t(ed.ta, ed.en)}</div>
-                </motion.div>
-              ))}
-            </div>
-
-            <p className="font-cinzel text-[9px] text-gold/40 uppercase tracking-[0.5em] font-bold mt-16">
-              {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
-            </p>
-          </div>
-        </motion.section>
 
       </div>
     </div>

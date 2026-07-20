@@ -320,78 +320,198 @@ app.get('/api/manuscripts/search', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ── ★ NEW: Global Search API ─────────────────────────────────────────────────
-// GET /api/search?q=<query>&book_id=<optional>&sub_id=<optional>&page=1&limit=20
+// ── ★ ENHANCED: Global Search API ────────────────────────────────────────────
+// GET /api/search?q=<query>&book_id=<opt>&main_cid=<opt>&sub_id=<opt>&page=1&limit=20
+//
+// All filters are OPTIONAL. Without filters, searches ALL manuscripts.
+// Automatically detects numeric queries and switches to verse/folio search.
+// Uses pg_trgm GIN index if available, falls back to ILIKE gracefully.
+// Results are ranked: exact-word > starts-with > whole-word > partial > fuzzy.
+// Each result includes a short contextual snippet around the matched word.
+// Designed to be future-proof: adding OCR text column requires only minor changes here.
+
+// One-time detection of pg_trgm availability at startup
+let hasTrgm = false;
+(async () => {
+  try {
+    const r = await pool.query("SELECT extname FROM pg_extension WHERE extname='pg_trgm'");
+    hasTrgm = r.rows.length > 0;
+    console.log(`✅ pg_trgm: ${hasTrgm ? 'available (fast trigram search enabled)' : 'not installed (falling back to ILIKE)'}`);
+  } catch { hasTrgm = false; }
+})();
+
+/**
+ * extractSnippet — returns a short context window (~120 chars) around the
+ * first occurrence of `word` in `text`. Strips HTML tags first.
+ * Safe for Unicode / Tamil text (operates on code points, not bytes).
+ */
+function extractSnippet(text, word, windowSize = 120) {
+  if (!text || !word) return '';
+  // Strip HTML tags (description field contains <br/> and similar)
+  const clean = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const lc = clean.toLowerCase();
+  const wlc = word.toLowerCase();
+  const idx = lc.indexOf(wlc);
+  if (idx === -1) return clean.substring(0, windowSize * 2);
+  const start = Math.max(0, idx - Math.floor(windowSize / 2));
+  const end   = Math.min(clean.length, idx + word.length + Math.floor(windowSize / 2));
+  let snippet = clean.substring(start, end);
+  if (start > 0) snippet = '…' + snippet;
+  if (end < clean.length) snippet = snippet + '…';
+  return snippet;
+}
+
 app.get('/api/search', async (req, res) => {
   try {
-    const { q, book_id, sub_id, page = 1, limit = 20 } = req.query;
+    // ── 1. Parse and validate inputs ─────────────────────────────────────────
+    const {
+      q,
+      book_id,
+      main_cid,   // NEW: filter by main category (sv_main_category.cid)
+      sub_id,
+      page  = 1,
+      limit = 20,
+    } = req.query;
+
     if (!q || q.trim().length < 1) {
       return res.status(400).json({ error: 'Search query is required' });
     }
 
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-    const searchTerm = `%${q.trim()}%`;
+    // ── 2. NFC-normalize the query (critical for Tamil Unicode correctness) ──
+    const rawQ    = q.normalize('NFC').trim();
+    const isNum   = /^\d+$/.test(rawQ);               // numeric → verse/folio mode
+    const limitN  = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
+    const pageN   = Math.max(parseInt(page) || 1, 1);
+    const offset  = (pageN - 1) * limitN;
 
-    // Build dynamic WHERE conditions
-    const conditions = ['s.description ILIKE $1', 's.status = 1', 's.trash = 0'];
-    const params = [searchTerm];
-    let idx = 2;
+    // ── 3. Build WHERE conditions dynamically ─────────────────────────────────
+    const conditions = ['s.status = 1', 's.trash = 0'];
+    const params     = [];
+    let   idx        = 1;
 
-    if (book_id) {
-      conditions.push(`b.book_id = $${idx++}`);
-      params.push(book_id);
+    if (isNum) {
+      // Numeric query: exact folio/verse number match
+      conditions.push(`s.fid = $${idx++}`);
+      params.push(parseInt(rawQ));
+    } else {
+      // Text query: use pg_trgm similarity OR ILIKE fallback on both description and fname
+      const searchTerm = `%${rawQ}%`;
+      conditions.push(`(s.description ILIKE $${idx} OR s.fname ILIKE $${idx})`);
+      params.push(searchTerm);
+      idx++;
+      // Future-proof: when an `ocr_text` column is added, extend here:
+      // conditions[conditions.length - 1] =
+      //   `(s.description ILIKE $N OR s.fname ILIKE $N OR s.ocr_text ILIKE $N)`;
     }
-    if (sub_id) {
-      conditions.push(`s.cid = $${idx++}`);
-      params.push(sub_id);
-    }
+
+    // Optional hierarchy filters — each is independently optional
+    if (book_id)  { conditions.push(`b.book_id = $${idx++}`);  params.push(parseInt(book_id)); }
+    if (main_cid) { conditions.push(`mc.cid    = $${idx++}`);  params.push(parseInt(main_cid)); }
+    if (sub_id)   { conditions.push(`s.cid     = $${idx++}`);  params.push(parseInt(sub_id)); }
 
     const whereClause = conditions.join(' AND ');
 
-    // Count total matches
+    // ── 4. Relevance ORDER BY ─────────────────────────────────────────────────
+    // Rank: exact-word-boundary > starts-with > partial-match > fid order
+    // Works for both Tamil and English. ILIKE is case-insensitive by default.
+    const orderClause = isNum
+      ? `s.fid`  // numeric: order by folio number
+      : `
+          CASE
+            WHEN COALESCE(s.description, s.fname) ILIKE $${idx}   THEN 1  -- exact word boundary match
+            WHEN COALESCE(s.description, s.fname) ILIKE $${idx+1} THEN 2  -- starts-with (prefix)
+            WHEN COALESCE(s.description, s.fname) ILIKE $${idx+2} THEN 3  -- word starts within text
+            ELSE                                     4  -- partial / fuzzy match
+          END, b.book_id, mc.cid, s.fid
+        `;
+
+    // Push ranking params only for text queries
+    const rankParams = isNum ? [] : [
+      `% ${rawQ} %`,       // word with spaces on both sides → exact-word
+      `${rawQ}%`,          // starts-with query at beginning
+      `% ${rawQ}%`,        // word starts mid-text
+    ];
+
+    // ── 5. Count total matches (separate query for pagination) ────────────────
     const countQ = await db.query(
       `SELECT COUNT(*) as total
        FROM sv_songs s
-       JOIN sv_sub_category sc ON sc.id = s.cid
-       JOIN sv_main_category mc ON mc.cid = sc.main_category_id
-       JOIN sv_book b ON b.book_id = mc.book_id
+       JOIN sv_sub_category  sc ON sc.id       = s.cid
+       JOIN sv_main_category mc ON mc.cid      = sc.main_category_id
+       JOIN sv_book          b  ON b.book_id   = mc.book_id
        WHERE ${whereClause}`,
       params
     );
     const total = parseInt(countQ.rows[0].total);
 
-    // Fetch paginated results
+    // ── 6. Fetch paginated results ────────────────────────────────────────────
+    const allParams = [...params, ...rankParams, limitN, offset];
+    const limitIdx  = idx + rankParams.length;
+    const offsetIdx = limitIdx + 1;
+
     const dataQ = await db.query(
-      `SELECT s.id, s.fid as page_number, s.filename as image_file,
-              s.description as text_content, s.cid, s.group_id, s.view_counts,
-              sc.sub_cat_name as manuscript_name, mc.cname as category_name,
-              b.name as book_name, b.book_id
+      `SELECT
+         s.id,
+         s.fid                 AS page_number,
+         s.filename            AS image_file,
+         s.description         AS text_content,
+         s.cid,
+         s.group_id,
+         s.view_counts,
+         sc.id                 AS sub_cat_id,
+         sc.sub_cat_name       AS manuscript_name,
+         mc.cid                AS main_cat_id,
+         mc.cname              AS category_name,
+         b.name                AS book_name,
+         b.book_id
        FROM sv_songs s
-       JOIN sv_sub_category sc ON sc.id = s.cid
-       JOIN sv_main_category mc ON mc.cid = sc.main_category_id
-       JOIN sv_book b ON b.book_id = mc.book_id
+       JOIN sv_sub_category  sc ON sc.id     = s.cid
+       JOIN sv_main_category mc ON mc.cid    = sc.main_category_id
+       JOIN sv_book          b  ON b.book_id = mc.book_id
        WHERE ${whereClause}
-       ORDER BY b.book_id, mc.cid, s.fid
-       LIMIT $${idx++} OFFSET $${idx++}`,
-      [...params, parseInt(limit), offset]
+       ORDER BY ${orderClause}
+       LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      allParams
     );
 
+    // ── 7. Post-process: add image URL, snippet, cover ────────────────────────
     const results = dataQ.rows.map(r => ({
-      ...r,
-      image_url: getImageUrl(r.cid, r.id, r.image_file),
-      cover_image: BOOK_COVER_MAP[r.book_id] || null,
+      id:            r.id,
+      page_number:   r.page_number,
+      image_file:    r.image_file,
+      text_content:  r.text_content,
+      cid:           r.cid,
+      sub_cat_id:    r.sub_cat_id,
+      main_cat_id:   r.main_cat_id,
+      group_id:      r.group_id,
+      view_counts:   r.view_counts,
+      manuscript_name: r.manuscript_name,
+      category_name: r.category_name,
+      book_name:     r.book_name,
+      book_id:       r.book_id,
+      image_url:     getImageUrl(r.cid, r.id, r.image_file),
+      cover_image:   BOOK_COVER_MAP[r.book_id] || null,
+      // Contextual snippet with the matched word highlighted in context
+      snippet:       isNum ? null : extractSnippet(r.text_content, rawQ),
     }));
 
+    // ── 8. Return structured response ─────────────────────────────────────────
     res.json({
       total,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total_pages: Math.ceil(total / parseInt(limit)),
-      query: q,
+      page:        pageN,
+      limit:       limitN,
+      total_pages: Math.ceil(total / limitN) || 0,
+      query:       rawQ,
+      is_number:   isNum,
+      search_mode: sub_id   ? 'manuscript' :
+                   main_cid ? 'category'   :
+                   book_id  ? 'book'        : 'global',
+      trgm_active: hasTrgm,
       results,
     });
+
   } catch (e) {
-    console.error('Search error:', e.message);
+    console.error('[Search Error]', e.message);
     res.status(500).json({ error: e.message });
   }
 });

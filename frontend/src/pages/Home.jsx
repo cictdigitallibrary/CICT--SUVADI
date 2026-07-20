@@ -174,7 +174,7 @@ function TiltCard({ children, className }) {
    HOME PAGE
 ══════════════════════════════════════════════════════════════════ */
 const Home = () => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const scrollRef = useRef(null);
 
   const { data: stats } = useQuery({
@@ -219,22 +219,16 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 1 ▸ HERO
       ══════════════════════════════════════════ */}
-      <section className="home-hero relative w-full">
-
-        {/* Banner image — full-width responsive img, no cropping, no zoom.
-            The section height is driven entirely by the image's natural height. */}
-        <img
-          src="/images/bg/hero-latest.png"
-          alt=""
-          aria-hidden="true"
-          style={{
-            display: 'block',
-            width: '100%',
-            height: 'auto',
-            userSelect: 'none',
-            pointerEvents: 'none',
-          }}
-        />
+      <section 
+        className="home-hero relative w-full overflow-hidden bg-[#1A0303]"
+        style={{
+          backgroundImage: "url('/images/bg/home_hero_final.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+          aspectRatio: '1920 / 555'
+        }}
+      >
 
         {/* Gold accent line at the bottom edge */}
         <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
@@ -311,8 +305,8 @@ const Home = () => {
 
               {/* Tagline */}
               <motion.p
-                className="tamil-body text-maroon/65 leading-loose font-medium"
-                style={{ fontSize: 'clamp(0.65rem, 1.1vw, 0.95rem)', margin: 0 }}
+                className="tamil-body text-[#5B1414] font-semibold text-[1rem] md:text-[1.1rem] lg:text-[1.22rem] leading-[1.8] tracking-[0.2px] opacity-100"
+                style={{ margin: 0, textShadow: 'none' }}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
               >
                 {t(
@@ -674,7 +668,7 @@ const Home = () => {
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-maroon text-lg mb-0.5" style={{ fontFamily: '"Baloo Thambi 2", sans-serif' }}>
+                <h3 className="font-bold text-maroon text-lg mb-0.5" style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Cinzel", serif' }}>
                   {t('தமிழ் அறுபதாண்டுச் சுழற்சி அட்டவணை', 'Tamil 60-Year Cycle Chart')}
                 </h3>
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#7A4510' }}>
@@ -703,7 +697,7 @@ const Home = () => {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-maroon text-lg mb-0.5" style={{ fontFamily: '"Baloo Thambi 2", sans-serif' }}>
+                  <h3 className="font-bold text-maroon text-lg mb-0.5" style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Cinzel", serif' }}>
                     {t('கருத்துக்கள் - பதிவு', 'Feedback / Remarks')}
                   </h3>
                   <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#7A4510' }}>

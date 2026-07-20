@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 const Footer = () => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <footer className="site-footer text-ivory" style={{ paddingTop: '3.5rem', paddingBottom: '2rem' }}>
@@ -25,11 +25,11 @@ const Footer = () => {
               <div className="w-11 h-11 flex items-center justify-center">
                 <img src="/images/logo_cict.png" alt="CICT Logo" className="w-full h-full object-contain" />
               </div>
-              <span style={{ fontFamily: '"Baloo Thambi 2", serif', fontWeight: 800, fontSize: '1.5rem', color: '#C9973B' }}>
+              <span style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Cinzel", serif', fontWeight: 800, fontSize: '1.5rem', color: '#C9973B' }}>
                 {t('சுவடி', 'Suvadi')}
               </span>
             </div>
-            <p style={{ fontFamily: '"Baloo Thambi 2", "Noto Sans Tamil", sans-serif', fontWeight: 400, fontSize: '0.82rem', color: 'rgba(245,240,232,0.72)', lineHeight: 1.7, marginBottom: '1.25rem' }}>
+            <p style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif', fontWeight: 400, fontSize: '0.82rem', color: 'rgba(245,240,232,0.72)', lineHeight: 1.7, marginBottom: '1.25rem' }}>
               {t(
                 'செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் (CICT) - தமிழ் செவ்வியல் நூல்களையும் சுவடிகளையும் பாதுகாத்து ஆய்வாளர்களுக்கு வழங்கும் மின்னணுத் தளம்.',
                 'Central Institute of Classical Tamil (CICT) – preserving, digitizing, and promoting the timeless treasures of Classical Tamil literature for future generations.'
@@ -162,7 +162,7 @@ const Footer = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <p style={{ fontSize: '0.72rem', color: 'rgba(245,240,232,0.45)', fontFamily: '"Baloo Thambi 2", sans-serif', margin: 0 }}>
+            <p style={{ fontSize: '0.72rem', color: 'rgba(245,240,232,0.45)', fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif', margin: 0 }}>
               © 2025 {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}. {t('அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை.', 'All Rights Reserved.')}
             </p>
             <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>

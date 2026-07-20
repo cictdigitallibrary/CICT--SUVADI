@@ -63,7 +63,7 @@ const TitleFlourishRight = () => (
 );
 
 const EBooks = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const { data: fetchedEbooks = [], isLoading } = useQuery({
     queryKey: ['ebooks'],
@@ -97,9 +97,11 @@ const EBooks = () => {
         glyphs={['முதல்', 'அச்சு', 'நூல்', 'பத்து', 'திரு', 'கலி']}
         backgroundImage="/images/bg/ebooks-panoramic.jpg"
         heroClass="ebooks-hero-bg"
-        headingStyle={{
-          fontSize: 'clamp(1.7rem, 4.8vw, 3.5rem)',
-        }}
+        headingStyle={
+          language === 'ta'
+            ? { fontSize: 'clamp(1.2rem, 3.5vw, 2.8rem)', whiteSpace: 'nowrap' }
+            : { fontSize: 'clamp(1.7rem, 4.8vw, 3.5rem)' }
+        }
       />
 
       <div className="w-full">

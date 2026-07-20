@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -8,10 +8,8 @@ import PageHero from '../components/PageHero';
 const API = 'http://localhost:3001';
 
 const Contact = () => {
-  const { t } = useLanguage();
-  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
-  const [status, setStatus] = useState('idle'); // idle | loading | success | error
-  const [errorMsg, setErrorMsg] = useState('');
+  const { t, language } = useLanguage();
+  const feedbackFormRef = useRef(null);
 
   const contactInfo = [
     {
@@ -45,15 +43,16 @@ const Contact = () => {
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
 
       <PageHero
-        label={t('தொடர்புக்கு', 'ACADEMIC COMMUNICATION')}
-        title={t('ஆய்வுத் தொடர்பு', 'Faculty Secretariat')}
+        label={t('தொடர்பு', 'GET IN TOUCH')}
+        title={t('எங்களைத் தொடர்புகொள்ளுங்கள்', 'Contact Us')}
         subtitle={t(
-          'ஆய்வு தொடர்பான சந்தேகங்கள் மற்றும் ஒத்துழைப்புகளுக்கு எங்களை அணுகவும்.',
-          'For scholarly inquiries, manuscript access requests, or collaborative research agendas, please reach out to our team.'
+          'செம்மொழித் தமிழ் சுவடிகள், மின்னணு நூலகம், வெளியீடுகள், நூலக அணுகல் மற்றும் தொழில்நுட்ப உதவிக்கான உங்கள் கேள்விகளுக்கு எங்களைத் தொடர்புகொள்ளலாம்.',
+          'We are here to assist you with enquiries about classical Tamil manuscripts, digital collections, publications, library access, and technical support.'
         )}
         glyphs={['தொ', 'ட', 'ர்', 'பு', 'அணு', 'கல்']}
         backgroundImage="/images/bg/Contact.png"
         heroClass="contact-hero-bg"
+        headingStyle={language === 'ta' ? { fontSize: 'clamp(2rem, 5vw, 4rem)', lineHeight: 1.08 } : { fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}
       />
 
       <div className="container mx-auto px-6 max-w-6xl py-20 relative">
@@ -125,9 +124,9 @@ const Contact = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.55, duration: 0.6 }}
             >
-              <Link
-                to="/feedback"
-                className="group flex items-center gap-5 bg-maroon rounded-2xl border-l-4 border-gold p-6 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-400 relative overflow-hidden block"
+              <button
+                onClick={() => feedbackFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className="group flex items-center gap-5 bg-maroon rounded-2xl border-l-4 border-gold p-6 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-400 relative overflow-hidden block w-full text-left"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
                 <div className="w-12 h-12 flex-shrink-0 rounded-full bg-gold/10 flex items-center justify-center text-2xl group-hover:bg-gold/20 transition-colors">
@@ -140,12 +139,13 @@ const Contact = () => {
                   </p>
                 </div>
                 <span className="text-gold text-2xl flex-shrink-0 group-hover:translate-x-2 transition-transform duration-300">→</span>
-              </Link>
+              </button>
             </motion.div>
           </motion.div>
 
           {/* ── Right: Contact Form ── */}
           <motion.div
+            ref={feedbackFormRef}
             initial={{ opacity: 0, x: 24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -154,135 +154,26 @@ const Contact = () => {
             {/* Top gold bar */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-maroon via-gold to-maroon rounded-t-[20px]" />
 
-            {/* Corner flourish */}
-            <div className="absolute top-6 right-6 text-5xl text-maroon/[0.04] select-none font-serif">✉</div>
-
             <div className="p-8 md:p-12 relative z-10">
               <h3 className="tamil-heading text-2xl text-maroon mb-10 italic">
-                {t('தொடர்பு படிவம்', 'Direct Message')}
+                {t('கருத்துக்கள் - பதிவு', 'Submit Feedback')}
               </h3>
 
-              <AnimatePresence mode="wait">
-                {status === 'success' ? (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex flex-col items-center justify-center py-16 text-center space-y-6"
-                  >
-                    <div className="w-20 h-20 rounded-full bg-green-50 border-2 border-green-200 flex items-center justify-center text-4xl">✅</div>
-                    <div>
-                      <h4 className="tamil-heading text-2xl text-maroon mb-2">{t('நன்றி!', 'Message Sent!')}</h4>
-                      <p className="tamil-text text-stone/60 font-medium">{t('உங்கள் செய்தி பெறப்பட்டது. நாங்கள் விரைவில் தொடர்பு கொள்வோம்.', 'Your message has been received. We will get back to you shortly.')}</p>
-                    </div>
-                    <button
-                      onClick={() => { setStatus('idle'); setFormData({ name: '', email: '', subject: '', message: '' }); }}
-                      className="px-8 py-3 rounded-xl border-2 border-maroon text-maroon text-xs font-black uppercase tracking-widest hover:bg-maroon hover:text-gold transition-all duration-300"
-                    >
-                      {t('மீண்டும் அனுப்ப', 'Send Another')}
-                    </button>
-                  </motion.div>
-                ) : (
-                  <motion.form
-                    key="form"
-                    className="space-y-6"
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      setStatus('loading');
-                      setErrorMsg('');
-                      try {
-                        await axios.post(`${API}/api/contact`, formData);
-                        setStatus('success');
-                      } catch (err) {
-                        setErrorMsg(err.response?.data?.error || 'Something went wrong. Please try again.');
-                        setStatus('error');
-                      }
-                    }}
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2 group">
-                        <label htmlFor="contact-name" className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
-                          {t('உங்கள் பெயர்', 'Your Name')} <span className="text-red-400">*</span>
-                        </label>
-                        <input
-                          id="contact-name"
-                          type="text"
-                          required
-                          value={formData.name}
-                          onChange={e => setFormData({ ...formData, name: e.target.value })}
-                          className="contact-input w-full p-4 outline-none tamil-text text-sm font-bold"
-                        />
-                      </div>
-                      <div className="space-y-2 group">
-                        <label htmlFor="contact-email" className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
-                          {t('மின்னஞ்சல்', 'Email Address')} <span className="text-red-400">*</span>
-                        </label>
-                        <input
-                          id="contact-email"
-                          type="email"
-                          required
-                          value={formData.email}
-                          onChange={e => setFormData({ ...formData, email: e.target.value })}
-                          className="contact-input w-full p-4 outline-none tamil-text text-sm font-bold"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label htmlFor="contact-subject" className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
-                        {t('பொருள்', 'Subject of Inquiry')}
-                      </label>
-                      <input
-                        id="contact-subject"
-                        type="text"
-                        value={formData.subject}
-                        onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                        className="contact-input w-full p-4 outline-none tamil-text text-sm font-bold"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label htmlFor="contact-message" className="tamil-label text-[9px] text-bronze uppercase font-black tracking-widest block">
-                        {t('செய்தி', 'Your Message')} <span className="text-red-400">*</span>
-                      </label>
-                      <textarea
-                        id="contact-message"
-                        rows={5}
-                        required
-                        value={formData.message}
-                        onChange={e => setFormData({ ...formData, message: e.target.value })}
-                        className="contact-input w-full p-4 outline-none tamil-text text-sm font-bold resize-none"
-                      />
-                    </div>
-
-                    {status === 'error' && (
-                      <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold p-4 rounded-xl">
-                        ⚠️ {errorMsg}
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={status === 'loading'}
-                      className="group w-full py-4 bg-maroon text-gold text-xs font-black uppercase tracking-[0.2em] rounded-xl shadow-xl hover:bg-maroon-dark hover:shadow-maroon/20 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-                    >
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-gold/0 via-gold/10 to-gold/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                      <span className="relative tamil-label flex items-center justify-center gap-3">
-                        {status === 'loading' ? (
-                          <>
-                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                            </svg>
-                            {t('அனுப்புகிறது...', 'SENDING...')}
-                          </>
-                        ) : t('அனுப்புக', 'TRANSMIT MESSAGE')}
-                      </span>
-                    </button>
-                  </motion.form>
-                )}
-              </AnimatePresence>
+              <iframe
+                src="https://docs.google.com/forms/d/e/1FAIpQLSd9mUjE2zM44gMYpM3Lthq2SeQT8HHFKxNmbnkKM51ufojMwA/viewform?embedded=true"
+                width="100%"
+                height="720"
+                frameBorder="0"
+                marginHeight="0"
+                marginWidth="0"
+                loading="lazy"
+                title="Feedback Form"
+                style={{
+                  border: "none",
+                  borderRadius: "16px",
+                  background: "transparent"
+                }}
+              />
             </div>
           </motion.div>
         </div>

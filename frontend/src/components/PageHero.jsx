@@ -20,7 +20,7 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
       <header className="relative pt-36 pb-16 overflow-hidden bg-ivory selection:bg-maroon selection:text-white">
         {/* Subtle watermark glyph */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 text-[16rem] font-black text-maroon/[0.025] select-none pointer-events-none leading-none"
-          style={{ fontFamily: '"Baloo Thambi 2", sans-serif' }}>சு</div>
+          style={{ fontFamily: '"Noto Sans Tamil", sans-serif' }}>சு</div>
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
         <div className="container mx-auto px-6 max-w-6xl text-center relative z-10">
           {label && (
@@ -85,7 +85,7 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
                 left: `${5 + (i * 16) % 88}%`,
                 top: `${10 + (i * 23) % 75}%`,
                 fontSize: `${3 + (i % 3)}rem`,
-                fontFamily: '"Baloo Thambi 2", sans-serif',
+                fontFamily: '"Noto Sans Tamil", sans-serif',
               }}
               animate={{ y: [0, -14, 0], rotate: [0, i % 2 === 0 ? 4 : -4, 0] }}
               transition={{ duration: 7 + i * 1.1, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }}
