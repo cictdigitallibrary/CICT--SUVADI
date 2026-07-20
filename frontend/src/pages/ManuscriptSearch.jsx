@@ -38,11 +38,11 @@ const StyledSelect = ({ value, onChange, disabled, children }) => (
       value={value}
       onChange={onChange}
       disabled={disabled}
-      className={`w-full appearance-none border rounded-sm px-4 py-2.5 pr-10 text-sm font-bold outline-none
+      className={`w-full appearance-none border rounded-sm px-4 py-3 pr-10 text-[15px] font-bold outline-none
         transition-all duration-200 cursor-pointer
         ${disabled
           ? 'bg-stone/3 border-maroon/8 text-maroon/25 cursor-not-allowed'
-          : 'bg-white border-maroon/15 text-maroon hover:border-maroon/30 focus:border-gold focus:ring-2 focus:ring-gold/10'
+          : 'bg-white border-maroon/20 text-maroon hover:border-maroon/30 focus:border-gold focus:ring-2 focus:ring-gold/10'
         }`}
       style={{ fontFamily: '"Baloo Thambi 2", sans-serif' }}
     >
@@ -143,7 +143,7 @@ const SEARCH_TABLE_ROWS = [
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════ */
 const ManuscriptSearch = () => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [searchParams] = useSearchParams();
 
   /* Hierarchical dropdown states — mirrors main site exactly */
@@ -355,8 +355,10 @@ const ManuscriptSearch = () => {
       setResults({ count: data.total, results: data.results });
       setSearchMeta({ total: data.total, total_pages: data.total_pages, search_mode: data.search_mode, is_number: data.is_number });
       setShowInstructions(false);
+      return data;
     } catch (err) {
       console.error(err);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -364,13 +366,17 @@ const ManuscriptSearch = () => {
 
   /* ── Browse all folios ───────────────────────────── */
   const handleBrowse = async (page = 1) => {
-    if (!selectedSub) return;
+    if (!selectedSub) return null;
     setBrowsing(true); setResults(null); setBrowsePage(page);
     try {
       const res = await axios.get(`${API}/api/songs?sub_id=${selectedSub}&page=${page}&limit=12`);
       setBrowseResults(res.data);
       setShowInstructions(false);
-    } catch (err) { console.error(err); }
+      return res.data;
+    } catch (err) { 
+      console.error(err); 
+      return null;
+    }
     finally { setBrowsing(false); }
   };
 
@@ -378,6 +384,21 @@ const ManuscriptSearch = () => {
   const selectedSubData = subcategories.find(s => String(s.id) === String(selectedSub));
   const selectedBookData = books.find(b => String(b.id) === String(selectedBook));
   const totalBrowsePages = browseResults ? Math.ceil(browseResults.total / 12) : 1;
+
+  /* ── Cross-page navigation for the viewer ────────────────── */
+  const handlePageChangeFromViewer = async (newPage, direction, type) => {
+    if (type === 'search') {
+      const data = await handleSearch(null, newPage);
+      if (data && data.results && data.results.length > 0) {
+        setActiveWordFolio(direction === 'next' ? data.results[0] : data.results[data.results.length - 1]);
+      }
+    } else {
+      const data = await handleBrowse(newPage);
+      if (data && data.results && data.results.length > 0) {
+        setActiveWordFolio(direction === 'next' ? data.results[0] : data.results[data.results.length - 1]);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-ivory selection:bg-maroon selection:text-white">
@@ -559,50 +580,41 @@ const ManuscriptSearch = () => {
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="overflow-hidden bg-gold/5 border-b border-gold/10"
+                        className="overflow-hidden bg-white"
                       >
-                        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {/* Tamil hints */}
-                          <div>
-                            <p className="tamil-label text-[10px] font-black text-bronze uppercase tracking-[0.18em] mb-3">
-                              தேடல் குறிப்புகள்
-                            </p>
-                            <div className="space-y-3">
-                              <div className="flex gap-2.5 items-start">
-                                <span className="shrink-0 w-5 h-5 bg-maroon/8 rounded-full flex items-center justify-center text-[9px] font-black text-maroon/50 mt-0.5">1</span>
-                                <div>
-                                  <p className="tamil-text text-[11px] text-stone/70 font-bold">எண் வழித் தேடல்:</p>
-                                  <p className="tamil-text text-[10px] text-stone/45 mt-0.5">தேடலுக்குரிய செவ்வியல் நூலின் பாடல்/ நூற்பா எண்ணைக் கொடுப்பதன் மூலம் உரிய சுவடியின் பக்கம் கிடைக்கப்பெறும்.</p>
-                                </div>
-                              </div>
-                              <div className="flex gap-2.5 items-start">
-                                <span className="shrink-0 w-5 h-5 bg-maroon/8 rounded-full flex items-center justify-center text-[9px] font-black text-maroon/50 mt-0.5">2</span>
-                                <div>
-                                  <p className="tamil-text text-[11px] text-stone/70 font-bold">பாடலின் குறிப்பிட்ட சொல் வழித் தேடல்:</p>
-                                  <p className="tamil-text text-[10px] text-stone/45 mt-0.5">தேடலுக்குரிய செவ்வியல் நூல் பாடலின் குறிப்பிட்ட சொல்லைக் கொடுப்பதன் மூலம் உரிய சுவடியின் பக்கம் கிடைக்கப் பெறும்.</p>
-                                </div>
+                        <div className="px-6 py-5 border-b border-maroon/10 bg-ivory/30">
+                          <h4 className={`text-[16px] md:text-[18px] font-bold text-maroon mb-3 ${language === 'ta' ? 'tamil-heading' : 'font-cinzel tracking-wider'}`}>
+                            {language === 'ta' ? 'தேடல் குறிப்புகள்' : 'Search Hints'}
+                          </h4>
+                          
+                          <div className="flex flex-col md:flex-row gap-5 md:gap-8">
+                            {/* Hint 1 */}
+                            <div className="flex gap-3 items-start flex-1">
+                              <span className="shrink-0 w-6 h-6 bg-gold/15 rounded-full flex items-center justify-center text-xs font-black text-maroon mt-[3px]">1</span>
+                              <div className="flex flex-col">
+                                <span className={`text-[15px] text-maroon font-bold mb-0.5 ${language === 'ta' ? 'tamil-text' : ''}`}>
+                                  {language === 'ta' ? 'எண் வழித் தேடல்:' : 'Search by Number:'}
+                                </span>
+                                <span className={`text-[14px] text-[#4a3b32] leading-[1.6] ${language === 'ta' ? 'tamil-text' : ''}`}>
+                                  {language === 'ta' 
+                                    ? 'தேடலுக்குரிய செவ்வியல் நூலின் பாடல்/ நூற்பா எண்ணைக் கொடுப்பதன் மூலம் உரிய சுவடியின் பக்கம் கிடைக்கப்பெறும்.'
+                                    : 'By entering song/nūṟpā number you can get the particular page of the manuscript.'}
+                                </span>
                               </div>
                             </div>
-                          </div>
-                          {/* English hints */}
-                          <div>
-                            <p className="tamil-label text-[10px] font-black text-bronze uppercase tracking-[0.18em] mb-3">
-                              Search Hints
-                            </p>
-                            <div className="space-y-3">
-                              <div className="flex gap-2.5 items-start">
-                                <span className="shrink-0 w-5 h-5 bg-maroon/8 rounded-full flex items-center justify-center text-[9px] font-black text-maroon/50 mt-0.5">1</span>
-                                <div>
-                                  <p className="tamil-text text-[11px] text-stone/70 font-bold">Search by Number:</p>
-                                  <p className="tamil-text text-[10px] text-stone/45 mt-0.5">By entering song/nūṟpā number you can get the particular page of the manuscript.</p>
-                                </div>
-                              </div>
-                              <div className="flex gap-2.5 items-start">
-                                <span className="shrink-0 w-5 h-5 bg-maroon/8 rounded-full flex items-center justify-center text-[9px] font-black text-maroon/50 mt-0.5">2</span>
-                                <div>
-                                  <p className="tamil-text text-[11px] text-stone/70 font-bold">Search by Word:</p>
-                                  <p className="tamil-text text-[10px] text-stone/45 mt-0.5">By entering any word of the verse you can get the particular page of the manuscript.</p>
-                                </div>
+                            
+                            {/* Hint 2 */}
+                            <div className="flex gap-3 items-start flex-1">
+                              <span className="shrink-0 w-6 h-6 bg-gold/15 rounded-full flex items-center justify-center text-xs font-black text-maroon mt-[3px]">2</span>
+                              <div className="flex flex-col">
+                                <span className={`text-[15px] text-maroon font-bold mb-0.5 ${language === 'ta' ? 'tamil-text' : ''}`}>
+                                  {language === 'ta' ? 'பாடலின் குறிப்பிட்ட சொல் வழித் தேடல்:' : 'Search by Word:'}
+                                </span>
+                                <span className={`text-[14px] text-[#4a3b32] leading-[1.6] ${language === 'ta' ? 'tamil-text' : ''}`}>
+                                  {language === 'ta'
+                                    ? 'தேடலுக்குரிய செவ்வியல் நூல் பாடலின் குறிப்பிட்ட சொல்லைக் கொடுப்பதன் மூலம் உரிய சுவடியின் பக்கம் கிடைக்கப் பெறும்.'
+                                    : 'By entering any word of the verse you can get the particular page of the manuscript.'}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -618,10 +630,10 @@ const ManuscriptSearch = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
 
                       {/* Step 1 — நூல் தலைப்பு (Book Title) */}
-                      <div className="flex flex-col gap-1.5">
-                        <label className="flex items-center gap-2 tamil-label text-[10px] uppercase tracking-widest font-black text-stone/45">
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 tamil-label text-xs uppercase tracking-widest font-black text-maroon/80">
                           <StepBadge n="1" active={!!selectedBook} />
-                          <BookOpen className="w-3 h-3" />
+                          <BookOpen className="w-3.5 h-3.5" />
                           {t('நூல் தலைப்பு', 'Book Title')}
                         </label>
                         <StyledSelect value={selectedBook} onChange={e => setSelectedBook(e.target.value)}>
@@ -631,10 +643,10 @@ const ManuscriptSearch = () => {
                       </div>
 
                       {/* Step 2 — செவ்வியல் நூல் (Classical Text) */}
-                      <div className="flex flex-col gap-1.5">
-                        <label className="flex items-center gap-2 tamil-label text-[10px] uppercase tracking-widest font-black text-stone/45">
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 tamil-label text-xs uppercase tracking-widest font-black text-maroon/80">
                           <StepBadge n="2" active={!!selectedMS} />
-                          <Layers className="w-3 h-3" />
+                          <Layers className="w-3.5 h-3.5" />
                           {t('செவ்வியல் நூல்', 'Classical Text')}
                         </label>
                         <StyledSelect
@@ -648,10 +660,10 @@ const ManuscriptSearch = () => {
                       </div>
 
                       {/* Step 3 — சுவடித் தேர்வு (Manuscript Selection) */}
-                      <div className="flex flex-col gap-1.5">
-                        <label className="flex items-center gap-2 tamil-label text-[10px] uppercase tracking-widest font-black text-stone/45">
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 tamil-label text-xs uppercase tracking-widest font-black text-maroon/80">
                           <StepBadge n="3" active={!!selectedSub} />
-                          <Scroll className="w-3 h-3" />
+                          <Scroll className="w-3.5 h-3.5" />
                           {t('சுவடித் தேர்வு', 'Manuscript Selection')}
                         </label>
                         <StyledSelect
@@ -665,22 +677,22 @@ const ManuscriptSearch = () => {
                       </div>
                     </div>
 
-                    {/* Divider */}
-                    <div className="h-px bg-maroon/6 mb-5" />
+                    {/* Elegant Divider */}
+                    <div className="h-px bg-gradient-to-r from-transparent via-maroon/20 to-transparent mb-6" />
 
                     {/* Single unified search input — exactly like main site's
                 "எண்/பாடலின் குறிப்பிட்ட சொல்" field */}
-                    <div className="mb-5">
-                      <label className="flex items-center gap-2 tamil-label text-[10px] uppercase tracking-widest font-black text-stone/45 mb-1.5">
-                        <Search className="w-3 h-3" />
+                    <div className="mb-2">
+                      <label className="flex items-center gap-2 tamil-label text-xs uppercase tracking-widest font-black text-maroon/80 mb-2">
+                        <Search className="w-3.5 h-3.5" />
                         {t('எண் / பாடலின் குறிப்பிட்ட சொல்', 'Number / Specific Word from Verse')}
                       </label>
 
                       <div className="relative">
-                        <div className={`flex h-11 rounded-sm overflow-hidden border shadow-sm transition-all
+                        <div className={`flex h-[52px] rounded-sm overflow-hidden border shadow-sm transition-all
                   ${showTrans
                             ? 'border-gold/50 ring-2 ring-gold/15'
-                            : 'border-maroon/15 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/10'}`}>
+                            : 'border-maroon/20 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/15'}`}>
                           <input
                             ref={searchInputRef}
                             type="text"
@@ -729,7 +741,7 @@ const ManuscriptSearch = () => {
                               }
                             }}
                             placeholder=""
-                            className="flex-grow bg-white px-4 text-sm text-maroon font-bold outline-none placeholder:text-stone/25"
+                            className="flex-grow bg-white px-4 text-base text-maroon font-bold outline-none placeholder:text-stone/25"
                             style={{ fontFamily: '"Baloo Thambi 2", sans-serif' }}
                             autoComplete="off"
                             spellCheck={false}
@@ -738,17 +750,17 @@ const ManuscriptSearch = () => {
                           {/* Transliteration active indicator */}
                           {showTrans && (
                             <div className="px-2.5 flex items-center border-l border-gold/20 bg-gold/8 shrink-0">
-                              <Languages className="w-3.5 h-3.5 text-gold-dark animate-pulse" />
+                              <Languages className="w-4 h-4 text-gold-dark animate-pulse" />
                             </div>
                           )}
 
                           <button
                             type="submit"
                             disabled={loading}
-                            className="bg-maroon text-white px-6 flex items-center gap-2 text-[11px] font-black uppercase tracking-wider
+                            className="bg-maroon text-white px-8 flex items-center gap-2 text-xs font-black uppercase tracking-wider
                       hover:bg-maroon-light transition-colors disabled:opacity-35 shrink-0"
                           >
-                            <Search className="w-3.5 h-3.5" />
+                            <Search className="w-4 h-4" />
                             {t('தேடுக', 'Search')}
                           </button>
                         </div>
@@ -989,72 +1001,7 @@ const ManuscriptSearch = () => {
                 </div>
               ) : (
                 <>
-                  {(() => {
-                    const isPureWordSearch = searchMeta && !searchMeta.is_number && !selectedBook && !selectedMS && !selectedSub;
-                    
-                    if (isPureWordSearch) {
-                      return (
-                        <div className="bg-white border border-maroon/10 rounded-sm shadow-sm overflow-hidden">
-                          <table className="w-full text-left border-collapse">
-                            <thead>
-                              <tr className="bg-maroon/[0.03] border-b border-maroon/10">
-                                <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-1/3">
-                                  {t('தலைப்பு', 'Title')}
-                                </th>
-                                <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-2/3 border-l border-maroon/5">
-                                  {t('பாடல்', 'Song')}
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {results.results.map((res, i) => {
-                                // Title formatting: Use book_name -> manuscript_name
-                                const titleParts = [];
-                                if (res.book_name) titleParts.push(res.book_name);
-                                if (res.manuscript_name && res.manuscript_name !== res.book_name) titleParts.push(res.manuscript_name);
-                                const titleStr = titleParts.length > 0 ? titleParts.join(' — ') : t('பெயரற்ற சுவடி', 'Untitled Manuscript');
-
-                                return (
-                                  <tr key={res.id || i} className="border-b border-maroon/5 hover:bg-gold/[0.03] transition-colors group">
-                                    <td className="px-5 py-4 align-top w-1/3">
-                                      <a
-                                        onClick={(e) => { e.preventDefault(); setActiveWordFolio(res); }}
-                                        href="#"
-                                        className="tamil-heading text-sm text-maroon hover:text-gold-dark underline decoration-maroon/20 hover:decoration-gold underline-offset-4 transition-all"
-                                      >
-                                        {titleStr}
-                                      </a>
-                                    </td>
-                                    <td className="px-5 py-4 align-top w-2/3 border-l border-maroon/5">
-                                      {res.snippet ? (
-                                        <div
-                                          className="tamil-heading text-xs text-stone/80 leading-loose"
-                                          style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-                                        >
-                                          <HighlightText text={res.snippet} query={query} />
-                                        </div>
-                                      ) : (
-                                        <span className="text-stone/30 italic text-xs">{t('படியெடுக்கப்படவில்லை', 'Transcription pending')}</span>
-                                      )}
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      );
-                    }
-
-                    // Fallback to existing SongCard grid for numbers or category searches
-                    return (
-                      <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 gap-6">
-                        {results.results.map((res, i) => (
-                          <SongCard key={res.id || i} res={res} i={i} t={t} query={query} onOpen={setActiveView} />
-                        ))}
-                      </motion.div>
-                    );
-                  })()}
+                  <ResultsTable resultsList={results.results} t={t} query={query} onOpen={setActiveWordFolio} />
 
                   {/* Pagination for search results */}
                   {searchMeta && searchMeta.total_pages > 1 && (
@@ -1113,14 +1060,7 @@ const ManuscriptSearch = () => {
                 <div className="h-px flex-grow bg-maroon/8" />
               </div>
 
-              <motion.div
-                variants={stagger} initial="hidden" animate="show"
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8"
-              >
-                {browseResults.results.map((res, i) => (
-                  <SongCard key={i} res={res} i={i} t={t} compact onOpen={setActiveView} />
-                ))}
-              </motion.div>
+                <ResultsTable resultsList={browseResults.results} t={t} query={query} onOpen={setActiveWordFolio} />
 
               {/* Pagination */}
               <div className="flex justify-center items-center gap-2 pt-5 border-t border-maroon/8">
@@ -1183,11 +1123,74 @@ const ManuscriptSearch = () => {
             folio={activeWordFolio}
             onClose={() => setActiveWordFolio(null)}
             t={t}
-            activeList={results?.results || []}
+            activeList={(results?.results || []).find(r => r.id === activeWordFolio.id) ? results?.results : (browseResults?.results || []).find(r => r.id === activeWordFolio.id) ? browseResults?.results : []}
+            pageContext={
+              (results?.results || []).find(r => r.id === activeWordFolio.id)
+                ? { currentPage: searchPage, totalPages: searchMeta?.total_pages, total: searchMeta?.total, limit: 20, type: 'search' }
+                : { currentPage: browsePage, totalPages: totalBrowsePages, total: browseResults?.total, limit: 12, type: 'browse' }
+            }
             onNavigate={(newFolio) => setActiveWordFolio(newFolio)}
+            onPageChange={handlePageChangeFromViewer}
           />
         )}
       </AnimatePresence>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════
+   Results Table (Unified list view)
+   ═══════════════════════════════════════════════════════ */
+const ResultsTable = ({ resultsList, t, query, onOpen }) => {
+  return (
+    <div className="bg-white border border-maroon/10 rounded-sm shadow-sm overflow-hidden">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-maroon/[0.03] border-b border-maroon/10">
+            <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-1/3">
+              {t('தலைப்பு', 'Title')}
+            </th>
+            <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-2/3 border-l border-maroon/5">
+              {t('பாடல்', 'Song')}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {resultsList.map((res, i) => {
+            // Title formatting: Use book_name -> manuscript_name
+            const titleParts = [];
+            if (res.book_name) titleParts.push(res.book_name);
+            if (res.manuscript_name && res.manuscript_name !== res.book_name) titleParts.push(res.manuscript_name);
+            const titleStr = titleParts.length > 0 ? titleParts.join(' — ') : t('பெயரற்ற சுவடி', 'Untitled Manuscript');
+
+            return (
+              <tr key={res.id || i} className="border-b border-maroon/5 hover:bg-gold/[0.03] transition-colors group">
+                <td className="px-5 py-4 align-top w-1/3">
+                  <a
+                    onClick={(e) => { e.preventDefault(); onOpen(res); }}
+                    href="#"
+                    className="tamil-heading text-sm text-maroon hover:text-gold-dark underline decoration-maroon/20 hover:decoration-gold underline-offset-4 transition-all"
+                  >
+                    {titleStr}
+                  </a>
+                </td>
+                <td className="px-5 py-4 align-top w-2/3 border-l border-maroon/5">
+                  {(res.snippet || res.text_content) ? (
+                    <div
+                      className="tamil-heading text-xs text-stone/80 leading-loose"
+                      style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                    >
+                      <HighlightText text={res.snippet || res.text_content} query={query} />
+                    </div>
+                  ) : (
+                    <span className="text-stone/30 italic text-xs">{t('படியெடுக்கப்படவில்லை', 'Transcription pending')}</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 };
@@ -1641,10 +1644,38 @@ const ManuscriptViewer = ({ folio, onClose, t, activeList = [], onNavigate }) =>
 /* ═══════════════════════════════════════════════════════
    Word Search Result Viewer Modal (Dedicated modern view)
    ═══════════════════════════════════════════════════════ */
-const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate }) => {
+const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate, pageContext, onPageChange }) => {
   const [zoom, setZoom] = useState(1);
   const currentIndex = activeList.findIndex(r => r.id === folio.id);
   const totalFolios = activeList.length;
+
+  const currentPage = pageContext?.currentPage || 1;
+  const totalPages = pageContext?.totalPages || 1;
+  const totalItems = pageContext?.total || totalFolios;
+  const limit = pageContext?.limit || totalFolios;
+  const type = pageContext?.type || 'search';
+
+  const overallIndex = (currentPage - 1) * limit + currentIndex + 1;
+  const hasPrev = currentPage > 1 || currentIndex > 0;
+  const hasNext = currentPage < totalPages || currentIndex < totalFolios - 1;
+
+  const handlePrev = () => {
+    setZoom(1);
+    if (currentIndex > 0) {
+      onNavigate(activeList[currentIndex - 1]);
+    } else if (currentPage > 1 && onPageChange) {
+      onPageChange(currentPage - 1, 'prev', type);
+    }
+  };
+
+  const handleNext = () => {
+    setZoom(1);
+    if (currentIndex < totalFolios - 1) {
+      onNavigate(activeList[currentIndex + 1]);
+    } else if (currentPage < totalPages && onPageChange) {
+      onPageChange(currentPage + 1, 'next', type);
+    }
+  };
 
   return (
     <motion.div
@@ -1665,23 +1696,27 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
           
           <div className="flex items-center gap-6">
             {/* Prev/Next Navigation */}
-            {currentIndex !== -1 && totalFolios > 1 && (
+            {currentIndex !== -1 && (hasPrev || hasNext || totalFolios > 1) && (
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => { setZoom(1); onNavigate(activeList[currentIndex - 1]); }}
-                  disabled={currentIndex === 0}
-                  className="p-2 rounded-sm bg-white border border-maroon/15 text-maroon hover:bg-maroon hover:text-white transition-colors disabled:opacity-30"
+                  onClick={handlePrev}
+                  disabled={!hasPrev}
+                  className="p-2 rounded-sm bg-white border border-maroon/15 text-maroon hover:bg-maroon hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   title={t('முந்தைய', 'Previous')}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="font-cinzel text-xs font-bold text-maroon/60 px-2">
-                  {currentIndex + 1} / {totalFolios}
+                <span className="font-cinzel text-xs font-bold text-maroon/60 px-2 whitespace-nowrap">
+                  {pageContext ? (
+                    `Result ${overallIndex} of ${totalItems} | Page ${currentPage} of ${totalPages}`
+                  ) : (
+                    `${currentIndex + 1} / ${totalFolios}`
+                  )}
                 </span>
                 <button
-                  onClick={() => { setZoom(1); onNavigate(activeList[currentIndex + 1]); }}
-                  disabled={currentIndex === totalFolios - 1}
-                  className="p-2 rounded-sm bg-white border border-maroon/15 text-maroon hover:bg-maroon hover:text-white transition-colors disabled:opacity-30"
+                  onClick={handleNext}
+                  disabled={!hasNext}
+                  className="p-2 rounded-sm bg-white border border-maroon/15 text-maroon hover:bg-maroon hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   title={t('அடுத்தது', 'Next')}
                 >
                   <ChevronRight className="w-4 h-4" />
