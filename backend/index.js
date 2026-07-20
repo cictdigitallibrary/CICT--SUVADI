@@ -524,10 +524,14 @@ app.get('/api/songs', async (req, res) => {
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const { rows } = await db.query(
-      `SELECT id, fid as page_number, filename as image_file, description as text_content, group_id, cid
-       FROM sv_songs
-       WHERE cid = $1 AND status = 1 AND trash = 0
-       ORDER BY fid
+      `SELECT s.id, s.fid as page_number, s.filename as image_file, s.description as text_content, s.group_id, s.cid,
+              sc.sub_cat_name as manuscript_name, mc.cname as category_name, b.name as book_name, b.book_id
+       FROM sv_songs s
+       LEFT JOIN sv_sub_category sc ON sc.id = s.cid
+       LEFT JOIN sv_main_category mc ON mc.cid = sc.main_category_id
+       LEFT JOIN sv_book b ON b.book_id = mc.book_id
+       WHERE s.cid = $1 AND s.status = 1 AND s.trash = 0
+       ORDER BY s.fid
        LIMIT $2 OFFSET $3`,
       [sub_id, parseInt(limit), offset]
     );

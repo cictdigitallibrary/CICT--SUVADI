@@ -10,8 +10,8 @@ const Layout = ({ children }) => {
 
   const isHomePage = location.pathname === '/';
   
-  // Navbar height: Solid un-scrolled = 124px
-  const mainPadding = isAdmin || isReader ? '' : 'pt-[124px]';
+  // Navbar height: Solid un-scrolled = 120px (72px logo + 48px padding)
+  const mainPadding = isAdmin || isReader ? '' : 'pt-[120px]';
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -1157,10 +1157,10 @@ const ResultsTable = ({ resultsList, t, query, onOpen }) => {
         </thead>
         <tbody>
           {resultsList.map((res, i) => {
-            // Title formatting: Use book_name -> manuscript_name
+            // Title formatting: Use book_name -> category_name
             const titleParts = [];
             if (res.book_name) titleParts.push(res.book_name);
-            if (res.manuscript_name && res.manuscript_name !== res.book_name) titleParts.push(res.manuscript_name);
+            if (res.category_name && res.category_name !== res.book_name) titleParts.push(res.category_name);
             const titleStr = titleParts.length > 0 ? titleParts.join(' — ') : t('பெயரற்ற சுவடி', 'Untitled Manuscript');
 
             return (
