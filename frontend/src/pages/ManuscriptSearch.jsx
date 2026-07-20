@@ -353,7 +353,7 @@ const ManuscriptSearch = () => {
       // Normalise to the shape the SongCard / results panel expects
       const data = res.data;
       setResults({ count: data.total, results: data.results });
-      setSearchMeta({ total: data.total, total_pages: data.total_pages, search_mode: data.search_mode, is_number: data.is_number });
+      setSearchMeta({ total: data.total, total_pages: data.total_pages, search_mode: data.search_mode, is_number: data.is_number, browse_page: data.browse_page });
       setShowInstructions(false);
       return data;
     } catch (err) {
@@ -1001,7 +1001,12 @@ const ManuscriptSearch = () => {
                 </div>
               ) : (
                 <>
-                  <ResultsTable resultsList={results.results} t={t} query={query} onOpen={setActiveWordFolio} />
+                  <ResultsTable resultsList={results.results} t={t} query={query} onOpen={(res) => {
+                    setActiveWordFolio(res);
+                    if (searchMeta?.is_number && selectedSub && searchMeta?.browse_page) {
+                      handleBrowse(searchMeta.browse_page);
+                    }
+                  }} />
 
                   {/* Pagination for search results */}
                   {searchMeta && searchMeta.total_pages > 1 && (
@@ -1123,9 +1128,17 @@ const ManuscriptSearch = () => {
             folio={activeWordFolio}
             onClose={() => setActiveWordFolio(null)}
             t={t}
-            activeList={(results?.results || []).find(r => r.id === activeWordFolio.id) ? results?.results : (browseResults?.results || []).find(r => r.id === activeWordFolio.id) ? browseResults?.results : []}
+            activeList={
+              searchMeta?.is_number && (browseResults?.results || []).find(r => r.id === activeWordFolio.id)
+                ? browseResults.results
+                : (results?.results || []).find(r => r.id === activeWordFolio.id) ? results.results
+                : (browseResults?.results || []).find(r => r.id === activeWordFolio.id) ? browseResults.results
+                : []
+            }
             pageContext={
-              (results?.results || []).find(r => r.id === activeWordFolio.id)
+              searchMeta?.is_number && (browseResults?.results || []).find(r => r.id === activeWordFolio.id)
+                ? { currentPage: searchMeta.browse_page, totalPages: totalBrowsePages, total: browseResults?.total, limit: 12, type: 'browse' }
+                : (results?.results || []).find(r => r.id === activeWordFolio.id)
                 ? { currentPage: searchPage, totalPages: searchMeta?.total_pages, total: searchMeta?.total, limit: 20, type: 'search' }
                 : { currentPage: browsePage, totalPages: totalBrowsePages, total: browseResults?.total, limit: 12, type: 'browse' }
             }
@@ -1791,7 +1804,7 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
                   {t('எண்', 'Number')}
                 </p>
                 <p className="tamil-heading text-lg font-bold text-maroon bg-[#faf8f2] inline-block px-4 py-1.5 rounded-sm border border-gold/20 shadow-sm">
-                  #{folio.page_number}
+                  {folio.page_number}
                 </p>
               </div>
 

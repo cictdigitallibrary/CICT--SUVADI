@@ -444,7 +444,19 @@ app.get('/api/search', async (req, res) => {
     );
     const total = parseInt(countQ.rows[0].total);
 
-    // ── 6. Fetch paginated results ────────────────────────────────────────────
+    // ── 6. Map final results ──────────────────────────────────────────────────
+    let browsePage = null;
+    if (isNum && sub_id && total > 0) {
+      // Calculate which page this folio belongs to in browse mode (limit 12)
+      const countRes = await db.query(
+        'SELECT COUNT(*) as c FROM sv_songs WHERE cid=$1 AND fid <= $2 AND status=1 AND trash=0',
+        [parseInt(sub_id), parseInt(rawQ)]
+      );
+      const index = parseInt(countRes.rows[0].c, 10);
+      browsePage = Math.ceil(index / 12);
+    }
+
+    // ── 7. Fetch paginated results ────────────────────────────────────────────
     const allParams = [...params, ...rankParams, limitN, offset];
     const limitIdx  = idx + rankParams.length;
     const offsetIdx = limitIdx + 1;
@@ -503,6 +515,7 @@ app.get('/api/search', async (req, res) => {
       total_pages: Math.ceil(total / limitN) || 0,
       query:       rawQ,
       is_number:   isNum,
+      browse_page: browsePage,
       search_mode: sub_id   ? 'manuscript' :
                    main_cid ? 'category'   :
                    book_id  ? 'book'        : 'global',

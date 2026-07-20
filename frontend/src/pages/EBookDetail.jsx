@@ -26,6 +26,11 @@ const EBookDetail = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
+  // Scroll to absolute top immediately when the page loads
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
   // Fetch Parent Book Info
   const { data: book, isLoading: isBookLoading, isError: isBookError } = useQuery({
     queryKey: ['ebook', id],

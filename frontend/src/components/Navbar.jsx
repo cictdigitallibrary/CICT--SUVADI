@@ -55,20 +55,6 @@ const Navbar = () => {
               onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-white text-xs font-bold">CICT</span>'; }}
             />
           </div>
-          <div className="flex flex-col leading-none">
-            <span
-              className={`font-black tracking-[0.25em] text-xl uppercase transition-colors duration-500 ${logoTextColor}`}
-              style={{ fontFamily: '"Cinzel", serif' }}
-            >
-              SUVADI
-            </span>
-            <span
-              className={`text-[10.5px] uppercase tracking-[0.2em] font-bold mt-1.5 transition-colors duration-500 ${subTextColor}`}
-              style={{ fontFamily: '"Cinzel", serif' }}
-            >
-              {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
-            </span>
-          </div>
         </Link>
 
         {/* ── Right side container ── */}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
+import AdminLogin from '../components/AdminLogin';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Chart as ChartJS,
@@ -449,6 +450,15 @@ const AdminPortal = () => {
   /* ── active tab meta ── */
   const activeMeta = tabs.find(t => t.id === activeTab) || tabs[0];
 
+  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem('adminAuth') === 'true');
+
+  if (!isAuthenticated) {
+    return <AdminLogin onLogin={() => {
+      sessionStorage.setItem('adminAuth', 'true');
+      setIsAuthenticated(true);
+    }} />;
+  }
+
   /* ═══════════════════════════════ RENDER ═══════════════════════════════ */
   return (
     <div className="h-screen overflow-hidden bg-[#F0F2F5] flex">
@@ -485,7 +495,7 @@ const AdminPortal = () => {
           ))}
         </nav>
 
-        <div className="p-5 border-t border-white/5 bg-black/10">
+        <div className="p-5 border-t border-white/5 bg-black/10 flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-gold/15 flex items-center justify-center text-gold border border-gold/20 font-black text-xs">AD</div>
             <div>
@@ -493,6 +503,15 @@ const AdminPortal = () => {
               <div className="text-[9px] opacity-35 uppercase tracking-tighter">System Access Level 5</div>
             </div>
           </div>
+          <button 
+            onClick={() => {
+              sessionStorage.removeItem('adminAuth');
+              setIsAuthenticated(false);
+            }}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider"
+          >
+            Logout
+          </button>
         </div>
       </aside>
 

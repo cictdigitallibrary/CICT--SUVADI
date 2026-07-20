@@ -264,32 +264,39 @@ const Home = () => {
               transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}
             >
-              {/* Institutional label */}
-              <motion.div
-                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }}
-              >
-                <div className="h-px w-12 bg-gradient-to-r from-transparent to-gold/70" />
-                <p className="font-cinzel uppercase font-bold text-maroon/75"
-                   style={{ fontSize: 'clamp(7px, 0.9vw, 11px)', letterSpacing: '0.45em', whiteSpace: 'nowrap' }}>
-                  {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
-                </p>
-                <div className="h-px w-12 bg-gradient-to-l from-transparent to-gold/70" />
-              </motion.div>
 
               {/* Main title */}
               <motion.h1
                 className="tamil-heading text-maroon italic"
                 style={{
-                  fontSize: 'clamp(1.4rem, 4vw, 3.6rem)',
+                  fontSize: language === 'ta' ? 'clamp(1.4rem, 4vw, 3.6rem)' : 'clamp(1.2rem, 2.8vw, 2.5rem)',
                   textShadow: '0 2px 20px rgba(201,151,59,0.15)',
                   lineHeight: '1.2',
                   margin: 0,
+                  whiteSpace: language === 'en' ? 'nowrap' : 'normal',
                 }}
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}
               >
                 {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
               </motion.h1>
+
+              {/* Institutional label (Bottom) */}
+              <motion.h2
+                className={`text-maroon ${language === 'en' ? 'font-cinzel font-black uppercase' : 'font-bold'}`}
+                style={{
+                  fontFamily: language === 'ta' ? '"Noto Sans Tamil", "Noto Sans", sans-serif' : undefined,
+                  fontSize: language === 'ta' ? 'clamp(1.1rem, 2.4vw, 2.2rem)' : 'clamp(1.4rem, 3.2vw, 2.8rem)',
+                  fontWeight: language === 'en' ? 900 : undefined,
+                  textShadow: '0 2px 15px rgba(201,151,59,0.15)',
+                  marginTop: language === 'en' ? '0rem' : '-0.5rem',
+                  marginBottom: 0,
+                  letterSpacing: language === 'en' ? '0.05em' : '0.01em',
+                  lineHeight: '1.3',
+                }}
+                initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 1 }}
+              >
+                {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
+              </motion.h2>
 
               {/* Ornamental separator */}
               <motion.div
@@ -305,7 +312,7 @@ const Home = () => {
 
               {/* Tagline */}
               <motion.p
-                className="tamil-body text-[#5B1414] font-semibold text-[1rem] md:text-[1.1rem] lg:text-[1.22rem] leading-[1.8] tracking-[0.2px] opacity-100"
+                className="tamil-body text-[#4A1010] font-bold text-[1.1rem] md:text-[1.2rem] lg:text-[1.35rem] leading-[1.8] tracking-[0.2px] opacity-100"
                 style={{ margin: 0, textShadow: 'none' }}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
               >

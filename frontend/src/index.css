@@ -381,9 +381,7 @@ a {
   color: #6B0F0F !important;
 }
 
-.home-hero p.tamil-body {
-  color: #3D2010 !important;
-}
+/* Removed .home-hero p.tamil-body color override to allow inline/tailwind styles */
 
 /* ── Stat pills: overlap bottom edge of hero ── */
 .home-hero-stats {

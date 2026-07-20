@@ -120,7 +120,7 @@ const Hero_3D = () => {
             </h1>
 
             {/* Tamil Subtitle */}
-            <p className="tamil-body text-base md:text-lg text-stone/75 max-w-xl mx-auto leading-loose" style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif', fontWeight: 500 }}>
+            <p className="tamil-body text-[#4A1010] font-bold text-[1.1rem] md:text-[1.2rem] lg:text-[1.35rem] max-w-xl mx-auto leading-loose" style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif' }}>
               {t(
                 'ஓலைச்சுவடிகளிலிருந்து செம்பதிப்புகள் வரை — தமிழ் செவ்வியல் இலக்கியத்தின் மின்னணு ஆவணக் கருவூலம்.',
                 'From palm-leaf manuscripts to critical editions — preserving Classical Tamil civilization.'
