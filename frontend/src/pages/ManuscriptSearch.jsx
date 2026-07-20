@@ -176,6 +176,7 @@ const ManuscriptSearch = () => {
 
   /* UI state */
   const [activeView, setActiveView] = useState(null);
+  const [activeWordFolio, setActiveWordFolio] = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
@@ -988,11 +989,72 @@ const ManuscriptSearch = () => {
                 </div>
               ) : (
                 <>
-                  <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 gap-6">
-                    {results.results.map((res, i) => (
-                      <SongCard key={res.id || i} res={res} i={i} t={t} query={query} onOpen={setActiveView} />
-                    ))}
-                  </motion.div>
+                  {(() => {
+                    const isPureWordSearch = searchMeta && !searchMeta.is_number && !selectedBook && !selectedMS && !selectedSub;
+                    
+                    if (isPureWordSearch) {
+                      return (
+                        <div className="bg-white border border-maroon/10 rounded-sm shadow-sm overflow-hidden">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="bg-maroon/[0.03] border-b border-maroon/10">
+                                <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-1/3">
+                                  {t('தலைப்பு', 'Title')}
+                                </th>
+                                <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-2/3 border-l border-maroon/5">
+                                  {t('பாடல்', 'Song')}
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {results.results.map((res, i) => {
+                                // Title formatting: Use book_name -> manuscript_name
+                                const titleParts = [];
+                                if (res.book_name) titleParts.push(res.book_name);
+                                if (res.manuscript_name && res.manuscript_name !== res.book_name) titleParts.push(res.manuscript_name);
+                                const titleStr = titleParts.length > 0 ? titleParts.join(' — ') : t('பெயரற்ற சுவடி', 'Untitled Manuscript');
+
+                                return (
+                                  <tr key={res.id || i} className="border-b border-maroon/5 hover:bg-gold/[0.03] transition-colors group">
+                                    <td className="px-5 py-4 align-top w-1/3">
+                                      <a
+                                        onClick={(e) => { e.preventDefault(); setActiveWordFolio(res); }}
+                                        href="#"
+                                        className="tamil-heading text-sm text-maroon hover:text-gold-dark underline decoration-maroon/20 hover:decoration-gold underline-offset-4 transition-all"
+                                      >
+                                        {titleStr}
+                                      </a>
+                                    </td>
+                                    <td className="px-5 py-4 align-top w-2/3 border-l border-maroon/5">
+                                      {res.snippet ? (
+                                        <div
+                                          className="tamil-heading text-xs text-stone/80 leading-loose"
+                                          style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                                        >
+                                          <HighlightText text={res.snippet} query={query} />
+                                        </div>
+                                      ) : (
+                                        <span className="text-stone/30 italic text-xs">{t('படியெடுக்கப்படவில்லை', 'Transcription pending')}</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    }
+
+                    // Fallback to existing SongCard grid for numbers or category searches
+                    return (
+                      <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 gap-6">
+                        {results.results.map((res, i) => (
+                          <SongCard key={res.id || i} res={res} i={i} t={t} query={query} onOpen={setActiveView} />
+                        ))}
+                      </motion.div>
+                    );
+                  })()}
 
                   {/* Pagination for search results */}
                   {searchMeta && searchMeta.total_pages > 1 && (
@@ -1114,6 +1176,15 @@ const ManuscriptSearch = () => {
             t={t}
             activeList={(results?.results || []).find(r => r.id === activeView.id) ? results?.results : (browseResults?.results || []).find(r => r.id === activeView.id) ? browseResults?.results : []}
             onNavigate={(newFolio) => setActiveView(newFolio)}
+          />
+        )}
+        {activeWordFolio && (
+          <WordSearchResultViewer
+            folio={activeWordFolio}
+            onClose={() => setActiveWordFolio(null)}
+            t={t}
+            activeList={results?.results || []}
+            onNavigate={(newFolio) => setActiveWordFolio(newFolio)}
           />
         )}
       </AnimatePresence>
@@ -1505,33 +1576,51 @@ const ManuscriptViewer = ({ folio, onClose, t, activeList = [], onNavigate }) =>
                 <div className="flex items-center gap-2 px-5 py-3.5 border-b border-maroon/8 bg-maroon/[0.02]">
                   <div className="w-1.5 h-1.5 rounded-full bg-gold" />
                   <h4 className="tamil-label text-[10px] text-maroon font-black uppercase tracking-widest">
-                    {t('எழுத்துப் பிரதி', 'Transcription')}
+                    {t('கோப்பின் தகவல்கள்', 'File Details')}
                   </h4>
                 </div>
                 <div className="flex-1 overflow-y-auto p-5">
-                  <div
-                    className="text-stone"
-                    style={{
-                      fontFamily: '"Noto Sans Tamil", "Noto Sans", sans-serif',
-                      fontWeight: 500,
-                      fontSize: '0.875rem',
-                      lineHeight: 2.1,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      overflowWrap: 'break-word',
-                      letterSpacing: '0.01em',
-                    }}
-                  >
-                    {folio.text_content
-                      ? folio.text_content
-                        .replace(/<br\s*\/?>/gi, '\n')
-                        .replace(/\\r\\n|\\n/g, '')
-                        .replace(/\r\n|\r|\n/g, '\n')
-                        .replace(/\t+/g, '')
-                        .replace(/\n{3,}/g, '\n\n')
-                        .trim()
-                      : t('இந்த ஏட்டிற்கு எழுத்துப் பிரதி இல்லை.', 'No transcription available for this folio.')}
+                  
+                  {/* File Details: Number */}
+                  <div className="mb-6 pb-5 border-b border-maroon/5">
+                    <p className="tamil-label text-[9px] font-black text-maroon/50 uppercase tracking-widest mb-1.5">
+                      {t('எண்', 'Number')}
+                    </p>
+                    <p className="tamil-text text-sm font-bold text-maroon">
+                      {folio.page_number}
+                    </p>
                   </div>
+
+                  {/* File Details: Complete Song */}
+                  <div>
+                    <p className="tamil-label text-[9px] font-black text-maroon/50 uppercase tracking-widest mb-3">
+                      {t('பாடல்', 'Song')}
+                    </p>
+                    <div
+                      className="text-stone"
+                      style={{
+                        fontFamily: '"Noto Sans Tamil", "Noto Sans", sans-serif',
+                        fontWeight: 500,
+                        fontSize: '0.875rem',
+                        lineHeight: 2.1,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word',
+                        letterSpacing: '0.01em',
+                      }}
+                    >
+                      {folio.text_content
+                        ? folio.text_content
+                          .replace(/<br\s*\/?>/gi, '\n')
+                          .replace(/\\r\\n|\\n/g, '')
+                          .replace(/\r\n|\r|\n/g, '\n')
+                          .replace(/\t+/g, '')
+                          .replace(/\n{3,}/g, '\n\n')
+                          .trim()
+                        : t('இந்த ஏட்டிற்கு எழுத்துப் பிரதி இல்லை.', 'No transcription available for this folio.')}
+                    </div>
+                  </div>
+
                 </div>
               </motion.div>
             )}
@@ -1543,6 +1632,159 @@ const ManuscriptViewer = ({ folio, onClose, t, activeList = [], onNavigate }) =>
           <p className="font-cinzel text-[9px] text-stone/50 uppercase tracking-[0.3em] text-center font-bold">
             © CICT | All archival rights reserved.
           </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════
+   Word Search Result Viewer Modal (Dedicated modern view)
+   ═══════════════════════════════════════════════════════ */
+const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate }) => {
+  const [zoom, setZoom] = useState(1);
+  const currentIndex = activeList.findIndex(r => r.id === folio.id);
+  const totalFolios = activeList.length;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-ivory/95 backdrop-blur-xl p-4 md:p-8"
+    >
+      <div className="relative w-full h-full max-w-5xl flex flex-col bg-white shadow-2xl border border-maroon/10 overflow-hidden rounded-sm">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 bg-maroon/[0.03] border-b border-maroon/10 shrink-0">
+          <div className="flex items-center gap-4">
+            <h3 className="tamil-heading text-lg md:text-xl text-maroon font-black">
+              {folio.book_name} {folio.manuscript_name && folio.manuscript_name !== folio.book_name && `— ${folio.manuscript_name}`}
+            </h3>
+          </div>
+          
+          <div className="flex items-center gap-6">
+            {/* Prev/Next Navigation */}
+            {currentIndex !== -1 && totalFolios > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setZoom(1); onNavigate(activeList[currentIndex - 1]); }}
+                  disabled={currentIndex === 0}
+                  className="p-2 rounded-sm bg-white border border-maroon/15 text-maroon hover:bg-maroon hover:text-white transition-colors disabled:opacity-30"
+                  title={t('முந்தைய', 'Previous')}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="font-cinzel text-xs font-bold text-maroon/60 px-2">
+                  {currentIndex + 1} / {totalFolios}
+                </span>
+                <button
+                  onClick={() => { setZoom(1); onNavigate(activeList[currentIndex + 1]); }}
+                  disabled={currentIndex === totalFolios - 1}
+                  className="p-2 rounded-sm bg-white border border-maroon/15 text-maroon hover:bg-maroon hover:text-white transition-colors disabled:opacity-30"
+                  title={t('அடுத்தது', 'Next')}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            
+            <button onClick={onClose} className="p-2 hover:bg-red-500 hover:text-white text-maroon/60 rounded-full transition-all bg-white border border-maroon/10">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto">
+          
+          {/* Image Section */}
+          <div className="relative w-full h-[45vh] bg-[#faf8f2] border-b border-maroon/10 overflow-hidden flex items-center justify-center p-6 shadow-inner">
+            <motion.div
+              animate={{ scale: zoom }}
+              drag
+              dragConstraints={{ top: -300, bottom: 300, left: -300, right: 300 }}
+              className="relative flex items-center justify-center w-full h-full cursor-grab active:cursor-grabbing"
+            >
+              {folio.image_url ? (
+                <img
+                  src={`${API}${folio.image_url}`}
+                  className="w-full h-full object-contain drop-shadow-xl"
+                  alt="Manuscript Folio"
+                  draggable={false}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-maroon/30">
+                  <div className="text-5xl mb-3">📜</div>
+                  <p className="font-cinzel text-xs uppercase tracking-widest font-bold">Image not available</p>
+                </div>
+              )}
+            </motion.div>
+            
+            {/* Zoom Controls */}
+            {folio.image_url && (
+              <div className="absolute bottom-6 right-6 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-full p-1.5 border border-maroon/15 shadow-lg">
+                <button onClick={() => setZoom(z => Math.max(0.5, z - 0.25))} className="p-1.5 hover:bg-maroon/10 rounded-full text-maroon transition-colors">
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="font-cinzel text-[10px] font-black w-10 text-center text-maroon select-none">
+                  {Math.round(zoom * 100)}%
+                </span>
+                <button onClick={() => setZoom(z => Math.min(3, z + 0.25))} className="p-1.5 hover:bg-maroon/10 rounded-full text-maroon transition-colors">
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Details Section */}
+          <div className="p-8 md:p-12 max-w-4xl mx-auto">
+            <h4 className="tamil-heading text-xl text-maroon font-black border-b border-maroon/10 pb-4 mb-8 flex items-center gap-3">
+              <FileText className="w-5 h-5 text-gold" />
+              {t('கோப்பின் தகவல்கள்', 'File Details')}
+            </h4>
+            
+            <div className="space-y-8">
+              {/* Number */}
+              <div>
+                <p className="tamil-label text-[10px] font-black text-maroon/50 uppercase tracking-widest mb-2">
+                  {t('எண்', 'Number')}
+                </p>
+                <p className="tamil-heading text-xl font-bold text-maroon bg-maroon/[0.02] inline-block px-4 py-2 rounded-sm border border-maroon/5">
+                  #{folio.page_number}
+                </p>
+              </div>
+
+              {/* Complete Song */}
+              <div>
+                <p className="tamil-label text-[10px] font-black text-maroon/50 uppercase tracking-widest mb-3">
+                  {t('பாடல்', 'Song')}
+                </p>
+                <div
+                  className="text-stone/90 bg-white p-6 md:p-8 rounded-sm border border-maroon/10 shadow-sm"
+                  style={{
+                    fontFamily: '"Noto Sans Tamil", "Noto Sans", sans-serif',
+                    fontWeight: 500,
+                    fontSize: '1rem',
+                    lineHeight: 2.2,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                  }}
+                >
+                  {folio.text_content
+                    ? folio.text_content
+                      .replace(/<br\s*\/?>/gi, '\n')
+                      .replace(/\\r\\n|\\n/g, '')
+                      .replace(/\r\n|\r|\n/g, '\n')
+                      .replace(/\t+/g, '')
+                      .replace(/\n{3,}/g, '\n\n')
+                      .trim()
+                    : t('இந்த ஏட்டிற்கு எழுத்துப் பிரதி இல்லை.', 'No transcription available.')}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
