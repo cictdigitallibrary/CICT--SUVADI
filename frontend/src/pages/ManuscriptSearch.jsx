@@ -1144,13 +1144,13 @@ const ManuscriptSearch = () => {
 const ResultsTable = ({ resultsList, t, query, onOpen }) => {
   return (
     <div className="bg-white border border-maroon/10 rounded-sm shadow-sm overflow-hidden">
-      <table className="w-full text-left border-collapse">
+      <table className="w-full text-left border-collapse table-fixed">
         <thead>
           <tr className="bg-maroon/[0.03] border-b border-maroon/10">
-            <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-1/3">
+            <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-[35%]">
               {t('தலைப்பு', 'Title')}
             </th>
-            <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-2/3 border-l border-maroon/5">
+            <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-[65%] border-l border-maroon/5">
               {t('பாடல்', 'Song')}
             </th>
           </tr>
@@ -1165,16 +1165,17 @@ const ResultsTable = ({ resultsList, t, query, onOpen }) => {
 
             return (
               <tr key={res.id || i} className="border-b border-maroon/5 hover:bg-gold/[0.03] transition-colors group">
-                <td className="px-5 py-4 align-top w-1/3">
+                <td className="px-5 py-4 align-top w-[35%] break-words">
                   <a
                     onClick={(e) => { e.preventDefault(); onOpen(res); }}
                     href="#"
-                    className="tamil-heading text-sm text-maroon hover:text-gold-dark underline decoration-maroon/20 hover:decoration-gold underline-offset-4 transition-all"
+                    className="tamil-heading text-sm font-bold text-maroon hover:text-maroon-dark transition-all"
+                    style={{ textDecoration: 'underline', cursor: 'pointer' }}
                   >
                     {titleStr}
                   </a>
                 </td>
-                <td className="px-5 py-4 align-top w-2/3 border-l border-maroon/5">
+                <td className="px-5 py-4 align-top w-[65%] border-l border-maroon/5 break-words">
                   {(res.snippet || res.text_content) ? (
                     <div
                       className="tamil-heading text-xs text-stone/80 leading-loose"
@@ -1682,9 +1683,13 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-ivory/95 backdrop-blur-xl p-4 md:p-8"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#fffefa] via-[#f9f5e9] to-[#ebdcb6] p-4 md:p-8"
     >
-      <div className="relative w-full h-full max-w-5xl flex flex-col bg-white shadow-2xl border border-maroon/10 overflow-hidden rounded-sm">
+      {/* Decorative Corner Text Motifs */}
+      <div className="absolute top-4 left-4 text-[120px] text-maroon/[0.03] font-black leading-none pointer-events-none select-none" style={{ fontFamily: 'Noto Sans Tamil' }}>சு</div>
+      <div className="absolute bottom-4 right-4 text-[120px] text-maroon/[0.03] font-black leading-none pointer-events-none select-none" style={{ fontFamily: 'Noto Sans Tamil' }}>வ</div>
+
+      <div className="relative w-full h-full max-w-5xl flex flex-col bg-white shadow-[0_30px_60px_-15px_rgba(74,59,50,0.3)] border border-gold/40 ring-1 ring-white/60 overflow-hidden rounded-sm">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-maroon/[0.03] border-b border-maroon/10 shrink-0">
@@ -1706,7 +1711,7 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="font-cinzel text-xs font-bold text-maroon/60 px-2 whitespace-nowrap">
+                <span className="font-cinzel text-[13px] md:text-[14px] font-black text-maroon/90 px-3 whitespace-nowrap tracking-wider bg-maroon/[0.04] py-1 rounded-sm border border-maroon/5 mx-2">
                   {pageContext ? (
                     `Result ${overallIndex} of ${totalItems} | Page ${currentPage} of ${totalPages}`
                   ) : (
@@ -1734,7 +1739,7 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
         <div className="flex-1 overflow-y-auto">
           
           {/* Image Section */}
-          <div className="relative w-full h-[45vh] bg-[#faf8f2] border-b border-maroon/10 overflow-hidden flex items-center justify-center p-6 shadow-inner">
+          <div className="relative w-full h-[55vh] bg-[#faf8f2] border-b border-maroon/10 overflow-hidden flex items-center justify-center p-4 shadow-inner">
             <motion.div
               animate={{ scale: zoom }}
               drag
@@ -1758,7 +1763,7 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
             
             {/* Zoom Controls */}
             {folio.image_url && (
-              <div className="absolute bottom-6 right-6 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-full p-1.5 border border-maroon/15 shadow-lg">
+              <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-white/95 backdrop-blur-md rounded-full p-1 border border-gold/30 shadow-md">
                 <button onClick={() => setZoom(z => Math.max(0.5, z - 0.25))} className="p-1.5 hover:bg-maroon/10 rounded-full text-maroon transition-colors">
                   <ZoomOut className="w-4 h-4" />
                 </button>
@@ -1773,35 +1778,35 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
           </div>
 
           {/* Details Section */}
-          <div className="p-8 md:p-12 max-w-4xl mx-auto">
-            <h4 className="tamil-heading text-xl text-maroon font-black border-b border-maroon/10 pb-4 mb-8 flex items-center gap-3">
+          <div className="p-6 md:p-8 max-w-4xl mx-auto">
+            <h4 className="tamil-heading text-lg md:text-xl text-maroon font-black border-b border-maroon/10 pb-3 mb-6 flex items-center gap-3">
               <FileText className="w-5 h-5 text-gold" />
               {t('கோப்பின் தகவல்கள்', 'File Details')}
             </h4>
             
-            <div className="space-y-8">
+            <div className="space-y-6">
               {/* Number */}
               <div>
-                <p className="tamil-label text-[10px] font-black text-maroon/50 uppercase tracking-widest mb-2">
+                <p className="tamil-label text-[10px] font-black text-maroon/60 uppercase tracking-widest mb-1.5">
                   {t('எண்', 'Number')}
                 </p>
-                <p className="tamil-heading text-xl font-bold text-maroon bg-maroon/[0.02] inline-block px-4 py-2 rounded-sm border border-maroon/5">
+                <p className="tamil-heading text-lg font-bold text-maroon bg-[#faf8f2] inline-block px-4 py-1.5 rounded-sm border border-gold/20 shadow-sm">
                   #{folio.page_number}
                 </p>
               </div>
 
               {/* Complete Song */}
               <div>
-                <p className="tamil-label text-[10px] font-black text-maroon/50 uppercase tracking-widest mb-3">
+                <p className="tamil-label text-[10px] font-black text-maroon/60 uppercase tracking-widest mb-2">
                   {t('பாடல்', 'Song')}
                 </p>
                 <div
-                  className="text-stone/90 bg-white p-6 md:p-8 rounded-sm border border-maroon/10 shadow-sm"
+                  className="text-[#4a3b32] bg-[#faf8f2] p-5 md:p-6 rounded-sm border border-gold/20 shadow-sm"
                   style={{
                     fontFamily: '"Noto Sans Tamil", "Noto Sans", sans-serif',
                     fontWeight: 500,
-                    fontSize: '1rem',
-                    lineHeight: 2.2,
+                    fontSize: '0.95rem',
+                    lineHeight: 1.9,
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-word',
                     overflowWrap: 'break-word',
