@@ -9,13 +9,13 @@ import { getBookCover } from '../utils/bookCovers';
 const API = 'http://localhost:3001';
 
 const CRITICAL_EDITIONS = [
-  { ta: 'இறையனார் களவியல்',       en: 'Irayanar Kalviyar',       year: '2013', img: '/images/publications/opt_25.jpg' },
-  { ta: 'ஐங்குறுநூறு – மருதம்',   en: 'Aingurunuru – Marutam',   year: '2017', img: '/images/publications/opt_30.jpg' },
-  { ta: 'ஐங்குறுநூறு – நெய்தல்',  en: 'Aingurunuru – Neital',    year: '2017', img: '/images/publications/opt_31.jpg' },
-  { ta: 'ஐங்குறுநூறு – குறிஞ்சி', en: 'Aingurunuru – Kurinji',   year: '2021', img: '/images/publications/opt_46.jpg' },
-  { ta: 'ஐங்குறுநூறு – பாலை',     en: 'Aingurunuru – Palai',     year: '2021', img: '/images/publications/opt_47.jpg' },
-  { ta: 'கைந்நிலை',               en: 'Kainnilai',               year: '2024', img: '/images/publications/opt_147.jpg' },
-  { ta: 'ஐங்குறுநூறு – முல்லை',   en: 'Aingurunuru – Mullai',    year: 'Press', img: '/images/edition/7.png' },
+  { ta: 'இறையனார் களவியல்', en: 'Irayanar Kalviyar', year: '2013', img: '/images/publications/opt_25.jpg' },
+  { ta: 'ஐங்குறுநூறு – மருதம்', en: 'Aingurunuru – Marutam', year: '2017', img: '/images/publications/opt_30.jpg' },
+  { ta: 'ஐங்குறுநூறு – நெய்தல்', en: 'Aingurunuru – Neital', year: '2017', img: '/images/publications/opt_31.jpg' },
+  { ta: 'ஐங்குறுநூறு – குறிஞ்சி', en: 'Aingurunuru – Kurinji', year: '2021', img: '/images/publications/opt_46.jpg' },
+  { ta: 'ஐங்குறுநூறு – பாலை', en: 'Aingurunuru – Palai', year: '2021', img: '/images/publications/opt_47.jpg' },
+  { ta: 'கைந்நிலை', en: 'Kainnilai', year: '2024', img: '/images/publications/opt_147.jpg' },
+  { ta: 'ஐங்குறுநூறு – முல்லை', en: 'Aingurunuru – Mullai', year: 'Press', img: '/images/edition/7.png' },
 ];
 
 /* Official content — Faculty of Manuscriptology, verbatim from suvadi.cict.in (Default.aspx) */
@@ -95,11 +95,11 @@ const FEATURES = [
 /* ── Animation variants ── */
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
 };
 const stagger = {
   hidden: {},
-  show:   { transition: { staggerChildren: 0.15 } },
+  show: { transition: { staggerChildren: 0.15 } },
 };
 
 /* ── Animated counter hook ── */
@@ -219,7 +219,7 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 1 ▸ HERO
       ══════════════════════════════════════════ */}
-      <section 
+      <section
         className="home-hero relative w-full overflow-hidden bg-[#1A0303]"
         style={{
           backgroundImage: "url('/images/bg/home_hero_final.png')",
@@ -265,38 +265,48 @@ const Home = () => {
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}
             >
 
-              {/* Main title */}
-              <motion.h1
-                className="tamil-heading text-maroon italic"
+              {/* Fixed-Width Heading Container (Matches safe center zone) */}
+              <div
                 style={{
-                  fontSize: language === 'ta' ? 'clamp(1.4rem, 4vw, 3.6rem)' : 'clamp(1.2rem, 2.8vw, 2.5rem)',
-                  textShadow: '0 2px 20px rgba(201,151,59,0.15)',
-                  lineHeight: '1.2',
-                  margin: 0,
-                  whiteSpace: language === 'en' ? 'nowrap' : 'normal',
+                  width: '56vw',
+                  maxWidth: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center'
                 }}
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}
               >
-                {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
-              </motion.h1>
+                {/* Main title (Secondary Heading) */}
+                <motion.h1
+                  className="tamil-heading text-maroon italic"
+                  style={{
+                    fontSize: 'clamp(0.9rem, 2vw, 2.2rem)',
+                    textShadow: '0 2px 20px rgba(201,151,59,0.15)',
+                    lineHeight: '1.2',
+                    margin: 0,
+                    whiteSpace: 'nowrap',
+                  }}
+                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}
+                >
+                  {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
+                </motion.h1>
 
-              {/* Institutional label (Bottom) */}
-              <motion.h2
-                className={`text-maroon ${language === 'en' ? 'font-cinzel font-black uppercase' : 'font-bold'}`}
-                style={{
-                  fontFamily: language === 'ta' ? '"Noto Sans Tamil", "Noto Sans", sans-serif' : undefined,
-                  fontSize: language === 'ta' ? 'clamp(1.1rem, 2.4vw, 2.2rem)' : 'clamp(1.4rem, 3.2vw, 2.8rem)',
-                  fontWeight: language === 'en' ? 900 : undefined,
-                  textShadow: '0 2px 15px rgba(201,151,59,0.15)',
-                  marginTop: language === 'en' ? '0rem' : '-0.5rem',
-                  marginBottom: 0,
-                  letterSpacing: language === 'en' ? '0.05em' : '0.01em',
-                  lineHeight: '1.3',
-                }}
-                initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 1 }}
-              >
-                {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
-              </motion.h2>
+                {/* Institutional label (Primary Heading) */}
+                <motion.h2
+                  className="tamil-heading text-maroon italic uppercase"
+                  style={{
+                    fontSize: language === 'ta' ? 'clamp(0.75rem, 1.6vw, 1.78rem)' : 'clamp(0.85rem, 1.8vw, 1.95rem)',
+                    textShadow: '0 2px 15px rgba(201,151,59,0.15)',
+                    marginTop: '0.25rem',
+                    marginBottom: 0,
+                    letterSpacing: '0.02em',
+                    lineHeight: '1.3',
+                    whiteSpace: 'nowrap',
+                  }}
+                  initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 1 }}
+                >
+                  {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
+                </motion.h2>
+              </div>
 
               {/* Ornamental separator */}
               <motion.div
@@ -484,7 +494,7 @@ const Home = () => {
                       <span className="group-hover:text-white transition-colors">{t('தொடர்க', 'LAUNCH')}</span>
                       <div className="h-px bg-white/50 transition-all duration-500 w-6 group-hover:w-14" />
                       <svg className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14 5l7 7-7 7" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                        <path d="M14 5l7 7-7 7" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" />
                       </svg>
                     </div>
                   </div>

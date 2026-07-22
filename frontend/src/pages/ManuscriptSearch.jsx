@@ -511,7 +511,7 @@ const ManuscriptSearch = () => {
                     className="inline-flex items-center gap-3 bg-maroon text-white px-8 py-3.5 rounded-sm hover:bg-maroon-dark transition-all duration-300 shadow-xl shadow-maroon/20 hover:shadow-maroon/30 hover:-translate-y-1 font-black uppercase tracking-wider text-sm tamil-label"
                   >
                     <Search className="w-4 h-4" />
-                    {t('சுவடிகளைத் தேடுங்கள்', 'Search Manuscripts')}
+                    {t('சுவடித் தேடல்', 'Search Manuscripts')}
                   </button>
                 </div>
               </motion.div>
