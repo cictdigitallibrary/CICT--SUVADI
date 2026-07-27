@@ -600,66 +600,96 @@ a {
 
 /* Reference image: 3 distinctly colored tool cards */
 .home-tool-card {
-  border-radius: 14px;
+  border-radius: 16px;
   height: 100%;
   position: relative;
   overflow: hidden;
-  transition: transform 0.35s ease, box-shadow 0.35s ease;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-  padding: 2.5rem;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  padding: 2.25rem 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .home-tool-card:hover {
-  transform: translateY(-7px);
-  box-shadow: 0 22px 65px rgba(0, 0, 0, 0.45);
+  transform: translateY(-8px);
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.5), inset 0 1.5px 2px rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.42);
 }
 
-/* Card 01 — Manuscript Search — Vivid warm amber/gold matching reference */
+/* Card 01 — Manuscript Search — Rich golden amber with subtle depth */
 .home-tool-card-1 {
-  background: linear-gradient(145deg, #D4A520 0%, #F0C035 35%, #D4A520 70%, #B88A10 100%);
+  background: linear-gradient(145deg, #A6761D 0%, #D4A520 40%, #E8B835 75%, #996515 100%);
 }
 
-/* Card 02 — Digital Library — Vivid forest green matching reference */
+/* Card 02 — Digital Library / E-Books — Rich emerald forest green */
 .home-tool-card-2 {
-  background: linear-gradient(145deg, #2A6645 0%, #3D8A5C 35%, #2A7048 70%, #1A4D32 100%);
+  background: linear-gradient(145deg, #1C4D32 0%, #2A6645 40%, #3D8A5C 75%, #123D26 100%);
 }
 
-/* Card 03 — Critical Editions — Vivid purple/plum matching reference */
+/* Card 03 — Critical Editions / Classical Texts — Rich royal purple/plum */
 .home-tool-card-3 {
-  background: linear-gradient(145deg, #6A2A9A 0%, #8A40C0 35%, #7030B0 70%, #4A1878 100%);
+  background: linear-gradient(145deg, #4D1A7A 0%, #6A2A9A 40%, #8A40C0 75%, #3B1060 100%);
+}
+
+/* Light sheen overlay on hover */
+.home-tool-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.75s ease;
+  pointer-events: none;
+}
+
+.home-tool-card:hover::before {
+  left: 150%;
 }
 
 .home-tool-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0);
-  transition: background 0.35s;
-  border-radius: 14px;
+  background: radial-gradient(circle at 85% 15%, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+  border-radius: 16px;
   pointer-events: none;
 }
 
-.home-tool-card:hover::after {
-  background: rgba(255, 255, 255, 0.06);
+/* Faint manuscript corner filigree accent */
+.home-tool-card-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+  transition: border-color 0.4s ease;
+}
+
+.group:hover .home-tool-card-corner {
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Number watermark inside each card */
 .tool-card-number {
   position: absolute;
   top: 0;
-  right: 0;
-  padding: 1.2rem 1.5rem;
-  font-size: 4.5rem;
+  right: 1.25rem;
+  font-size: 5rem;
   font-weight: 900;
   font-family: "Cinzel", serif;
   color: rgba(255, 255, 255, 0.14);
   line-height: 1;
   user-select: none;
-  transition: color 0.4s;
+  pointer-events: none;
+  transition: color 0.4s ease, transform 0.4s ease;
 }
 
 .group:hover .tool-card-number {
-  color: rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.24);
+  transform: scale(1.05) translateY(-2px);
 }
 
 /* ════════════════════════════════════════════════════════
@@ -676,18 +706,19 @@ a {
 .home-editions-artwork {
   position: absolute;
   inset: 0;
-  background-image: url('/images/bg/editions-bg.png');
-  background-size: cover;
-  background-position: center center;
-  /* More visible — show the archival paper mandala artwork */
-  opacity: 0.35;
+  background-image: url('/images/bg/editions-floral-left.png'), url('/images/bg/editions-floral-right.png');
+  background-position: left center, right center;
+  background-size: auto 90%, auto 90%;
+  background-repeat: no-repeat, no-repeat;
+  mix-blend-mode: multiply;
+  opacity: 0.6;
 }
 
 .home-editions-overlay {
   position: absolute;
   inset: 0;
-  /* Very light — just a gentle cream tint */
   background: linear-gradient(180deg, rgba(255, 253, 248, 0.42) 0%, rgba(252, 248, 240, 0.38) 100%);
+  pointer-events: none;
 }
 
 .home-book-card {

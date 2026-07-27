@@ -62,8 +62,7 @@ const FACULTY_CONTENT = [
 const FEATURES = [
   {
     num: '01',
-    icon: '📜',
-    ta: 'சுவடிகளின் தேடல்',
+    ta: 'சுவடித் தேடல்',
     en: 'Manuscript Search',
     desc_ta: 'உலகெங்கும் உள்ள ஓலைச்சுவடிகளை ஆராய்ச்சி செய்யுங்கள்.',
     desc_en: 'Search and explore palm-leaf manuscripts preserved across the world.',
@@ -72,9 +71,8 @@ const FEATURES = [
   },
   {
     num: '02',
-    icon: '📚',
-    ta: 'மின் நூலகம்',
-    en: 'Digital Library',
+    ta: 'மின் நூல்கள்',
+    en: 'E-Books',
     desc_ta: 'செவ்வியல் நூல்களின் முதல் அச்சுப் பதிப்புகளை படியுங்கள்.',
     desc_en: 'Access first printed editions of Classical Tamil texts online.',
     link: '/ebooks',
@@ -82,9 +80,8 @@ const FEATURES = [
   },
   {
     num: '03',
-    icon: '🏛️',
-    ta: 'செம்பதிப்புகள்',
-    en: 'Critical Editions',
+    ta: 'செவ்வியல் நூல்கள்',
+    en: 'Classical Texts',
     desc_ta: 'CICT வெளியிட்ட அதிகாரபூர்வ நூல் பதிப்புகள்.',
     desc_en: 'Authoritative critical editions published by CICT scholars.',
     link: '/classical-texts',
@@ -449,7 +446,7 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 3 ▸ STRATEGIC PILLARS
       ══════════════════════════════════════════ */}
-      <section className="home-research-section relative py-24 overflow-hidden">
+      <section className="home-research-section relative py-14 md:py-18 overflow-hidden">
         {/* Generated maroon manuscript artwork background */}
         <div className="home-research-artwork" />
         <div className="home-research-overlay" />
@@ -458,45 +455,63 @@ const Home = () => {
         <div className="section-wave-bottom" />
 
         <div className="container mx-auto px-6 max-w-6xl relative z-10">
-          {/* Section header */}
-          <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <span className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-gold/55 font-bold block mb-3">
-              {t('நமது சேவைகள்', 'Our Services')}
-            </span>
-            <h2 className="tamil-heading text-3xl md:text-4xl text-white font-black italic">
-              {t('ஆய்வுக் கருவிகள்', 'Research Tools')}
-            </h2>
-          </motion.div>
-
-          <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
             {FEATURES.map((f, i) => (
-              <motion.div key={i} variants={fadeUp}>
+              <motion.div key={i} variants={fadeUp} className="h-full">
                 <Link to={f.link} className="group block relative h-full">
                   {/* Card — each gets its own accent color matching reference image */}
-                  <div className={`home-tool-card home-tool-card-${i + 1}`}>
-                    {/* Number watermark */}
-                    <div className="tool-card-number">{f.num}</div>
+                  <div className={`home-tool-card home-tool-card-${i + 1} flex flex-col justify-between`}>
 
-                    {/* Icon */}
-                    <div className="relative mb-6">
-                      <div className="text-5xl transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-1 inline-block">
-                        {f.icon}
+                    {/* Top Content Area */}
+                    <div>
+                      {/* Number watermark */}
+                      <div className="tool-card-number">{f.num}</div>
+
+                      {/* Corner filigree accents for manuscript aesthetic */}
+                      <span className="home-tool-card-corner top-3 left-3 border-t border-l" />
+                      <span className="home-tool-card-corner bottom-3 right-3 border-b border-r" />
+
+                      {/* SVG Icon Visual Container */}
+                      <div className="relative mb-6">
+                        <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-white/10 backdrop-blur-md border border-white/25 shadow-lg group-hover:scale-110 group-hover:-translate-y-1 group-hover:border-white/40 group-hover:bg-white/20 transition-all duration-500">
+                          {i === 0 && (
+                            <svg className="w-7 h-7 text-amber-100 transition-transform duration-500 group-hover:rotate-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.25 11.25L21 21m-2.25-6.75a6 6 0 11-12 0 6 6 0 0112 0z" />
+                            </svg>
+                          )}
+                          {i === 1 && (
+                            <svg className="w-7 h-7 text-emerald-100 transition-transform duration-500 group-hover:rotate-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                          )}
+                          {i === 2 && (
+                            <svg className="w-7 h-7 text-purple-100 transition-transform duration-500 group-hover:rotate-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5M4.5 21V10.5M12 3v3" />
+                            </svg>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Title matching navbar title exactly */}
+                      <h3 className="tamil-label text-2xl text-white mb-3 font-black tracking-wide" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.35)', fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Cinzel", serif' }}>
+                        {t(f.ta, f.en)}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="tamil-text text-white/85 text-sm leading-relaxed font-medium group-hover:text-white transition-colors duration-300">
+                        {t(f.desc_ta, f.desc_en)}
+                      </p>
                     </div>
 
-                    <h3 className="tamil-label text-2xl text-white mb-4 font-black" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>{t(f.ta, f.en)}</h3>
-                    <p className="tamil-text text-white/80 text-sm leading-loose font-bold group-hover:text-white transition-colors duration-300">
-                      {t(f.desc_ta, f.desc_en)}
-                    </p>
-
-                    {/* Arrow CTA */}
-                    <div className="mt-8 flex items-center gap-3 text-white/90 text-[10px] font-black uppercase tracking-[0.3em]">
+                    {/* Bottom Arrow CTA with animation */}
+                    <div className="mt-8 pt-4 border-t border-white/15 flex items-center gap-3 text-white/90 text-xs font-black uppercase tracking-[0.25em]">
                       <span className="group-hover:text-white transition-colors">{t('தொடர்க', 'LAUNCH')}</span>
-                      <div className="h-px bg-white/50 transition-all duration-500 w-6 group-hover:w-14" />
-                      <svg className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14 5l7 7-7 7" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                      <div className="h-px bg-white/40 transition-all duration-500 w-6 group-hover:w-12 group-hover:bg-white" />
+                      <svg className="w-4 h-4 opacity-70 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7-7 7" />
                       </svg>
                     </div>
+
                   </div>
                 </Link>
               </motion.div>
@@ -508,51 +523,43 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           SECTION 4 ▸ CRITICAL EDITIONS GALLERY
       ══════════════════════════════════════════ */}
-      <section className="home-editions-section py-32 overflow-hidden">
+      <section className="home-editions-section py-14 md:py-16 overflow-hidden">
         {/* Generated archival paper artwork background with mandala decorations */}
         <div className="home-editions-artwork" />
         <div className="home-editions-overlay" />
 
         <div className="container mx-auto px-6 max-w-6xl relative" style={{ zIndex: 2 }}>
           {/* Header */}
-          <motion.div className="text-center mb-20" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <p className="tamil-label text-bronze text-xs uppercase tracking-[0.4em] mb-4 font-black">
+          <motion.div className="text-center mb-8 md:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <p className="tamil-label text-bronze text-xs uppercase tracking-[0.4em] mb-3 font-black">
               {t('சுவடியியல் வெளியீடுகள்', 'ARCHIVAL PUBLICATIONS')}
             </p>
             <h2 className="tamil-heading text-4xl md:text-5xl text-maroon italic">
               {t('வெளியிடப்பட்ட செம்பதிப்புகள்', 'Published Critical Editions')}
             </h2>
-            <div className="flex items-center justify-center gap-3 mt-6">
+            <div className="flex items-center justify-center gap-3 mt-4">
               <div className="h-px w-16 bg-gold/35" />
               <div className="w-2 h-2 bg-gold/50 rounded-full" />
               <div className="h-px w-16 bg-gold/35" />
             </div>
           </motion.div>
 
-          {/* Draggable horizontal scroll strip */}
-          <div
-            ref={scrollRef}
-            className="flex gap-5 overflow-x-auto pb-6 select-none"
-            style={{ cursor: 'grab', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={stopDrag}
-            onMouseLeave={stopDrag}
-          >
+          {/* 7 featured books displayed simultaneously on one horizontal row on desktop */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4">
             {CRITICAL_EDITIONS.map((ed, i) => (
-              <TiltCard key={i} className="flex-shrink-0 w-40 md:w-44">
+              <TiltCard key={i} className="w-full">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.07 }}
-                  className="group home-book-card"
+                  transition={{ delay: i * 0.05 }}
+                  className="group home-book-card h-full flex flex-col justify-between"
                 >
                   <div className="relative aspect-[3/4] bg-stone/5 flex items-center justify-center overflow-hidden">
                     <img
                       src={ed.img.startsWith('/images/publications') ? ed.img : `${API}${ed.img}`}
                       alt={ed.ta}
-                      className="h-full w-full object-contain p-2 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
+                      className="h-full w-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
                       onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📚</span>'; }}
                     />
                     {/* Year badge */}
@@ -560,20 +567,17 @@ const Home = () => {
                     {/* Hover overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-maroon/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </div>
-                  <div className="mt-3 pb-2 px-1">
-                    <p className="tamil-label text-[11px] text-maroon text-center group-hover:text-gold transition-colors font-black line-clamp-2 leading-snug">{ed.ta}</p>
+                  <div className="mt-2.5 pb-1.5 px-0.5">
+                    <p className="tamil-label text-[10px] md:text-[11px] text-maroon text-center group-hover:text-gold transition-colors font-black line-clamp-2 leading-tight">
+                      {t(ed.ta, ed.en)}
+                    </p>
                   </div>
                 </motion.div>
               </TiltCard>
             ))}
           </div>
 
-          {/* Drag hint */}
-          <p className="text-center text-stone/30 text-[10px] font-cinzel uppercase tracking-widest mt-3">
-            {t('இழுத்து பார்க்கவும்', '← drag to explore →')}
-          </p>
-
-          <div className="mt-12 text-center">
+          <div className="mt-8 text-center">
             <Link to="/classical-texts" className="catalogue-link">
               <span>{t('அனைத்து வெளியீடுகளையும் காண்க', 'EXPLORE THE FULL CATALOGUE')}</span>
               <span>→</span>
