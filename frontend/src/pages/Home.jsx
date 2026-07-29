@@ -138,6 +138,24 @@ function StatItem({ val, label }) {
   );
 }
 
+/* ── Compact Home Stat item with animated counter ── */
+function HomeStatItem({ val, labelTa, labelEn }) {
+  const { count, ref } = useAnimatedCount(val);
+  return (
+    <div ref={ref} className="flex flex-col items-center">
+      <span className="text-3xl md:text-4xl font-extrabold text-maroon tabular-nums">
+        {count ? Number(count).toLocaleString('en-IN') : Number(val || 0).toLocaleString('en-IN')}
+      </span>
+      <span className="text-xs md:text-sm font-black text-stone/80 mt-1 tamil-body">
+        {labelTa}
+      </span>
+      <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-stone/40 font-bold font-sans">
+        {labelEn}
+      </span>
+    </div>
+  );
+}
+
 /* ── Tilt card for publications ── */
 function TiltCard({ children, className }) {
   const cardRef = useRef(null);

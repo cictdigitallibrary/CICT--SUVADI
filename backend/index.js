@@ -640,12 +640,13 @@ app.get('/api/team', async (req, res) => {
 // 6. Stats (backward compatible + enhanced)
 app.get('/api/stats', async (req, res) => {
   try {
-    const [tc, mc, sc, subs, editions] = await Promise.all([
+    const [tc, mc, sc, subs, editions, tb] = await Promise.all([
       db.query('SELECT COUNT(*) as c FROM sv_book WHERE status=1'),
       db.query('SELECT COUNT(*) as c FROM sv_main_category WHERE status=1'),
       db.query('SELECT COUNT(*) as c FROM sv_songs WHERE status=1 AND trash=0'),
       db.query('SELECT COUNT(*) as c FROM sv_sub_category WHERE status=1'),
       db.query('SELECT COUNT(*) as c FROM sv_ebook_editions WHERE status=1'),
+      db.query('SELECT COUNT(*) as c FROM sv_book'),
     ]);
     res.json({
       texts:          parseInt(tc.rows[0].c),
@@ -653,6 +654,7 @@ app.get('/api/stats', async (req, res) => {
       sub_categories: parseInt(subs.rows[0].c),
       songs:          parseInt(sc.rows[0].c),
       ebook_editions: parseInt(editions.rows[0].c),
+      total_books:    parseInt(tb.rows[0].c),
     });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

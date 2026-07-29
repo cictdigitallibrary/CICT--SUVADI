@@ -180,6 +180,39 @@ const ManuscriptSearch = () => {
   const [showInstructions, setShowInstructions] = useState(true);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
+  /* Inline page viewer states */
+  const [inlineViewerFolio, setInlineViewerFolio] = useState(null);
+  const [categorySongsList, setCategorySongsList] = useState([]);
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(-1);
+  const [fetchingCategoryList, setFetchingCategoryList] = useState(false);
+  const [detailZoom, setDetailZoom] = useState(1);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [isSearchVisible]);
+
+  const loadCategorySequence = useCallback(async (cid, currentId) => {
+    if (!cid) return;
+    setFetchingCategoryList(true);
+    try {
+      const res = await axios.get(`${API}/api/songs?sub_id=${cid}&limit=5000`);
+      const songs = res.data.results || [];
+      setCategorySongsList(songs);
+      const idx = songs.findIndex(s => String(s.id) === String(currentId));
+      setActiveCategoryIndex(idx);
+    } catch (err) {
+      console.error('Failed to load category sequence:', err);
+    } finally {
+      setFetchingCategoryList(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (inlineViewerFolio) {
+      loadCategorySequence(inlineViewerFolio.cid, inlineViewerFolio.id);
+    }
+  }, [inlineViewerFolio, loadCategorySequence]);
+
   /* Transliteration state */
   const [transSugs, setTransSugs] = useState([]);
   const [showTrans, setShowTrans] = useState(false);
@@ -247,7 +280,7 @@ const ManuscriptSearch = () => {
       try {
         // Build optional filter params — only attach what's selected
         const params = new URLSearchParams({ q: trimmed, limit: 50 });
-        if (selectedSub)  params.set('sub_id',  selectedSub);
+        if (selectedSub) params.set('sub_id', selectedSub);
         else if (selectedMS) params.set('main_cid', selectedMS);
         else if (selectedBook) params.set('book_id', selectedBook);
 
@@ -342,12 +375,12 @@ const ManuscriptSearch = () => {
       // Build optional hierarchy filters — only attach what's selected
       const params = new URLSearchParams({
         q,
-        page:  pageOverride,
+        page: pageOverride,
         limit: 20,
       });
-      if (selectedSub)   params.set('sub_id',   selectedSub);
-      else if (selectedMS)   params.set('main_cid', selectedMS);
-      else if (selectedBook) params.set('book_id',  selectedBook);
+      if (selectedSub) params.set('sub_id', selectedSub);
+      else if (selectedMS) params.set('main_cid', selectedMS);
+      else if (selectedBook) params.set('book_id', selectedBook);
 
       const res = await axios.get(`${API}/api/search?${params.toString()}`);
       // Normalise to the shape the SongCard / results panel expects
@@ -355,6 +388,9 @@ const ManuscriptSearch = () => {
       setResults({ count: data.total, results: data.results });
       setSearchMeta({ total: data.total, total_pages: data.total_pages, search_mode: data.search_mode, is_number: data.is_number, browse_page: data.browse_page });
       setShowInstructions(false);
+      if (data.is_number && data.results && data.results.length > 0) {
+        setInlineViewerFolio(data.results[0]);
+      }
       return data;
     } catch (err) {
       console.error(err);
@@ -373,8 +409,8 @@ const ManuscriptSearch = () => {
       setBrowseResults(res.data);
       setShowInstructions(false);
       return res.data;
-    } catch (err) { 
-      console.error(err); 
+    } catch (err) {
+      console.error(err);
       return null;
     }
     finally { setBrowsing(false); }
@@ -410,24 +446,180 @@ const ManuscriptSearch = () => {
       `}</style>
 
       {/* ── Page Hero ─────────────────────────────────────── */}
-      <PageHero
-        label={t('இணையவழிச் செவ்வியல்', 'ONLINE CLASSICAL ARCHIVES')}
-        title={t('சுவடித் தேடல்', 'Manuscript Search')}
-        subtitle={t(
-          'பாடலின் எண்ணிட்டுத் தேடும் வசதியும் பாடலின் குறிப்பிட்ட சொல்லைக் கொண்டு தேடும் முறையும் உருவாக்கப்பட்டுள்ளது.',
-          'Search by poem number or explore literary themes through keyword queries across digitised palm-leaf manuscripts.'
-        )}
-        glyphs={['சுவடி', 'ஏடு', 'பாடல்', 'மூலம்', 'தேடல்', 'ஆய்வு']}
-        backgroundImage="/images/bg/search-hero-panoramic.png"
-        heroClass="search-hero-bg"
-        headingStyle={{ fontSize: 'clamp(1.8rem, 4.5vw, 3.6rem)', lineHeight: '1.3', fontWeight: '800', letterSpacing: '0.02em' }}
-      />
+      {!inlineViewerFolio && (
+        <PageHero
+          label={t('இணையவழிச் செவ்வியல்', 'ONLINE CLASSICAL ARCHIVES')}
+          title={t('சுவடித் தேடல்', 'Manuscript Search')}
+          subtitle={t(
+            'பாடலின் எண்ணிட்டுத் தேடும் வசதியும் பாடலின் குறிப்பிட்ட சொல்லைக் கொண்டு தேடும் முறையும் உருவாக்கப்பட்டுள்ளது.',
+            'Search by poem number or explore literary themes through keyword queries across digitised palm-leaf manuscripts.'
+          )}
+          glyphs={['சுவடி', 'ஏடு', 'பாடல்', 'மூலம்', 'தேடல்', 'ஆய்வு']}
+          backgroundImage="/images/bg/search-hero-panoramic.png"
+          heroClass="search-hero-bg"
+          headingStyle={{ fontSize: 'clamp(1.8rem, 4.5vw, 3.6rem)', lineHeight: '1.3', fontWeight: '800', letterSpacing: '0.02em' }}
+        />
+      )}
 
       {/* ══════════════════════════════════════════════════
           OFFICIAL SEARCH INTRODUCTION — verbatim content from
           suvadi.cict.in/asp/suvadisearch.aspx
       ══════════════════════════════════════════════════ */}
-      <div className="w-full px-4 sm:px-6 py-14">
+      {inlineViewerFolio ? (
+        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-10">
+          {/* Back to search/results control */}
+          <div className="flex justify-start mb-6">
+            <button
+              onClick={() => setInlineViewerFolio(null)}
+              className="flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-maroon hover:text-gold transition-colors px-4 py-2 border border-maroon/10 hover:border-gold/30 rounded-sm bg-white shadow-sm font-bold"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              {t('தேடலுக்குத் திரும்ப', 'Back to Results/Search')}
+            </button>
+          </div>
+
+          {/* Header Area Card */}
+          <div className="bg-[#FAF8F5] border border-gold/30 rounded-md shadow-sm p-4 sm:p-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* Left: dynamically selected titles in medium-sized maroon text */}
+            <div className="flex flex-wrap items-center gap-2 text-sm sm:text-base font-bold text-maroon tamil-heading leading-relaxed max-w-full sm:max-w-[70%]">
+              <span>{selectedBookData?.title_tamil || inlineViewerFolio.book_name || t('பெயரற்ற நூல்', 'Untitled Book')}</span>
+              <span className="text-gold font-normal">›</span>
+              <span>{selectedManuscript?.title_tamil || inlineViewerFolio.category_name || t('பெயரற்ற வகுப்பு', 'Untitled Class')}</span>
+              <span className="text-gold font-normal">›</span>
+              <span>{selectedSubData?.title_tamil || inlineViewerFolio.manuscript_name || t('பெயரற்ற சுவடி', 'Untitled Manuscript')}</span>
+            </div>
+
+            {/* Right: Clean Prev / Next navigation buttons only */}
+            <div className="flex items-center gap-1.5 shrink-0 ml-auto sm:ml-0">
+              <button
+                onClick={() => {
+                  if (activeCategoryIndex > 0) {
+                    setInlineViewerFolio(categorySongsList[activeCategoryIndex - 1]);
+                    setDetailZoom(1);
+                  }
+                }}
+                disabled={activeCategoryIndex <= 0 || fetchingCategoryList}
+                className="flex items-center justify-center p-2 border border-gold/30 rounded-sm bg-white hover:bg-maroon hover:text-white disabled:opacity-20 disabled:pointer-events-none transition-colors"
+                title={t('முந்தைய', 'Previous')}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  if (activeCategoryIndex < categorySongsList.length - 1) {
+                    setInlineViewerFolio(categorySongsList[activeCategoryIndex + 1]);
+                    setDetailZoom(1);
+                  }
+                }}
+                disabled={activeCategoryIndex >= categorySongsList.length - 1 || fetchingCategoryList}
+                className="flex items-center justify-center p-2 border border-gold/30 rounded-sm bg-white hover:bg-maroon hover:text-white disabled:opacity-20 disabled:pointer-events-none transition-colors"
+                title={t('அடுத்தது', 'Next')}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Image Section */}
+          <div className="relative w-full h-[220px] bg-[#FAF8F2] border border-gold/20 rounded-md overflow-hidden flex items-center justify-center p-4 shadow-inner mb-4">
+            <motion.div
+              animate={{ scale: detailZoom }}
+              drag
+              dragConstraints={{ top: -300, bottom: 300, left: -300, right: 300 }}
+              className="relative flex items-center justify-center w-full h-full cursor-grab active:cursor-grabbing"
+            >
+              {inlineViewerFolio.image_url ? (
+                <img
+                  src={`${API}${inlineViewerFolio.image_url}`}
+                  className="w-full h-full object-contain drop-shadow-xl"
+                  alt="Manuscript Folio"
+                  draggable={false}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-maroon/30">
+                  <div className="text-5xl mb-3">📜</div>
+                  <p className="font-cinzel text-xs uppercase tracking-widest font-bold">Image not available</p>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Zoom Controls */}
+            {inlineViewerFolio.image_url && (
+              <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-white/95 backdrop-blur-md rounded-full p-1 border border-gold/30 shadow-md">
+                <button
+                  type="button"
+                  onClick={() => setDetailZoom(z => Math.max(0.5, z - 0.25))}
+                  className="p-1.5 hover:bg-maroon/10 rounded-full text-maroon transition-colors"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="font-cinzel text-[10px] font-black w-10 text-center text-maroon select-none">
+                  {Math.round(detailZoom * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDetailZoom(z => Math.min(3, z + 0.25))}
+                  className="p-1.5 hover:bg-maroon/10 rounded-full text-maroon transition-colors"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Details Section */}
+          <div className="bg-[#FAF8F5] border border-gold/25 rounded-md p-6 md:p-8 shadow-sm mb-8">
+            <h4 className="tamil-heading text-lg md:text-xl text-maroon font-black border-b border-gold/20 pb-3 mb-6 flex items-center gap-3">
+              <FileText className="w-5 h-5 text-gold" />
+              {t('கோப்பின் தகவல்கள்', 'File Details')}
+            </h4>
+
+            <div className="space-y-6">
+              {/* Number */}
+              <div>
+                <p className="tamil-label text-[10px] font-black text-maroon/60 uppercase tracking-widest mb-1.5">
+                  {t('எண்', 'Number')}
+                </p>
+                <p className="tamil-heading text-lg font-bold text-maroon bg-white inline-block px-4 py-1.5 rounded-sm border border-gold/20 shadow-sm">
+                  {inlineViewerFolio.page_number}
+                </p>
+              </div>
+
+              {/* Complete Song */}
+              <div>
+                <p className="tamil-label text-[10px] font-black text-maroon/60 uppercase tracking-widest mb-2">
+                  {t('பாடல்', 'Song')}
+                </p>
+                <div
+                  className="text-[#4a3b32] bg-white p-5 md:p-6 rounded-sm border border-gold/20 shadow-sm"
+                  style={{
+                    fontFamily: '"Noto Sans Tamil", "Noto Sans", sans-serif',
+                    fontWeight: 500,
+                    fontSize: '0.95rem',
+                    lineHeight: 1.9,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                  }}
+                >
+                  {inlineViewerFolio.text_content
+                    ? inlineViewerFolio.text_content
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .replace(/\\r\\n|\\n/g, '')
+                        .replace(/\r\n|\r|\n/g, '\n')
+                        .replace(/\t+/g, '')
+                        .replace(/\n{3,}/g, '\n\n')
+                        .trim()
+                    : t('இந்த ஏட்டிற்கு எழுத்துப் பிரதி இல்லை.', 'No transcription available.')}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      ) : (
+        <>
+          <div className="w-full px-4 sm:px-6 py-14">
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -508,9 +700,9 @@ const ManuscriptSearch = () => {
                 <div className="mt-12 text-center pb-4">
                   <button
                     onClick={() => setIsSearchVisible(true)}
-                    className="inline-flex items-center gap-3 bg-maroon text-white px-8 py-3.5 rounded-sm hover:bg-maroon-dark transition-all duration-300 shadow-xl shadow-maroon/20 hover:shadow-maroon/30 hover:-translate-y-1 font-black uppercase tracking-wider text-sm tamil-label"
+                    className="inline-flex items-center gap-3 bg-maroon text-white px-10 py-4 rounded-sm border border-gold/30 hover:border-gold hover:bg-maroon-dark transition-all duration-300 shadow-lg shadow-maroon/15 hover:shadow-maroon/30 hover:-translate-y-0.5 font-black uppercase tracking-widest text-sm tamil-label"
                   >
-                    <Search className="w-4 h-4" />
+                    <Search className="w-4 h-4 text-gold-light" />
                     {t('சுவடித் தேடல்', 'Search Manuscripts')}
                   </button>
                 </div>
@@ -540,9 +732,9 @@ const ManuscriptSearch = () => {
                 {/* ══════════════════════════════════════════════════
               SEARCH PANEL 
           ══════════════════════════════════════════════════ */}
-                <div className="bg-white border border-maroon/10 shadow-lg rounded-sm mb-6 overflow-hidden text-left">
+                <div className="bg-[#FAF8F5] border border-gold/30 shadow-md rounded-md mb-6 overflow-hidden text-left">
                   {/* Panel header */}
-                  <div className="flex items-center justify-between px-5 py-3.5 bg-maroon/[0.03] border-b border-maroon/8">
+                  <div className="flex items-center justify-between px-5 py-3.5 bg-maroon/[0.04] border-b border-gold/20">
                     <div className="flex items-center gap-2.5">
                       <SlidersHorizontal className="w-3.5 h-3.5 text-maroon/50" />
                       <span className="tamil-label text-[10px] uppercase tracking-[0.35em] font-black text-maroon/60">
@@ -586,7 +778,7 @@ const ManuscriptSearch = () => {
                           <h4 className={`text-[16px] md:text-[18px] font-bold text-maroon mb-3 ${language === 'ta' ? 'tamil-heading' : 'font-cinzel tracking-wider'}`}>
                             {language === 'ta' ? 'தேடல் குறிப்புகள்' : 'Search Hints'}
                           </h4>
-                          
+
                           <div className="flex flex-col md:flex-row gap-5 md:gap-8">
                             {/* Hint 1 */}
                             <div className="flex gap-3 items-start flex-1">
@@ -596,13 +788,13 @@ const ManuscriptSearch = () => {
                                   {language === 'ta' ? 'எண் வழித் தேடல்:' : 'Search by Number:'}
                                 </span>
                                 <span className={`text-[14px] text-[#4a3b32] leading-[1.6] ${language === 'ta' ? 'tamil-text' : ''}`}>
-                                  {language === 'ta' 
+                                  {language === 'ta'
                                     ? 'தேடலுக்குரிய செவ்வியல் நூலின் பாடல்/ நூற்பா எண்ணைக் கொடுப்பதன் மூலம் உரிய சுவடியின் பக்கம் கிடைக்கப்பெறும்.'
                                     : 'By entering song/nūṟpā number you can get the particular page of the manuscript.'}
                                 </span>
                               </div>
                             </div>
-                            
+
                             {/* Hint 2 */}
                             <div className="flex gap-3 items-start flex-1">
                               <span className="shrink-0 w-6 h-6 bg-gold/15 rounded-full flex items-center justify-center text-xs font-black text-maroon mt-[3px]">2</span>
@@ -692,7 +884,7 @@ const ManuscriptSearch = () => {
                         <div className={`flex h-[52px] rounded-sm overflow-hidden border shadow-sm transition-all
                   ${showTrans
                             ? 'border-gold/50 ring-2 ring-gold/15'
-                            : 'border-maroon/20 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/15'}`}>
+                            : 'border-gold/30 focus-within:border-gold focus-within:ring-2 focus-within:ring-gold/15'}`}>
                           <input
                             ref={searchInputRef}
                             type="text"
@@ -898,10 +1090,10 @@ const ManuscriptSearch = () => {
                         {selectedSub
                           ? <span className="text-bronze font-bold not-italic">{selectedSubData?.title_tamil}</span>
                           : selectedMS
-                          ? <span className="text-bronze/70 font-bold not-italic">{selectedManuscript?.title_tamil}</span>
-                          : selectedBook
-                          ? <span className="text-bronze/70 font-bold not-italic">{selectedBookData?.title_tamil}</span>
-                          : <span className="text-stone/40">{t('அனைத்து சுவடிகளிலும் தேடல்', 'Searching all manuscripts')}</span>}
+                            ? <span className="text-bronze/70 font-bold not-italic">{selectedManuscript?.title_tamil}</span>
+                            : selectedBook
+                              ? <span className="text-bronze/70 font-bold not-italic">{selectedBookData?.title_tamil}</span>
+                              : <span className="text-stone/40">{t('அனைத்து சுவடிகளிலும் தேடல்', 'Searching all manuscripts')}</span>}
                       </p>
                       {selectedSub && (
                         <button
@@ -925,228 +1117,191 @@ const ManuscriptSearch = () => {
         </motion.div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 max-w-6xl py-4 pb-10">
+      {isSearchVisible && (
+        <div className="container mx-auto px-4 sm:px-6 max-w-6xl py-4 pb-10">
 
-        {/* ── Empty state (manuscript selected but nothing searched) ── */}
-        <AnimatePresence>
-          {selectedManuscript && !results && !browseResults && !loading && !browsing && (
-            <motion.div
-              variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0 }}
-              className="bg-white border border-maroon/10 rounded-sm shadow-md p-10 text-center"
-            >
-              <div className="w-14 h-14 bg-maroon/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">📜</span>
-              </div>
-              <h2 className="tamil-heading text-xl text-maroon mb-1">{selectedManuscript.title_tamil}</h2>
-              {selectedBookData && (
-                <p className="font-cinzel text-[9px] text-bronze font-bold uppercase tracking-[0.3em] mb-4">
-                  {selectedBookData.title_tamil}
-                </p>
-              )}
-              <p className="tamil-body text-stone/50 text-xs max-w-sm mx-auto">
-                {t(
-                  'பதிவேற்றம் செய்யப்பட்டுள்ள அனைத்துப் பக்கங்களையும் காண "அனைத்து ஏடுகள்" பொத்தானை அழுத்தவும்.',
-                  'Use the "Browse All Folios" button above to explore the complete digitised archive page by page.'
-                )}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── Loading Indicator ───────────────────────────── */}
-        <AnimatePresence>
-          {(loading || browsing) && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center py-20 gap-3"
-            >
-              <div className="w-8 h-8 border-2 border-maroon/8 border-t-gold rounded-full animate-spin" />
-              <p className="font-cinzel tracking-[0.4em] text-bronze animate-pulse uppercase text-[9px]">
-                {t('நூலக அடுக்குகளில் தேடுகிறோம்…', 'SCANNING ARCHIVAL REPOSITORY…')}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── Search Results ──────────────────────────────── */}
-        <AnimatePresence mode="wait">
-          {results && !loading && (
-            <motion.div key="search-results" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0 }}>
-
-              {/* Result count + pagination header */}
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-px flex-grow bg-maroon/8" />
-                <span className="tamil-label text-[10px] text-bronze uppercase tracking-[0.25em] font-black whitespace-nowrap">
-                  {results.count > 0
-                    ? t(`${results.count} ஏட்டுப் பக்கங்கள் கிடைத்தன`, `${results.count} FOLIO${results.count !== 1 ? 'S' : ''} FOUND`)
-                    : t('முடிவுகள் இல்லை', 'NO MATCHES FOUND')}
-                </span>
-                {searchMeta && searchMeta.total_pages > 1 && (
-                  <span className="font-cinzel text-[9px] text-stone/35">
-                    — {t('பக்கம்', 'Page')} {searchPage}/{searchMeta.total_pages}
-                  </span>
-                )}
-                <div className="h-px flex-grow bg-maroon/8" />
-              </div>
-
-              {results.count === 0 ? (
-                <div className="text-center py-16 bg-white border border-maroon/8 rounded-sm">
-                  <div className="text-4xl mb-3">📜</div>
-                  <p className="tamil-body text-stone/40 text-sm">
-                    {t('இந்தத் தேடலுக்கு சுவடி ஏடுகள் எதுவும் கிடைக்கவில்லை.', 'No archival fragments matched your query.')}
-                  </p>
-                  <p className="font-cinzel text-[9px] text-stone/25 mt-2 uppercase tracking-widest">
-                    {t('வேறொரு எண் அல்லது சொல்லில் முயற்சிக்கவும்', 'Try a different number or word')}
-                  </p>
+          {/* ── Empty state (manuscript selected but nothing searched) ── */}
+          <AnimatePresence>
+            {selectedManuscript && !results && !browseResults && !loading && !browsing && (
+              <motion.div
+                variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0 }}
+                className="bg-white border border-maroon/10 rounded-sm shadow-md p-10 text-center"
+              >
+                <div className="w-14 h-14 bg-maroon/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">📜</span>
                 </div>
-              ) : (
-                <>
-                  <ResultsTable resultsList={results.results} t={t} query={query} onOpen={(res) => {
-                    setActiveWordFolio(res);
-                    if (searchMeta?.is_number && selectedSub && searchMeta?.browse_page) {
-                      handleBrowse(searchMeta.browse_page);
-                    }
-                  }} />
+                <h2 className="tamil-heading text-xl text-maroon mb-1">{selectedManuscript.title_tamil}</h2>
+                {selectedBookData && (
+                  <p className="font-cinzel text-[9px] text-bronze font-bold uppercase tracking-[0.3em] mb-4">
+                    {selectedBookData.title_tamil}
+                  </p>
+                )}
+                <p className="tamil-body text-stone/50 text-xs max-w-sm mx-auto">
+                  {t(
+                    'பதிவேற்றம் செய்யப்பட்டுள்ள அனைத்துப் பக்கங்களையும் காண "அனைத்து ஏடுகள்" பொத்தானை அழுத்தவும்.',
+                    'Use the "Browse All Folios" button above to explore the complete digitised archive page by page.'
+                  )}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-                  {/* Pagination for search results */}
+          {/* ── Loading Indicator ───────────────────────────── */}
+          <AnimatePresence>
+            {(loading || browsing) && (
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center justify-center py-20 gap-3"
+              >
+                <div className="w-8 h-8 border-2 border-maroon/8 border-t-gold rounded-full animate-spin" />
+                <p className="font-cinzel tracking-[0.4em] text-bronze animate-pulse uppercase text-[9px]">
+                  {t('நூலக அடுக்குகளில் தேடுகிறோம்…', 'SCANNING ARCHIVAL REPOSITORY…')}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Search Results ──────────────────────────────── */}
+          <AnimatePresence mode="wait">
+            {results && !loading && (
+              <motion.div key="search-results" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0 }}>
+
+                {/* Result count + pagination header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-px flex-grow bg-maroon/8" />
+                  <span className="tamil-label text-[10px] text-bronze uppercase tracking-[0.25em] font-black whitespace-nowrap">
+                    {results.count > 0
+                      ? t(`${results.count} ஏட்டுப் பக்கங்கள் கிடைத்தன`, `${results.count} FOLIO${results.count !== 1 ? 'S' : ''} FOUND`)
+                      : t('முடிவுகள் இல்லை', 'NO MATCHES FOUND')}
+                  </span>
                   {searchMeta && searchMeta.total_pages > 1 && (
-                    <div className="flex justify-center items-center gap-2 pt-6 mt-4 border-t border-maroon/8">
-                      <button
-                        onClick={() => handleSearch(null, searchPage - 1)}
-                        disabled={searchPage <= 1}
-                        className="flex items-center gap-1 px-4 py-2 border border-maroon/15 text-maroon text-[10px] font-black
+                    <span className="font-cinzel text-[9px] text-stone/35">
+                      — {t('பக்கம்', 'Page')} {searchPage}/{searchMeta.total_pages}
+                    </span>
+                  )}
+                  <div className="h-px flex-grow bg-maroon/8" />
+                </div>
+
+                {results.count === 0 ? (
+                  <div className="text-center py-16 bg-white border border-maroon/8 rounded-sm">
+                    <div className="text-4xl mb-3">📜</div>
+                    <p className="tamil-body text-stone/40 text-sm">
+                      {t('இந்தத் தேடலுக்கு சுவடி ஏடுகள் எதுவும் கிடைக்கவில்லை.', 'No archival fragments matched your query.')}
+                    </p>
+                    <p className="font-cinzel text-[9px] text-stone/25 mt-2 uppercase tracking-widest">
+                      {t('வேறொரு எண் அல்லது சொல்லில் முயற்சிக்கவும்', 'Try a different number or word')}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <ResultsTable resultsList={results.results} t={t} query={query} onOpen={setInlineViewerFolio} />
+
+                    {/* Pagination for search results */}
+                    {searchMeta && searchMeta.total_pages > 1 && (
+                      <div className="flex justify-center items-center gap-2 pt-6 mt-4 border-t border-maroon/8">
+                        <button
+                          onClick={() => handleSearch(null, searchPage - 1)}
+                          disabled={searchPage <= 1}
+                          className="flex items-center gap-1 px-4 py-2 border border-maroon/15 text-maroon text-[10px] font-black
                           uppercase tracking-widest tamil-label rounded-sm hover:bg-maroon hover:text-white hover:border-maroon
                           transition-all disabled:opacity-25 disabled:pointer-events-none"
-                      >
-                        <ChevronLeft className="w-3.5 h-3.5" /> {t('முந்தைய', 'Prev')}
-                      </button>
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(searchMeta.total_pages, 7) }, (_, i) => {
-                          const p = i + 1;
-                          return (
-                            <button key={p} onClick={() => handleSearch(null, p)}
-                              className={`w-7 h-7 font-cinzel text-xs font-black rounded-sm transition-all
+                        >
+                          <ChevronLeft className="w-3.5 h-3.5" /> {t('முந்தைய', 'Prev')}
+                        </button>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(searchMeta.total_pages, 7) }, (_, i) => {
+                            const p = i + 1;
+                            return (
+                              <button key={p} onClick={() => handleSearch(null, p)}
+                                className={`w-7 h-7 font-cinzel text-xs font-black rounded-sm transition-all
                                 ${searchPage === p ? 'bg-maroon text-white' : 'text-maroon/40 hover:bg-maroon/8'}`}>
-                              {p}
-                            </button>
-                          );
-                        })}
-                        {searchMeta.total_pages > 7 && <span className="text-maroon/30 font-cinzel text-xs px-1 select-none">…</span>}
-                      </div>
-                      <button
-                        onClick={() => handleSearch(null, searchPage + 1)}
-                        disabled={searchPage >= searchMeta.total_pages}
-                        className="flex items-center gap-1 px-4 py-2 bg-maroon text-white text-[10px] font-black
+                                {p}
+                              </button>
+                            );
+                          })}
+                          {searchMeta.total_pages > 7 && <span className="text-maroon/30 font-cinzel text-xs px-1 select-none">…</span>}
+                        </div>
+                        <button
+                          onClick={() => handleSearch(null, searchPage + 1)}
+                          disabled={searchPage >= searchMeta.total_pages}
+                          className="flex items-center gap-1 px-4 py-2 bg-maroon text-white text-[10px] font-black
                           uppercase tracking-widest tamil-label rounded-sm hover:bg-maroon-light
                           transition-all disabled:opacity-25 disabled:pointer-events-none"
-                      >
-                        {t('அடுத்தது', 'Next')} <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                        >
+                          {t('அடுத்தது', 'Next')} <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* ── Browse Results ──────────────────────────────── */}
-        <AnimatePresence mode="wait">
-          {browseResults && !browsing && (
-            <motion.div key="browse-results" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0 }}>
+          {/* ── Browse Results ──────────────────────────────── */}
+          <AnimatePresence mode="wait">
+            {browseResults && !browsing && (
+              <motion.div key="browse-results" variants={fadeUp} initial="hidden" animate="show" exit={{ opacity: 0 }}>
 
-              {/* Browse count header */}
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-px flex-grow bg-maroon/8" />
-                <span className="tamil-label text-[10px] text-bronze uppercase tracking-[0.25em] font-black whitespace-nowrap">
-                  {t(`பக்கம் ${browsePage} / ${totalBrowsePages} — மொத்தம் ${browseResults.total} ஏடுகள்`,
-                    `PAGE ${browsePage} / ${totalBrowsePages} — ${browseResults.total} TOTAL FOLIOS`)}
-                </span>
-                <div className="h-px flex-grow bg-maroon/8" />
-              </div>
-
-                <ResultsTable resultsList={browseResults.results} t={t} query={query} onOpen={setActiveWordFolio} />
-
-              {/* Pagination */}
-              <div className="flex justify-center items-center gap-2 pt-5 border-t border-maroon/8">
-                <button
-                  onClick={() => handleBrowse(browsePage - 1)}
-                  disabled={browsePage <= 1}
-                  className="flex items-center gap-1 px-4 py-2 border border-maroon/15 text-maroon text-[10px] font-black
-                    uppercase tracking-widest tamil-label rounded-sm hover:bg-maroon hover:text-white hover:border-maroon
-                    transition-all disabled:opacity-25 disabled:pointer-events-none"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" /> {t('முந்தைய', 'Prev')}
-                </button>
-
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(totalBrowsePages, 5) }, (_, i) => {
-                    const p = i + 1;
-                    return (
-                      <button
-                        key={p}
-                        onClick={() => handleBrowse(p)}
-                        className={`w-7 h-7 font-cinzel text-xs font-black rounded-sm transition-all
-                          ${browsePage === p ? 'bg-maroon text-white' : 'text-maroon/40 hover:bg-maroon/8'}`}
-                      >
-                        {p}
-                      </button>
-                    );
-                  })}
-                  {totalBrowsePages > 5 && <span className="text-maroon/30 font-cinzel text-xs px-1 select-none">…</span>}
+                {/* Browse count header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-px flex-grow bg-maroon/8" />
+                  <span className="tamil-label text-[10px] text-bronze uppercase tracking-[0.25em] font-black whitespace-nowrap">
+                    {t(`பக்கம் ${browsePage} / ${totalBrowsePages} — மொத்தம் ${browseResults.total} ஏடுகள்`,
+                      `PAGE ${browsePage} / ${totalBrowsePages} — ${browseResults.total} TOTAL FOLIOS`)}
+                  </span>
+                  <div className="h-px flex-grow bg-maroon/8" />
                 </div>
 
-                <button
-                  onClick={() => handleBrowse(browsePage + 1)}
-                  disabled={browseResults.results.length < 12}
-                  className="flex items-center gap-1 px-4 py-2 bg-maroon text-white text-[10px] font-black
+                <ResultsTable resultsList={browseResults.results} t={t} query={query} onOpen={setInlineViewerFolio} />
+
+                {/* Pagination */}
+                <div className="flex justify-center items-center gap-2 pt-5 border-t border-maroon/8">
+                  <button
+                    onClick={() => handleBrowse(browsePage - 1)}
+                    disabled={browsePage <= 1}
+                    className="flex items-center gap-1 px-4 py-2 border border-maroon/15 text-maroon text-[10px] font-black
+                    uppercase tracking-widest tamil-label rounded-sm hover:bg-maroon hover:text-white hover:border-maroon
+                    transition-all disabled:opacity-25 disabled:pointer-events-none"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" /> {t('முந்தைய', 'Prev')}
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(totalBrowsePages, 5) }, (_, i) => {
+                      const p = i + 1;
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => handleBrowse(p)}
+                          className={`w-7 h-7 font-cinzel text-xs font-black rounded-sm transition-all
+                          ${browsePage === p ? 'bg-maroon text-white' : 'text-maroon/40 hover:bg-maroon/8'}`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    })}
+                    {totalBrowsePages > 5 && <span className="text-maroon/30 font-cinzel text-xs px-1 select-none">…</span>}
+                  </div>
+
+                  <button
+                    onClick={() => handleBrowse(browsePage + 1)}
+                    disabled={browseResults.results.length < 12}
+                    className="flex items-center gap-1 px-4 py-2 bg-maroon text-white text-[10px] font-black
                     uppercase tracking-widest tamil-label rounded-sm hover:bg-maroon-light
                     transition-all disabled:opacity-25 disabled:pointer-events-none"
-                >
-                  {t('அடுத்தது', 'Next')} <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  >
+                    {t('அடுத்தது', 'Next')} <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-      </div>
-
-      {/* ── Folio Viewer Modal ──────────────────────────────── */}
-      <AnimatePresence>
-        {activeView && (
-          <ManuscriptViewer
-            folio={activeView}
-            onClose={() => setActiveView(null)}
-            t={t}
-            activeList={(results?.results || []).find(r => r.id === activeView.id) ? results?.results : (browseResults?.results || []).find(r => r.id === activeView.id) ? browseResults?.results : []}
-            onNavigate={(newFolio) => setActiveView(newFolio)}
-          />
-        )}
-        {activeWordFolio && (
-          <WordSearchResultViewer
-            folio={activeWordFolio}
-            onClose={() => setActiveWordFolio(null)}
-            t={t}
-            activeList={
-              searchMeta?.is_number && (browseResults?.results || []).find(r => r.id === activeWordFolio.id)
-                ? browseResults.results
-                : (results?.results || []).find(r => r.id === activeWordFolio.id) ? results.results
-                : (browseResults?.results || []).find(r => r.id === activeWordFolio.id) ? browseResults.results
-                : []
-            }
-            pageContext={
-              searchMeta?.is_number && (browseResults?.results || []).find(r => r.id === activeWordFolio.id)
-                ? { currentPage: searchMeta.browse_page, totalPages: totalBrowsePages, total: browseResults?.total, limit: 12, type: 'browse' }
-                : (results?.results || []).find(r => r.id === activeWordFolio.id)
-                ? { currentPage: searchPage, totalPages: searchMeta?.total_pages, total: searchMeta?.total, limit: 20, type: 'search' }
-                : { currentPage: browsePage, totalPages: totalBrowsePages, total: browseResults?.total, limit: 12, type: 'browse' }
-            }
-            onNavigate={(newFolio) => setActiveWordFolio(newFolio)}
-            onPageChange={handlePageChangeFromViewer}
-          />
-        )}
-      </AnimatePresence>
+        </div>
+      )}
+      </>
+      )}
     </div>
   );
 };
@@ -1156,14 +1311,14 @@ const ManuscriptSearch = () => {
    ═══════════════════════════════════════════════════════ */
 const ResultsTable = ({ resultsList, t, query, onOpen }) => {
   return (
-    <div className="bg-white border border-maroon/10 rounded-sm shadow-sm overflow-hidden">
+    <div className="bg-[#FAF8F5] border border-gold/30 rounded-md shadow-md overflow-hidden mb-6">
       <table className="w-full text-left border-collapse table-fixed">
         <thead>
-          <tr className="bg-maroon/[0.03] border-b border-maroon/10">
-            <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-[35%]">
+          <tr className="bg-maroon/[0.04] border-b border-gold/20">
+            <th className="px-6 py-4 tamil-label text-xs font-black uppercase tracking-widest text-maroon/70 w-[35%]">
               {t('தலைப்பு', 'Title')}
             </th>
-            <th className="px-5 py-3 tamil-label text-[10px] font-black uppercase tracking-widest text-maroon/60 w-[65%] border-l border-maroon/5">
+            <th className="px-6 py-4 tamil-label text-xs font-black uppercase tracking-widest text-maroon/70 w-[65%] border-l border-gold/15">
               {t('பாடல்', 'Song')}
             </th>
           </tr>
@@ -1177,21 +1332,21 @@ const ResultsTable = ({ resultsList, t, query, onOpen }) => {
             const titleStr = titleParts.length > 0 ? titleParts.join(' — ') : t('பெயரற்ற சுவடி', 'Untitled Manuscript');
 
             return (
-              <tr key={res.id || i} className="border-b border-maroon/5 hover:bg-gold/[0.03] transition-colors group">
-                <td className="px-5 py-4 align-top w-[35%] break-words">
+              <tr key={res.id || i} className="border-b border-gold/15 hover:bg-gold/5 transition-colors group">
+                <td className="px-6 py-5 align-top w-[35%] break-words">
                   <a
                     onClick={(e) => { e.preventDefault(); onOpen(res); }}
                     href="#"
-                    className="tamil-heading text-sm font-bold text-maroon hover:text-maroon-dark transition-all"
+                    className="tamil-heading text-sm font-bold text-maroon hover:text-gold transition-colors duration-200"
                     style={{ textDecoration: 'underline', cursor: 'pointer' }}
                   >
                     {titleStr}
                   </a>
                 </td>
-                <td className="px-5 py-4 align-top w-[65%] border-l border-maroon/5 break-words">
+                <td className="px-6 py-5 align-top w-[65%] border-l border-gold/15 break-words">
                   {(res.snippet || res.text_content) ? (
                     <div
-                      className="tamil-heading text-xs text-stone/80 leading-loose"
+                      className="tamil-heading text-sm text-stone/85 leading-relaxed"
                       style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
                     >
                       <HighlightText text={res.snippet || res.text_content} query={query} />
@@ -1597,7 +1752,7 @@ const ManuscriptViewer = ({ folio, onClose, t, activeList = [], onNavigate }) =>
                   </h4>
                 </div>
                 <div className="flex-1 overflow-y-auto p-5">
-                  
+
                   {/* File Details: Number */}
                   <div className="mb-6 pb-5 border-b border-maroon/5">
                     <p className="tamil-label text-[9px] font-black text-maroon/50 uppercase tracking-widest mb-1.5">
@@ -1703,7 +1858,7 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
       <div className="absolute bottom-4 right-4 text-[120px] text-maroon/[0.03] font-black leading-none pointer-events-none select-none" style={{ fontFamily: 'Noto Sans Tamil' }}>வ</div>
 
       <div className="relative w-full h-full max-w-5xl flex flex-col bg-white shadow-[0_30px_60px_-15px_rgba(74,59,50,0.3)] border border-gold/40 ring-1 ring-white/60 overflow-hidden rounded-sm">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-maroon/[0.03] border-b border-maroon/10 shrink-0">
           <div className="flex items-center gap-4">
@@ -1711,7 +1866,7 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
               {folio.book_name} {folio.manuscript_name && folio.manuscript_name !== folio.book_name && `— ${folio.manuscript_name}`}
             </h3>
           </div>
-          
+
           <div className="flex items-center gap-6">
             {/* Prev/Next Navigation */}
             {currentIndex !== -1 && (hasPrev || hasNext || totalFolios > 1) && (
@@ -1741,7 +1896,7 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
                 </button>
               </div>
             )}
-            
+
             <button onClick={onClose} className="p-2 hover:bg-red-500 hover:text-white text-maroon/60 rounded-full transition-all bg-white border border-maroon/10">
               <X className="w-4 h-4" />
             </button>
@@ -1750,7 +1905,7 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
 
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto">
-          
+
           {/* Image Section */}
           <div className="relative w-full h-[55vh] bg-[#faf8f2] border-b border-maroon/10 overflow-hidden flex items-center justify-center p-4 shadow-inner">
             <motion.div
@@ -1773,7 +1928,7 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
                 </div>
               )}
             </motion.div>
-            
+
             {/* Zoom Controls */}
             {folio.image_url && (
               <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-white/95 backdrop-blur-md rounded-full p-1 border border-gold/30 shadow-md">
@@ -1796,7 +1951,7 @@ const WordSearchResultViewer = ({ folio, onClose, t, activeList = [], onNavigate
               <FileText className="w-5 h-5 text-gold" />
               {t('கோப்பின் தகவல்கள்', 'File Details')}
             </h4>
-            
+
             <div className="space-y-6">
               {/* Number */}
               <div>
