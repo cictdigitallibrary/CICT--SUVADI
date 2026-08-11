@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BookOpen } from 'lucide-react';
+import { ArrowLeft, BookOpen, Download } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 import CategoryBanner from '../components/CategoryBanner';
@@ -30,6 +30,25 @@ const EBookDetail = () => {
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+  const handleDownload = async (editionId, bookTitle) => {
+    const proxyUrl = `${API}/api/proxy/pdf/${editionId}`;
+    try {
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error('fetch failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${bookTitle}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch {
+      window.open(proxyUrl, '_blank', 'noopener');
+    }
+  };
 
   // Fetch Parent Book Info
   const { data: book, isLoading: isBookLoading, isError: isBookError } = useQuery({
@@ -75,98 +94,69 @@ const EBookDetail = () => {
   return (
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
       {id === '9' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]">
-          <div 
-            className="w-full relative"
-            style={{
-              backgroundImage: "url('/images/bg/hero_ebook_9_panoramic.png')",
-              backgroundSize: '100% 100%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              aspectRatio: '1920 / 555'
-            }}
+        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+          <img
+            src="/images/bg/hero_ebook_9_panoramic_fit1920.png"
+            alt="Category Banner"
+            className="w-full h-full object-cover"
           />
         </section>
       ) : id === '13' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]">
-          <div 
-            className="w-full relative"
-            style={{
-              backgroundImage: "url('/images/bg/hero_ebook_13_panoramic.png')",
-              backgroundSize: '100% 100%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              aspectRatio: '1920 / 555'
-            }}
+        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+          <img
+            src="/images/bg/hero_ebook_13_panoramic_fit1920.png"
+            alt="Category Banner"
+            className="w-full h-full object-cover"
           />
         </section>
       ) : id === '11' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]">
-          <div 
-            className="w-full relative"
-            style={{
-              backgroundImage: "url('/images/bg/hero_ebook_11_panoramic.png')",
-              backgroundSize: '100% 100%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              aspectRatio: '1920 / 555'
-            }}
+        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+          <img
+            src="/images/bg/hero_ebook_11_panoramic_fit1920.png"
+            alt="Category Banner"
+            className="w-full h-full object-cover"
           />
         </section>
       ) : id === '15' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]">
-          <div 
-            className="w-full relative"
-            style={{
-              backgroundImage: "url('/images/bg/hero_ebook_15_panoramic.png')",
-              backgroundSize: '100% 100%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              aspectRatio: '1920 / 555'
-            }}
+        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+          <img
+            src="/images/bg/hero_ebook_15_panoramic_fit1920.png"
+            alt="Category Banner"
+            className="w-full h-full object-cover"
           />
         </section>
       ) : id === '16' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]">
-          <div 
-            className="w-full relative"
-            style={{
-              backgroundImage: "url('/images/bg/hero_ebook_16_panoramic.png')",
-              backgroundSize: '100% 100%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              aspectRatio: '1920 / 555'
-            }}
+        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+          <img
+            src="/images/bg/hero_ebook_16_panoramic_fit1920.png"
+            alt="Category Banner"
+            className="w-full h-full object-cover"
           />
         </section>
       ) : id === '17' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]">
-          <div 
-            className="w-full relative"
-            style={{
-              backgroundImage: "url('/images/bg/hero_ebook_17_panoramic.png')",
-              backgroundSize: '100% 100%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              aspectRatio: '1920 / 555'
-            }}
+        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+          <img
+            src="/images/bg/hero_ebook_17_panoramic_fit1920.png"
+            alt="Category Banner"
+            className="w-full h-full object-cover"
           />
         </section>
       ) : id === '12' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]">
-          <div 
-            className="w-full relative"
-            style={{
-              backgroundImage: "url('/images/bg/hero_panoramic_12.png')",
-              backgroundSize: '100% 100%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              aspectRatio: '1920 / 555'
-            }}
+        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+          <img
+            src="/images/bg/hero_panoramic_12_fit1920.png"
+            alt="Category Banner"
+            className="w-full h-full object-cover"
           />
         </section>
       ) : id === '10' ? (
-        <CategoryBanner src="/hero_ebook_10.jpg" alt="Ettuthogai Banner" />
+        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+          <img
+            src="/hero_ebook_10.jpg"
+            alt="Ettuthogai Banner"
+            className="w-full h-full object-contain p-8 md:p-12 drop-shadow-2xl"
+          />
+        </section>
       ) : (
         <PageHero
           label={t('மின் நூலகம் · பதிப்புகள்', 'DIGITAL LIBRARY · EDITIONS')}
@@ -217,102 +207,86 @@ const EBookDetail = () => {
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             >
               {editions.map((edition) => (
-                  <motion.div
-                    key={edition.id}
-                    variants={fadeUp}
-                    className="group bg-white border border-maroon/10 p-6 flex flex-col justify-between shadow-md hover:shadow-2xl hover:shadow-maroon/5 hover:border-gold/30 transition-all duration-500 relative overflow-hidden min-h-[260px]"
-                  >
-                    {/* Top gradient accent line visible on hover */}
-                    <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-maroon via-gold to-maroon transform -translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                <motion.div
+                  key={edition.id}
+                  variants={fadeUp}
+                  className="group bg-white border border-maroon/10 p-6 flex flex-col justify-between shadow-md hover:shadow-2xl hover:shadow-maroon/5 hover:border-gold/30 transition-all duration-500 relative overflow-hidden min-h-[260px]"
+                >
+                  {/* Top gradient accent line visible on hover */}
+                  <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-maroon via-gold to-maroon transform -translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
 
-                    <div>
-                      {/* Edition Cover (Flat Image with 3D Opening Effect) */}
-                      <div className="book-3d-wrapper w-full h-[260px] mb-6 flex items-center justify-center">
-                        <div className="book-3d-container relative w-[150px] h-[220px]">
-                          {/* Front Cover */}
-                          <div className="book-3d-cover absolute inset-0 z-20 bg-white shadow-[2px_2px_10px_rgba(0,0,0,0.3)] border border-black/5">
-                            <img
-                              src={getBookCover(edition)}
-                              alt={edition.title_tamil}
-                              className="w-full h-full object-contain p-1"
-                            />
-                            {/* Lighting overlay on hover */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-overlay" />
-                          </div>
-
-                          {/* Book Block / Pages (visible behind the cover when open) */}
-                          <div 
-                            className="absolute inset-0 z-10 origin-left bg-[#f8f5f0] border border-stone-300 shadow-xl rounded-r-[2px]" 
-                            style={{ transform: 'translateZ(-8px)' }}
-                          >
-                            {/* Pages Edge Texture */}
-                            <div className="absolute right-0 top-[2%] bottom-[2%] w-[8px] bg-[#fdfdfc] border-l border-[#e0dacd] flex flex-col justify-evenly overflow-hidden">
-                               <div className="w-full h-[1px] bg-stone-200" />
-                               <div className="w-full h-[1px] bg-stone-200" />
-                               <div className="w-full h-[1px] bg-stone-200" />
-                               <div className="w-full h-[1px] bg-stone-200" />
-                               <div className="w-full h-[1px] bg-stone-200" />
-                            </div>
-                            {/* Inside cover gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-stone-300 to-[#f8f5f0] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                          </div>
+                  <div>
+                    {/* Edition Cover (Flat Image with 3D Opening Effect) */}
+                    <div className="book-3d-wrapper w-full h-[260px] mb-6 flex items-center justify-center">
+                      <div className="book-3d-container relative w-[150px] h-[220px]">
+                        {/* Front Cover */}
+                        <div className="book-3d-cover absolute inset-0 z-20 bg-white shadow-[2px_2px_10px_rgba(0,0,0,0.3)] border border-black/5">
+                          <img
+                            src={getBookCover(edition)}
+                            alt={edition.title_tamil}
+                            className="w-full h-full object-contain p-1"
+                          />
+                          {/* Lighting overlay on hover */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none mix-blend-overlay" />
                         </div>
-                      </div>
 
-                      {/* Floating Publication Year Badge */}
-                      {edition.year_published && (
-                        <div className="absolute top-4 right-4 bg-maroon text-gold text-[10px] font-bold px-2 py-1 shadow-md z-10 group-hover:bg-gold group-hover:text-maroon transition-colors">
-                          {edition.year_published}
+                        {/* Book Block / Pages (visible behind the cover when open) */}
+                        <div
+                          className="absolute inset-0 z-10 origin-left bg-[#f8f5f0] border border-stone-300 shadow-xl rounded-r-[2px]"
+                          style={{ transform: 'translateZ(-8px)' }}
+                        >
+                          {/* Pages Edge Texture */}
+                          <div className="absolute right-0 top-[2%] bottom-[2%] w-[8px] bg-[#fdfdfc] border-l border-[#e0dacd] flex flex-col justify-evenly overflow-hidden">
+                            <div className="w-full h-[1px] bg-stone-200" />
+                            <div className="w-full h-[1px] bg-stone-200" />
+                            <div className="w-full h-[1px] bg-stone-200" />
+                            <div className="w-full h-[1px] bg-stone-200" />
+                            <div className="w-full h-[1px] bg-stone-200" />
+                          </div>
+                          {/* Inside cover gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-stone-300 to-[#f8f5f0] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                         </div>
-                      )}
-
-                      {/* Title */}
-                      <h3 className="tamil-label text-base text-black font-extrabold leading-relaxed mb-2 group-hover:text-maroon transition-colors duration-300">
-                        {edition.title_tamil}
-                      </h3>
-                      {edition.title_english && (
-                        <p className="font-cinzel text-[10px] text-black font-bold uppercase tracking-widest mb-4">
-                          {edition.title_english}
-                        </p>
-                      )}
-
-                      {/* Editor & Publisher */}
-                      <div className="mt-auto pt-4 border-t border-maroon/5 space-y-2">
-                        {edition.editor && (
-                          <p className="tamil-label text-[12px] text-black font-semibold">
-                            <span className="font-cinzel text-[10px] uppercase tracking-widest text-black font-bold mr-2">Ed:</span>
-                            {edition.editor}
-                          </p>
-                        )}
-                        {edition.publisher && (
-                          <p className="tamil-label text-[12px] text-black font-semibold">
-                            <span className="font-cinzel text-[10px] uppercase tracking-widest text-black font-bold mr-2">Pub:</span>
-                            {edition.publisher}
-                          </p>
-                        )}
                       </div>
                     </div>
 
-                    {/* Footer / Read Action */}
-                    <div className="mt-6 pt-6 border-t border-maroon/5 flex items-center justify-between">
-                      <span className="text-[9px] text-stone/40 font-cinzel font-bold">
-                        {'PDF READER'}
-                      </span>
-                      <button
-                        onClick={() => {
-                          // All editions read from local storage via backend PDF proxy
-                          const back   = encodeURIComponent(`/ebooks/${id}`);
-                          const title  = encodeURIComponent(edition.title_tamil);
-                          navigate(`/ebooks/${id}/read?edition=${edition.id}&title=${title}&back=${back}`);
-                        }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-maroon text-white hover:bg-gold hover:text-maroon text-[10px] font-bold uppercase tracking-widest transition-all shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
-                      >
-                        <span>{t('படிக்க', 'READ')}</span>
-                        <BookOpen className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
+                    {/* Floating Publication Year Badge */}
+                    {edition.year_published && (
+                      <div className="absolute top-4 right-4 bg-maroon text-gold text-[10px] font-bold px-2 py-1 shadow-md z-10 group-hover:bg-gold group-hover:text-maroon transition-colors">
+                        {edition.year_published}
+                      </div>
+                    )}
+
+                    {/* Title */}
+                    <h3 className="tamil-label text-base text-black font-extrabold leading-relaxed mb-2 group-hover:text-maroon transition-colors duration-300">
+                      {edition.title_tamil}
+                    </h3>
+                    <div className="mt-auto" />
+                  </div>
+
+                  {/* Footer / Read & Download Action */}
+                  <div className="mt-6 pt-6 border-t border-maroon/5 flex items-center justify-end gap-3">
+                    <button
+                      onClick={() => handleDownload(edition.id, edition.title_tamil)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-maroon hover:bg-maroon hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all border border-maroon/30 shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
+                    >
+                      <span>{t('பதிவிறக்கு', 'DOWNLOAD')}</span>
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        // All editions read from local storage via backend PDF proxy
+                        const back = encodeURIComponent(`/ebooks/${id}`);
+                        const title = encodeURIComponent(edition.title_tamil);
+                        navigate(`/ebooks/${id}/read?edition=${edition.id}&title=${title}&back=${back}`);
+                      }}
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-maroon text-white hover:bg-gold hover:text-maroon text-[10px] font-bold uppercase tracking-widest transition-all shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
+                    >
+                      <span>{t('படிக்க', 'READ')}</span>
+                      <BookOpen className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
             </motion.div>
           )}
         </div>

@@ -146,7 +146,7 @@ const ClassicalTexts = () => {
             </div>
 
             <h1 className="font-cinzel text-5xl md:text-7xl text-white font-bold tracking-wide" style={{ textShadow: '0 0 60px rgba(201,151,59,0.15)' }}>
-              {t('செவ்வியல் நூல்கள்', 'Classical Tamil Texts')}
+              {t('செம்பதிப்பின் தேவை', 'Classical Tamil Texts')}
             </h1>
 
             {/* Gold divider ornament image */}
@@ -154,126 +154,150 @@ const ClassicalTexts = () => {
               <img src="/images/gold_divider.png" alt="divider ornament" className="h-6 object-contain opacity-80" />
             </div>
 
-            <p className="tamil-body text-white/75 max-w-2xl mx-auto leading-loose text-lg font-medium">
-              {t(
-                'செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் பட்டியலிட்டுள்ள செவ்வியல் நூல்களும் அவற்றுக்கான ஓலைச்சுவடி வகைகளும்.',
-                'A comprehensive repository of Classical Tamil primary texts identified by the Institute, including their corresponding digital manuscript archives.'
-              )}
-            </p>
+            {/* Tagline removed */}
 
 
           </motion.div>
         </div>
       </header>
 
-      {/* ── Introduction Section ── */}
-      <section className="relative py-10 md:py-14 bg-[#FAF8F2]">
-        <div className="w-[92%] lg:w-[95%] max-w-[1600px] mx-auto px-0 relative z-10">
+      {/* ── Introduction & Scholarly Content Section ── */}
+      <section className="relative py-12 md:py-16 bg-[#FAF8F5]">
+        <div className="container mx-auto px-4 sm:px-6 max-w-5xl relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.1 }}
+            viewport={{ once: true, amount: 0.05 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="bg-white border border-gold/20 shadow-[0_8px_40px_rgba(201,151,59,0.12),0_2px_8px_rgba(60,20,5,0.06)] rounded-sm overflow-hidden"
+            className="bg-white border border-gold/30 shadow-[0_10px_45px_rgba(201,151,59,0.14),0_2px_10px_rgba(60,20,5,0.05)] rounded-lg overflow-hidden"
           >
-            {/* Top accent bar */}
-            <div className="h-[3px] w-full bg-gradient-to-r from-maroon via-gold to-maroon" />
+            {/* Top decorative gradient bar */}
+            <div className="h-[4px] w-full bg-gradient-to-r from-maroon via-gold to-maroon" />
 
-            <div className="px-6 md:px-10 lg:px-14 py-8 md:py-10">
+            <div className="p-6 sm:p-10 md:p-14 space-y-12">
 
-              {/* Section label */}
-              <div className="flex items-center justify-center gap-4 mb-8">
-                <div className="h-px flex-1 max-w-[80px] bg-gradient-to-r from-transparent to-gold/50" />
-                <span className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-gold/70 font-bold">
-                  {'செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்'}
-                </span>
-                <div className="h-px flex-1 max-w-[80px] bg-gradient-to-l from-transparent to-gold/50" />
+              {/* ══════════════════════════════════════════
+                  1. செம்பதிப்பின் தேவை (Need for Critical Edition)
+              ══════════════════════════════════════════ */}
+              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-6 md:p-8 relative shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-2.5 h-2.5 rounded-full bg-gold" />
+                  <h2 className="font-cinzel text-xl md:text-2xl text-maroon font-bold tracking-wide">
+                    {'செவ்வியல் நூல்கள்'}
+                  </h2>
+                </div>
+                <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
+
+                <div className="space-y-4 tamil-body text-stone/85 text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-justify">
+                  <p>
+                    {'தரமாய்ந்த மிகப்பகழ் பதிப்புகளில் கூடப் பொருந்தாப்பாடம், எழுத்துப் பிழை, புணர்ச்சிப் பிழை, சீர்ப்பிரிவு, அடிப்பிரிவு போன்றவை அருகியும் பரவலாகவும் காணப்படுகின்றன. செவ்வியல் நூல்களை உயர்தரமுடையனவாகவும் பிழை பிறழ்வுகளினின்றும் நீங்கினவாகவும் பாடம் உறுதி செய்து பதிப்பித்தல் இன்றியமையாதது. ஆகவே ஆய்வு நோக்கில் செம்பதிப்பு பெரிதும் பயன்பாடு உடையது.'}
+                  </p>
+                  <p>
+                    {'மரபுவழிப் புணர்ச்சிகளை மேற்கொண்டால், சீர்ப்பிரித்து யாப்பமைதி கெடாதவாறு வடிவமைத்தல் ஆகியவற்றின் அடிப்படையில் செம்பதிப்புகள் அமையுமாதலின் அவற்றுளு வெளிப்படுவதன் மூலம் பழந்தமிழ் மரபுகள் பாதுகாக்கப்படும்.'}
+                  </p>
+                  <p>
+                    {'செம்பதிப்பு நூல்கள், உலக அளவிலும் தமிழக அளவிலும் ஆராய்ச்சி செய்வதற்கு ஏற்ற அடிப்படை ஆய்வுக்களங்களாக அமையும்.'}
+                  </p>
+                  <p>
+                    {'தரப்படுத்தப்பட்ட பதிப்புகளை வெளியிடுவதால, பள்ளி, கல்லூரி, பல்கலைக்கழகப் பாடத்திட்டங்களில், பிழையும பிறழ்வுமற்ற பழந்தமிழ் நூற்பகுதிகளைப் பயிற்றுவிக்க வாய்ப்பு ஏற்படும்.'}
+                  </p>
+                  <p>
+                    {'எல்லாப் பழந்தமிழ் நூல்களும் எழுத்தாட்சி, கட்டுக்கோப்பு, நூற்கட்டமைப்பு போன்றவற்றில் ஒரே சீரினவாகச் சீரமைக்கப்பட்டால், ஒருவகை அழகுணர்ச்சியைத் தோற்றுவிப்பதோடு பயில்வோர்க்கு ஈடுபாடு ஏற்படவும் உதவும்.'}
+                  </p>
+                </div>
               </div>
 
-              {/* Page title */}
-              <h2 className="font-cinzel text-2xl md:text-3xl lg:text-4xl text-maroon font-bold mb-3 text-center tracking-wide">
-                {'செம்மொழித் தமிழ் நூல்களின் முதல் அச்சுப் பதிப்புகள்'}
-              </h2>
 
-              {/* Gold divider */}
-              <div className="flex justify-center my-6">
-                <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-70" />
+              {/* ══════════════════════════════════════════
+                  2. செம்பதிப்புப் பணி - மூன்று கட்டங்கள்
+              ══════════════════════════════════════════ */}
+              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-6 md:p-8 relative shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-2.5 h-2.5 rounded-full bg-gold" />
+                  <h2 className="font-cinzel text-xl md:text-2xl text-maroon font-bold tracking-wide">
+                    {'செம்பதிப்புப் பணி - மூன்று கட்டங்கள்'}
+                  </h2>
+                </div>
+                <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
+
+                {/* Numbered Steps */}
+                <div className="space-y-6">
+                  {/* Step I */}
+                  <div className="bg-white border border-gold/20 rounded-md p-5 shadow-xs transition-all hover:border-gold/40">
+                    <div className="flex items-start gap-4">
+                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
+                        Ⅰ
+                      </span>
+                      <div className="space-y-3">
+                        <h3 className="font-tamil-bold text-lg text-maroon font-bold">
+                          {'சுவடிகளையும் பதிப்புகளையும் கண்டறிந்து தொகுத்தல்'}
+                        </h3>
+                        <p className="tamil-body text-stone/80 text-base leading-relaxed text-justify">
+                          {'அட்டவணைகளின் அடிப்படையில் தேடிக் கண்டறிந்த சுவடிகளை மின்படி (Scan) எடுத்தல்; மற்றொன்று ஏடுகளை வரிசையாக அடுக்கிப் படம் எடுத்தல், அவற்றைத் தனித்தனி பக்கங்களாகப் பிரித்து அமைத்தல், தனிப்பக்கங்களைத் தூய்மை செய்து (Color correction) படி எடுத்தல் என்று இது அமையும். சுவடிகளின் பின்படங்களை விரைந்து படிப்பதற்கு ஏதுவாகத் தேவையான பக்கங்கள் மற்றும் பாடல்களை உடனே திரைக்குக் கொண்டுவரும் வகையில் உரிய மென்பொருள் உருவாக்கப்பட்டுள்ளது.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step II */}
+                  <div className="bg-white border border-gold/20 rounded-md p-5 shadow-xs transition-all hover:border-gold/40">
+                    <div className="flex items-start gap-4">
+                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
+                        Ⅱ
+                      </span>
+                      <div>
+                        <h3 className="font-tamil-bold text-lg text-maroon font-bold">
+                          {'பாடவேறுபாட்டுத் தரவுகளைத் தொகுத்தலும் பட்டியலிடுதலும்.'}
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step III */}
+                  <div className="bg-white border border-gold/20 rounded-md p-5 shadow-xs transition-all hover:border-gold/40">
+                    <div className="flex items-start gap-4">
+                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
+                        Ⅲ
+                      </span>
+                      <div>
+                        <h3 className="font-tamil-bold text-lg text-maroon font-bold">
+                          {'சரியான பாடங்களையும் யாப்பு மற்றும் புணர்ச்சி அமைவுகளையும் உறுதி செய்து வரையறுத்தலும் மீட்டுருவாக்கம் செய்தலும்.'}
+                        </h3>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* ── அறிமுகம் — Introduction ── */}
-              <h3 className="font-tamil-bold text-base md:text-lg text-maroon font-bold mb-5 flex items-center gap-3">
-                <span className="text-gold/60">◆</span>
-                {'அறிமுகம்'}
-              </h3>
 
-              <div className="space-y-5 tamil-body text-stone/80 text-base md:text-[1.0625rem] leading-[1.9] md:leading-[2.1] font-medium text-justify">
-                <p>
-                  {'தமிழின் தொன்மை, தனித்தன்மை, தமிழர்களின் நாகரிகம், பண்பாடு ஆகியவற்றின் சிறப்புகளைக் கவனத்தில் கொண்டு பல்வேறு வெளியீடுகளைக் கொண்டுவருவதைச் செம்மொழி நிறுவனம் குறிக்கோளாகக் கொண்டுள்ளது. இந்த வகையில் பழந்தமிழ் நூல்களை வெளியிடுதல், செம்மொழித் தமிழ் தொடர்பான தகவல்களை வழங்குதல் முதலான பணிகளை நிறுவனம் மேற்கொண்டுள்ளது. அந்த வகையில் செம்மொழித் தமிழுக்கு ஆதாரமாக உள்ள 41 நூல்களின் முதல் அச்சுப் பதிப்புகளை ஆவணப்படுத்திச் செம்மொழித் தமிழாய்வு நிறுவனம் வெளியிடுகிறது.'}
-                </p>
-                <p>
-                  {'செவ்வியல் தகுதிப்பாட்டிற்கான நூல்களைப் பாதுகாத்துக் கையளித்துவந்த தமிழ்ப் புலமை மரபிற்கும், உரையாசிரியர்கள், பதிப்பாசிரியர்களுக்கும், உலகளாவிய நிலையில் தமிழ்ச் சுவடிகளையும், நூல்களையும் பாதுகாத்து வரும் நிறுவனங்களுக்கும் தமிழ்ச் சமூகம் எப்போதும் நன்றிபாராட்ட கடமைப்பட்டுள்ளது.'}
-                </p>
-                <p>
-                  {'41 செவ்வியல் நூல்களின் அச்சுப் பதிப்புகளைச் செம்மொழித் தமிழாய்வு மத்திய நிறுவனத்திற்கு வழங்கியுதவிய மறைமலையடிகள் நூலகம், டாக்டர் உ.வே. சாமிநாதையர் நூல்நிலையம், ரோஜா முத்தையா ஆராய்ச்சி நூலகம், தமிழ்ப் பல்கலைக்கழக நூலகம், தமிழ் இணையக் கல்விக்கழக மின்நூலகம் உள்ளிட்ட நூலகத்தார்களுக்கும், ஆய்வாளர்களுக்கும் செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் நன்றி பாராட்டி மகிழ்கிறது.'}
-                </p>
+              {/* ══════════════════════════════════════════
+                  3. செம்பதிப்பின் தனித்தன்மைகள்
+              ══════════════════════════════════════════ */}
+              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-6 md:p-8 relative shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-2.5 h-2.5 rounded-full bg-gold" />
+                  <h2 className="font-cinzel text-xl md:text-2xl text-maroon font-bold tracking-wide">
+                    {'செம்பதிப்பின் தனித்தன்மைகள்'}
+                  </h2>
+                </div>
+                <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
+
+                <div className="space-y-4 tamil-body text-stone/85 text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-justify">
+                  <p>
+                    {'எல்லா மூலச்சுவடிகளிலும அனைத்துப் பதிப்புகளிலும் உரைமேற்கோள்களிலும் இடம்பெறும் அனைத்துப் பாடவேறுபாடுகளையும் ஒருங்கிணைத்தளிக்குந்தன்மையால் செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் வெளியிடும் செம்பதிப்பு வேறு எந்தப்பதிப்பையும் விடத் தனித்தன்மை வாய்ந்ததாகிறது. பிற பதிப்புகளில் பாடம் உறுதி செய்து, அதற்கான காரணங்கள் விரிவாக விளக்கப்படவில்லை. செம்பதிப்பு பாடத் தேர்வு விளக்கங்களை பெற்றிருத்தலால் தனிச்சிறப்புப் பெறுகிறது. வரையறுக்கப்பட்ட யாப்பு வடிவங்களை மேற்கொள்வதாலும் மரபுவழிப்பட்ட சரியான புணர்ச்சிகளை எதிர்நிற்கும் யாப்பும் புணர்ச்சியும் இறுதி செய்யப்பட்டமைக்கான விளக்கங்களைப் பெற்றிருத்தலும் செம்பதிப்பை ஒப்புயர்வற்றதாக உயர்த்துகின்றன. பதிப்புகளையும், சுவடிகளையும் காலவரிசைப்படுத்தித் தருவது, பொதுவாகத் தமிழ்ப் பதிப்புகளில் காணப்படாத பெருமை சான்றது.'}
+                  </p>
+                </div>
               </div>
 
-              {/* ── பதிப்புக் குறிப்புகள் — Publication Notes ── */}
-              <div className="my-10 border-t border-gold/20" />
 
-              <h3 className="font-tamil-bold text-base md:text-lg text-maroon font-bold mb-5 flex items-center gap-3">
-                <span className="text-gold/60">◆</span>
-                {'பதிப்புக் குறிப்புகள்'}
-              </h3>
-
-              <div className="space-y-5 tamil-body text-stone/80 text-base md:text-[1.0625rem] leading-[1.9] md:leading-[2.1] font-medium text-justify">
-                <p>
-                  {'தமிழ்ச் செவ்வியல் நூல்களுள் திருக்குறள், நாலடியார் ஆகிய இரு நூல்களே முதன் முதலாக அச்சு வடிவம் பெற்றன. 1812இல் தஞ்சை நகரைச் சேர்ந்த மலையப்பப் பிள்ளையின் மகனாகிய ஞானப்பிரகாசன் எனும் அறிஞர் திருக்குறள், நாலடியார் இரண்டையும் ஒன்றாக இணைத்து அச்சிட்டு வெளியிட்டார். அதனுடன் திருவள்ளுவமாலை மூலமும் இடம்பெற்றிருந்தது.'}
-                </p>
-                <p>
-                  {'தொல்காப்பியத்தின் அச்சுப் பதிப்பு வரலாறு மழைவை மகாலிங்கையர் பதிப்பித்து வெளியிட்ட எழுத்ததிகார நச்சினார்க்கினியர் உரைப் பதிப்பிலிருந்து தொடங்குகிறது. 1847ஆம் ஆண்டு மகாலிங்கையரின் பதிப்பு வெளிவந்தது. நச்சினார்க்கினியர் உரைப் பதிப்பில் தொடங்கிய தொல்காப்பிய அச்சுப் பதிப்பு வரலாறு 1935ஆம் ஆண்டு வ.உ. சிதம்பரம் பிள்ளை பதிப்பித்து வெளியிட்ட தொல்காப்பிய இளம்பூரணர் உரைப் பதிப்போடு முதல் கட்ட பதிப்பு வரலாறு நிறைவுகொண்டிருக்கிறது.'}
-                </p>
-                <p>
-                  {'சங்க இலக்கிய நூல்களுள் முதன் முதலாக அச்சு வடிவம் பெற்ற நூல் கலித்தொகை ஆகும். 1887ஆம் ஆண்டு சி.வை. தாமோதரம் பிள்ளை நச்சினார்க்கனியர் உரையுடன் கலித்தொகையைப் பதிப்பித்து வெளியிட்டதன் வழியாகச் சங்க இலக்கியப் பதிப்பு வரலாறு தொடங்குகிறது. கலித்தொகைக்கு முன்னரே பத்துப்பாட்டினுள் ஒன்றாகிய திருமுருகாற்றுப்படைக்குப் பல அச்சுப் பதிப்புகள் வெளிவந்துள்ளன. அப்பதிப்புகளைப் பத்துப்பாட்டின் முழுமையான பதிப்பாகக் கொள்ளமுடியாத நிலையில், சங்க இலக்கிய நூல்களுள் முதன் முதலாக அச்சுவடிவம் பெற்ற நூலாகக் கலித்தொகை அமைகிறது.'}
-                </p>
-                <p>
-                  {'1872ஆம் ஆண்டில் சிலப்பதிகாரமும் 1894ஆம் ஆண்டில் மணிமேகலையும் முதன் முதலாக அச்சுவடிவம் பெற்றன. 1883இல் இறையனார் களவியலுரைக்கும், 1905இல் முத்தொள்ளாயிரத்திற்கும் முதல் அச்சுப் பதிப்பு வெளிவந்துள்ளன.'}
-                </p>
-                <p>
-                  {'தொல்காப்பியம், சங்க இலக்கியம், காப்பிய நூல்களுக்கான முதல் அச்சுப் பதிப்புகளைக் கண்டறிவதில் நமக்குச் சிக்கல் ஏதும் ஏற்படவில்லை. கீழ்க்கணக்கு நூல்களுள் திருக்குறள், நாலடியார் நூல்களைத் தவிர்த்து ஏனைய நூல்களின் முதல் அச்சுப் பதிப்புகளைக் கண்டறிவதில் பெருஞ்சிரமம் ஏற்படுகிறது. இதனால் கிடைத்திருக்கிற கீழ்க்கணக்கு நூல்களுக்கான அச்சுப் பதிப்புகளில் மிகவும் காலத்தால் மூத்த பதிப்புகளை முதல் பதிப்பாகக் கருதி இங்குத் தரப்பட்டுள்ளன.'}
-                </p>
-                <p>
-                  {'கீழ்க்கணக்கு நூல்களில் இங்குத் தரப்பட்டுள்ள அச்சுப் பதிப்புகளுக்கும் காலத்தால் முன்னரான பதிப்புகள் இருப்பதாகத் தகவல்கள் மட்டும் கிடைக்கின்றன; அச்சுப் பதிப்புகள் எங்கும் கிடைக்கப்பெறவில்லை. அதனால் அதற்கடுத்தடுத்த நிலையில் வெளிவந்த அச்சுப் பதிப்புகள் இங்குத் தரப்பட்டுள்ளன.'}
-                </p>
-                <p>
-                  {'ஐந்திணையெழுபது நூல் பழையுரையுள்ள 26 பாடல்களை மட்டும் மு. இராகவையங்கார் 1906இல் செந்தமிழில் வெளியிட்டிருக்கிறார். அவை முழுமையான பதிப்பாகக் கருதமுடியாத நிலையில் அதன் பின்னர் 1926இல் வெளிவந்த சோமசுந்தர தேசிகர் பதிப்பை முதல் பதிப்பாகக் கொண்டு இங்குத் தரப்பட்டுள்ளது.'}
-                </p>
-                <p>
-                  {'இனியவை நாற்பது முகவை இராமாநுச கவிராயரால் 1844இல் அச்சிட்டு வெளியிட்டிருப்பதாக ஒரு தகவலுண்டு. அந்த அச்சுப் பதிப்பு எங்கும் கிடைக்கப்பெறாமையால் 1903இல் வெளிவந்த ரா. இராகவையங்கார் பதிப்பு இங்குத் தரப்பட்டுள்ளது.'}
-                </p>
-                <p>
-                  {'பழமொழி நானூற்றை 1874இல் சோடசாவதானம் சுப்பராயசெட்டியார் பதிப்பித்து வெளியிட்டதாகத் தகவல் உள்ளது; இப்போது அப்பதிப்பு கிடைக்கப்பெறாமையால் 1917இல் வெளிவந்த தி. செல்வகேசவராயர் பதிப்பும், ஆசாரக்கோவைக்குத் தில்லையம்பூர் சந்திசேகர கவிராஜ பண்டிதர் 1857இல் அச்சுப் பதிப்பை வெளியிட்டிருக்கிறார் என்ற தகவல் மட்டும் உள்ள நிலையில், 1883இல் வெளிவந்த அச்சுப் பதிப்பும் இங்குத் தரப்பட்டுள்ளன.'}
-                </p>
-                <p>
-                  {'ஏனைய கீழ்க்கணக்கு நூல்களின் அச்சுப் பதிப்புகள் முதல் பதிப்பாகக் கருதத்தக்கனவாகும். இந்த அச்சுப் பதிப்புகளுக்கும் மேலான பழைய அச்சுப் பதிப்புகளை வைத்திருப்பவர்களாயினும், அறிந்திருப்பவர்களாயினும் அவை பற்றிய தகவலைச் செம்மொழித் தமிழாய்வு நிறுவனத்திற்குத் தெரிவித்து உதவினால் இப்பதிப்புப் பட்டியலை மேம்படுத்த உதவியாக இருக்கும்.'}
-                </p>
+              {/* Decorative bottom ornament divider */}
+              <div className="flex justify-center pt-4">
+                <img src="/images/gold_divider.png" alt="divider" className="h-5 object-contain opacity-70" />
               </div>
 
-              {/* Lower decorative ornament */}
-              <div className="flex justify-center mt-12 mb-10">
-                <img src="/images/gold_divider.png" alt="divider" className="h-4 object-contain opacity-60" />
-              </div>
-
-              {/* Action Button */}
-              <div className="flex justify-center pb-4">
-                <Link to="/ebooks" onClick={() => window.scrollTo(0, 0)} className="inline-flex items-center gap-3 bg-gradient-to-r from-maroon to-[#4A0A0A] text-white px-8 py-3.5 rounded border border-gold/40 shadow-lg hover:shadow-gold/20 hover:-translate-y-1 transition-all duration-300 font-cinzel font-bold tracking-widest text-sm uppercase group">
-                  {'மின்நூல்களை ஆராய்க'} 
-                  <span className="text-gold text-lg group-hover:translate-x-1 transition-transform">→</span>
-                </Link>
-              </div>
             </div>
 
-            {/* Bottom accent bar */}
+            {/* Bottom decorative bar */}
             <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
           </motion.div>
         </div>

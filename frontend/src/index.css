@@ -332,19 +332,8 @@ a {
 ═══════════════════════════════════════════════════════ */
 .home-hero {
   position: relative;
-  /* Height is determined purely by the <img> natural dimensions */
-  overflow: visible !important;
-  /* let stat cards bleed below boundary */
   width: 100%;
-}
-
-.home-hero-artwork {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
+  /* overflow-hidden set via Tailwind class on the element itself */
 }
 
 .home-hero-overlay {

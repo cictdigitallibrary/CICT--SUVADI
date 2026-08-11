@@ -241,7 +241,7 @@ const Home = () => {
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
-          aspectRatio: '1920 / 555'
+          aspectRatio: '1920 / 555',
         }}
       >
 
@@ -265,12 +265,13 @@ const Home = () => {
         >
           <div
             style={{
-              /* The manuscripts start at roughly 22% from each edge.
-                 Keep content inside the safe 56% centre band, capped at 660px. */
+              /* Keep content inside the safe 50% centre band to clear the side manuscript graphics */
               width: '100%',
-              maxWidth: 'min(56%, 660px)',
+              maxWidth: 'min(50%, 600px)',
               textAlign: 'center',
               pointerEvents: 'auto',
+              paddingLeft: '1.5rem',
+              paddingRight: '1.5rem',
             }}
           >
             <motion.div
@@ -283,18 +284,19 @@ const Home = () => {
               {/* Fixed-Width Heading Container (Matches safe center zone) */}
               <div
                 style={{
-                  width: '56vw',
-                  maxWidth: 'none',
+                  width: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  paddingLeft: '1rem',
+                  paddingRight: '1rem',
                 }}
               >
                 {/* Main title (Secondary Heading) */}
                 <motion.h1
                   className="tamil-heading text-maroon italic"
                   style={{
-                    fontSize: 'clamp(0.9rem, 2vw, 2.2rem)',
+                    fontSize: 'clamp(0.95rem, 1.95vw, 2.2rem)',
                     textShadow: '0 2px 20px rgba(201,151,59,0.15)',
                     lineHeight: '1.2',
                     margin: 0,
@@ -309,7 +311,7 @@ const Home = () => {
                 <motion.h2
                   className="tamil-heading text-maroon italic uppercase"
                   style={{
-                    fontSize: language === 'ta' ? 'clamp(0.75rem, 1.6vw, 1.78rem)' : 'clamp(0.85rem, 1.8vw, 1.95rem)',
+                    fontSize: language === 'ta' ? 'clamp(0.75rem, 1.52vw, 1.7rem)' : 'clamp(0.85rem, 1.72vw, 1.9rem)',
                     textShadow: '0 2px 15px rgba(201,151,59,0.15)',
                     marginTop: '0.25rem',
                     marginBottom: 0,
@@ -335,42 +337,8 @@ const Home = () => {
                 <div className="w-1.5 h-1.5 rounded-full border border-gold/50" />
               </motion.div>
 
-              {/* Tagline */}
-              <motion.p
-                className="tamil-body text-[#4A1010] font-bold text-[1.1rem] md:text-[1.2rem] lg:text-[1.35rem] leading-[1.8] tracking-[0.2px] opacity-100"
-                style={{ margin: 0, textShadow: 'none' }}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.8 }}
-              >
-                {t(
-                  'ஓலைச்சுவடிகளிலிருந்து செம்பதிப்புகள் வரை — தமிழ் செவ்வியல் இலக்கியத்தின் மின்னணு ஆவணக் கருவூலம்.',
-                  'From sacred palm-leaf manuscripts to modern critical editions — preserving the eternal voice of Classical Tamil civilization.'
-                )}
-              </motion.p>
 
-              {/* CTA buttons */}
-              <motion.div
-                style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem', paddingTop: '0.25rem' }}
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1, duration: 0.8 }}
-              >
-                <Link to="/search" id="hero-search-btn" className="group relative overflow-hidden shadow-lg shadow-gold/20 rounded-lg"
-                  style={{ padding: '0.6rem 1.8rem' }}>
-                  <div className="absolute inset-0 bg-gold transition-all duration-500 group-hover:bg-gold-light rounded-lg" />
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg"
-                    style={{ background: 'linear-gradient(135deg, #E8B86D, #C9973B)' }} />
-                  <div className="relative flex items-center gap-2 text-maroon font-black uppercase tracking-widest transition-transform group-hover:translate-x-1"
-                    style={{ fontSize: 'clamp(9px, 0.75vw, 11px)' }}>
-                    <span className="tamil-label">{t('சுவடிகளை தேடுக', 'Explore Archives')}</span>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </Link>
-                <Link to="/ebooks" id="hero-ebooks-btn"
-                  className="group border-2 border-gold/50 text-maroon/80 font-cinzel font-black uppercase tracking-widest hover:bg-gold/10 hover:border-gold transition-all duration-300 relative overflow-hidden rounded-lg"
-                  style={{ padding: '0.6rem 1.8rem', fontSize: 'clamp(9px, 0.75vw, 11px)' }}>
-                  <span className="relative z-10">{t('மின் நூலகம்', 'Digital Library')}</span>
-                </Link>
-              </motion.div>
+
 
             </motion.div>
           </div>
@@ -447,17 +415,46 @@ const Home = () => {
               )
             ))}
           </motion.div>
+        </div>
+      </section>
 
-          {/* CTA links */}
-          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.7 }}
-            className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto mt-10">
-            <Link to="/search" className="btn-primary flex-1 py-5 shadow-maroon/20 text-center">
-              <span className="tamil-label font-black uppercase tracking-widest">{'தேடல் பக்கம்'}</span>
-            </Link>
-            <Link to="/team" className="btn-outline flex-1 py-5 text-center">
-              <span className="tamil-label font-black uppercase tracking-widest">{'அறிஞர் குழு'}</span>
-            </Link>
-          </motion.div>
+      {/* ── MANUSCRIPT STATISTICS CARD ROW ( Cream Parchment Theme ) ── */}
+      <section className="py-10 bg-[#FAF8F5] border-t border-b border-gold/15 relative overflow-hidden">
+        <div className="container mx-auto px-6 max-w-6xl relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {/* Palm Leaf Manuscripts Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-white border border-maroon/10 p-6 rounded-md shadow-sm hover:shadow-md hover:border-gold/50 transition-all duration-300 flex justify-center items-center group"
+            >
+              <HomeStatItem val="96215" labelTa="ஓலைச்சுவடிகள்" labelEn="Digitized Palm Leaf Manuscripts" />
+            </motion.div>
+
+            {/* Paper Manuscripts Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="bg-white border border-maroon/10 p-6 rounded-md shadow-sm hover:shadow-md hover:border-gold/50 transition-all duration-300 flex justify-center items-center group"
+            >
+              <HomeStatItem val="39061" labelTa="காகித சுவடிகள்" labelEn="Digitized Paper Manuscripts" />
+            </motion.div>
+
+            {/* Total Digitized Manuscripts Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="bg-white border border-maroon/10 p-6 rounded-md shadow-sm hover:shadow-md hover:border-gold/50 transition-all duration-300 flex justify-center items-center group"
+            >
+              <HomeStatItem val="135276" labelTa="மொத்த சுவடிகள்" labelEn="Total Digitized Manuscripts" />
+            </motion.div>
+
+          </div>
         </div>
       </section>
 
@@ -564,35 +561,42 @@ const Home = () => {
 
           {/* 7 featured books displayed simultaneously on one horizontal row on desktop */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4">
-            {CRITICAL_EDITIONS.map((ed, i) => (
-              <TiltCard key={i} className="w-full">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="group home-book-card h-full flex flex-col justify-between"
-                >
-                  <div className="relative aspect-[3/4] bg-stone/5 flex items-center justify-center overflow-hidden">
-                    <img
-                      src={ed.img.startsWith('/images/publications') ? ed.img : `${API}${ed.img}`}
-                      alt={ed.ta}
-                      className="h-full w-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
-                      onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📚</span>'; }}
-                    />
-                    {/* Year badge */}
-                    <div className="edition-year-badge">{ed.year}</div>
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-maroon/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  </div>
-                  <div className="mt-2.5 pb-1.5 px-0.5">
-                    <p className="tamil-label text-[10px] md:text-[11px] text-maroon text-center group-hover:text-gold transition-colors font-black line-clamp-2 leading-tight">
-                      {t(ed.ta, ed.en)}
-                    </p>
-                  </div>
-                </motion.div>
-              </TiltCard>
-            ))}
+            {CRITICAL_EDITIONS.map((ed, i) => {
+              // Find matching ID from FACULTY_CONTENT list items for dynamic correct routing
+              const matchingItem = FACULTY_CONTENT.find(c => c.type === 'list')?.items.find(item => item.ta.startsWith(ed.ta));
+              const destUrl = matchingItem?.id ? `/publication/${matchingItem.id}` : '/classical-texts';
+              return (
+                <Link key={i} to={destUrl} className="block w-full">
+                  <TiltCard className="w-full h-full">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.05 }}
+                      className="group home-book-card h-full flex flex-col justify-between cursor-pointer"
+                    >
+                      <div className="relative aspect-[3/4] bg-stone/5 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={ed.img.startsWith('/images/publications') ? ed.img : `${API}${ed.img}`}
+                          alt={ed.ta}
+                          className="h-full w-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
+                          onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📚</span>'; }}
+                        />
+                        {/* Year badge */}
+                        <div className="edition-year-badge">{ed.year}</div>
+                        {/* Hover overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-maroon/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      </div>
+                      <div className="mt-2.5 pb-1.5 px-0.5">
+                        <p className="tamil-label text-[10px] md:text-[11px] text-maroon text-center group-hover:text-gold transition-colors font-black line-clamp-2 leading-tight">
+                          {t(ed.ta, ed.en)}
+                        </p>
+                      </div>
+                    </motion.div>
+                  </TiltCard>
+                </Link>
+              );
+            })}
           </div>
 
           <div className="mt-8 text-center">
@@ -650,7 +654,7 @@ const Home = () => {
                   {ebooks.slice(0, 8).map((book, idx) => (
                     <motion.div key={book.id} variants={fadeUp}
                       className="group home-ebook-card flex-1 min-w-0">
-                      <div className="p-3">
+                      <Link to={`/ebooks/${book.id}`} className="block w-full h-full p-3 cursor-pointer">
                         <div className="aspect-[3/4] bg-white/5 flex items-center justify-center mb-3 overflow-hidden rounded-sm">
                           <img
                             src={getBookCover(book)}
@@ -661,7 +665,7 @@ const Home = () => {
                         <p className="tamil-label text-[10px] text-gold/90 text-center font-black group-hover:text-white transition-colors line-clamp-2 leading-snug">
                           {book.title_tamil}
                         </p>
-                      </div>
+                      </Link>
                     </motion.div>
                   ))}
                 </motion.div>

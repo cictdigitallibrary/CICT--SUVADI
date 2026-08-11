@@ -28,8 +28,9 @@ const Navbar = () => {
   const activeColor    = 'text-gold';
 
   const navLinks = [
-    { nameTa: 'முகப்பு',          nameEn: 'Home',              path: '/' },
-    { nameTa: 'செவ்வியல் நூல்கள்', nameEn: 'Classical Texts',   path: '/classical-texts' },
+    { nameTa: 'முகப்பு',             nameEn: 'Home',              path: '/' },
+    { nameTa: 'செவ்வியல் நூல்கள்',  nameEn: 'Classical Texts',   path: '/classical-texts-list' },
+    { nameTa: 'செம்பதிப்பின் தேவை', nameEn: 'Critical Edition',  path: '/classical-texts' },
     { nameTa: 'மின் நூல்கள்',     nameEn: 'E-Books',           path: '/ebooks' },
     { nameTa: 'சுவடித் தேடல்',    nameEn: 'Manuscript Search', path: '/search' },
     { nameTa: 'உருவாக்கம்',       nameEn: 'Team',              path: '/team' },

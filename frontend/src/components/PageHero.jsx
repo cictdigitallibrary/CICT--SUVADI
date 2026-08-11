@@ -32,9 +32,7 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
             <div className="w-1.5 h-1.5 rounded-full bg-gold/50" />
             <div className="h-px w-14 bg-gold/40" />
           </div>
-          {subtitle && (
-            <p className="tamil-body text-stone/55 text-lg max-w-2xl mx-auto leading-loose font-medium">{subtitle}</p>
-          )}
+          {/* Subtitle removed */}
           {badge && (
             <div className="inline-block mt-6 px-5 py-2 border border-maroon/10 bg-white shadow-sm">
               <span className="font-cinzel text-[10px] uppercase tracking-[0.3em] text-bronze font-bold">{badge}</span>
@@ -127,9 +125,7 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
             <div className="w-1 h-1 rounded-full border border-gold/40" />
           </div>
 
-          {subtitle && (
-            <p className={`tamil-body text-white/65 mx-auto leading-relaxed font-medium ${align === 'left' ? 'text-base md:text-lg max-w-[90%]' : 'text-lg max-w-2xl'}`}>{subtitle}</p>
-          )}
+          {/* Subtitle removed */}
 
           {badge && (
             <div className="inline-block px-6 py-2 border border-gold/20 bg-white/5 mt-4">

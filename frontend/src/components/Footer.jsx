@@ -1,12 +1,86 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 const Footer = () => {
   const { language, t } = useLanguage();
 
+  const SOCIAL_LINKS = [
+    {
+      name: 'Facebook',
+      url: 'https://www.facebook.com/chennaicict',
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Instagram',
+      url: 'https://www.instagram.com/cict_chennai?r=nametag',
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'YouTube',
+      url: 'https://www.youtube.com/cictarchives',
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Threads',
+      url: 'https://www.threads.com/@cict_chennai?invite=0',
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12.186 24.004c-3.16 0-5.814-.997-7.897-2.964C2.26 19.124 1.2 16.294 1.134 12.62c-.068-3.766.9-6.732 2.879-8.817C6.046 1.768 8.815.748 12.233.748c3.275 0 6.012.983 8.136 2.923 2.054 1.876 3.123 4.544 3.181 7.93.067 3.864-.954 6.877-3.036 8.956-1.92 1.916-4.502 2.963-7.68 2.963-3.176 0-5.746-1.025-7.432-2.964-1.573-1.808-2.316-4.237-2.209-7.22.106-2.935.986-5.26 2.617-6.91 1.545-1.564 3.659-2.358 6.286-2.358 2.766 0 4.962.88 6.527 2.617 1.344 1.493 1.986 3.488 1.908 5.928-.052 1.637-.478 2.964-1.266 3.945-.764.95-1.821 1.432-3.143 1.432-1.085 0-1.96-.34-2.602-1.01-.617-.643-.889-1.503-.809-2.556.079-1.042.454-2.072 1.115-3.062.646-.968 1.474-1.684 2.463-2.13.435-.195.895-.333 1.378-.414-.627-.893-1.517-1.408-2.647-1.408-1.558 0-2.768.497-3.595 1.477-.812.962-1.241 2.37-1.276 4.185-.034 1.77.34 3.174 1.111 4.173.785 1.017 1.92 1.533 3.372 1.533 1.474 0 2.697-.474 3.635-1.41.909-.906 1.417-2.19 1.51-3.818.15-2.607-.638-4.708-2.342-6.246-1.575-1.423-3.791-2.146-6.586-2.146-2.637 0-4.757.77-6.301 2.288-1.545 1.518-2.344 3.666-2.376 6.384-.031 2.668.742 4.772 2.3 6.257 1.514 1.446 3.667 2.179 6.4 2.179 2.474 0 4.542-.647 6.147-1.923.364-.29.882-.234 1.173.13.29.364.234.882-.13 1.173-1.854 1.475-4.248 2.222-7.19 2.222z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'LinkedIn',
+      url: 'https://www.linkedin.com/in/central-institute-of-classical-tamil-chennai-1b735a367',
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14m-.5 15.5v-5.3a3.26 3.26 0 00-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 011.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.74a1.6 1.6 0 100 3.2 1.6 1.6 0 000-3.2z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'WhatsApp Channel',
+      url: 'https://www.whatsapp.com/channel/0029Vb0wjUvGOj9r7LmmgU0e',
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Telegram',
+      url: 'https://t.me/+kcJKUcLyKD8wZjk1',
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.562 8.161c-.18.717-.962 4.084-1.362 5.411-.168.56-.45.747-.72.764-.588.037-1.034-.387-1.602-.759-.89-.583-1.393-.944-2.257-1.512-1.001-.657-.352-1.019.218-1.61.149-.155 2.732-2.504 2.782-2.718.007-.027.012-.132-.05-.187-.062-.055-.154-.036-.221-.021-.095.021-1.609 1.023-4.542 3.004-.43.294-.818.438-1.164.43-.382-.009-1.118-.217-1.666-.395-.672-.218-1.207-.333-1.16-.704.024-.192.292-.389.803-.591 3.149-1.371 5.25-2.276 6.303-2.714 2.998-1.248 3.622-1.465 4.028-1.472.089 0 .289.022.418.127.109.089.14.21.154.296.014.086.031.284.017.44z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Aratt',
+      url: 'https://aratt.ai/@cict_chennai',
+      icon: (
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
-    <footer className="site-footer text-ivory" style={{ paddingTop: '3.5rem', paddingBottom: '2rem' }}>
+    <footer className="site-footer text-ivory" style={{ paddingTop: '2rem', paddingBottom: '1.5rem' }}>
       {/* Top gold line */}
       <div className="absolute top-0 left-0 w-full h-[3px]"
         style={{ background: 'linear-gradient(90deg, transparent 0%, #C9973B 25%, #E8B86D 50%, #C9973B 75%, transparent 100%)' }} />
@@ -17,170 +91,134 @@ const Footer = () => {
       </div>
 
       <div className="footer-inner container mx-auto px-6" style={{ position: 'relative', zIndex: 2 }}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10" style={{ marginBottom: '2.5rem' }}>
+        {/* 2 Balanced Vertically-Centered Columns Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
 
-          {/* ── Brand & Socials ── */}
-          <div className="col-span-1" style={{ paddingRight: '1rem' }}>
-            <div className="flex items-center gap-3" style={{ marginBottom: '1rem' }}>
-              <div className="w-11 h-11 flex items-center justify-center">
-                <img src="/images/logo_cict.png" alt="CICT Logo" className="w-full h-full object-contain" />
+          {/* ── Left Column: About Suvadi (col-span-6) ── */}
+          <div className="md:col-span-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-3" style={{ marginBottom: '0.75rem' }}>
+                <span style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Cinzel", serif', fontWeight: 800, fontSize: '1.75rem', color: '#C9973B', letterSpacing: '0.02em' }}>
+                  {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
+                </span>
               </div>
-              <span style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Cinzel", serif', fontWeight: 800, fontSize: '1.5rem', color: '#C9973B' }}>
-                {t('சுவடி', 'Suvadi')}
+
+              <p style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif', fontWeight: 400, fontSize: '0.85rem', color: 'rgba(245,240,232,0.80)', lineHeight: 1.6, marginBottom: '1.25rem', maxWidth: '540px' }}>
+                {t(
+                  'செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் (CICT) - தமிழ் செவ்வியல் நூல்களையும் சுவடிகளையும் பாதுகாத்து ஆய்வாளர்களுக்கு வழங்கும் மின்னணுத் தளம்.',
+                  'Central Institute of Classical Tamil (CICT) – preserving, digitizing, and promoting the timeless treasures of Classical Tamil literature for future generations.'
+                )}
+              </p>
+            </div>
+
+            <div>
+              {/* Social media icons header */}
+              <p className="footer-col-heading" style={{ marginBottom: '0.5rem' }}>{t('சமூக ஊடகங்கள்', 'CONNECT WITH US')}</p>
+              <div className="flex flex-wrap items-center gap-2.5" style={{ marginBottom: '0.75rem' }}>
+                {SOCIAL_LINKS.map((s, i) => (
+                  <a
+                    key={i}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.name}
+                    title={s.name}
+                    className="group"
+                    style={{
+                      width: '2rem',
+                      height: '2rem',
+                      borderRadius: '50%',
+                      border: '1px solid rgba(201,151,59,0.35)',
+                      backgroundColor: 'rgba(255,255,255,0.03)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#C9973B',
+                      transition: 'all 0.3s ease',
+                      flexShrink: 0,
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = '#C9973B';
+                      e.currentTarget.style.backgroundColor = 'rgba(201,151,59,0.15)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(201,151,59,0.2)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = 'rgba(201,151,59,0.35)';
+                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
+
+              <span style={{ fontFamily: '"Cinzel", serif', fontSize: '0.6rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(201,151,59,0.65)', fontWeight: 700, display: 'block' }}>
+                CENTRAL INSTITUTE OF CLASSICAL TAMIL
               </span>
             </div>
-            <p style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif', fontWeight: 400, fontSize: '0.82rem', color: 'rgba(245,240,232,0.72)', lineHeight: 1.7, marginBottom: '1.25rem' }}>
-              {t(
-                'செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் (CICT) - தமிழ் செவ்வியல் நூல்களையும் சுவடிகளையும் பாதுகாத்து ஆய்வாளர்களுக்கு வழங்கும் மின்னணுத் தளம்.',
-                'Central Institute of Classical Tamil (CICT) – preserving, digitizing, and promoting the timeless treasures of Classical Tamil literature for future generations.'
-              )}
-            </p>
-            {/* Social icons */}
-            <div className="flex items-center gap-3" style={{ marginBottom: '1rem' }}>
-              {[
-                { icon: 'f', path: 'M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z' },
-                { icon: 't', path: 'M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z' },
-                { icon: 'i', rect: true },
-                { icon: 'y', path: 'M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33 2.78 2.78 0 001.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.33 29 29 0 00-.46-5.33zM9.75 15.02V8.48l6.15 3.27-6.15 3.27z' },
-              ].map((s, i) => (
-                <a key={i} href="#" style={{
-                  width: '2rem', height: '2rem', borderRadius: '50%',
-                  border: '1px solid rgba(201,151,59,0.40)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#C9973B', transition: 'all 0.3s',
-                  flexShrink: 0,
-                }}>
-                  {s.rect ? (
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                      <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zm1.5-4.87h.01" stroke="#1A0202" strokeWidth="1.5" fill="none" />
-                    </svg>
-                  ) : (
-                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d={s.path} /></svg>
-                  )}
-                </a>
-              ))}
+          </div>
+
+          {/* ── Right Column: Contact Details (col-span-6) ── */}
+          <div className="md:col-span-6" style={{ position: 'relative', zIndex: 10 }}>
+            <p className="footer-col-heading" style={{ marginBottom: '0.4rem' }}>{t('தொடர்பு தகவல்', 'CONTACT INFORMATION')}</p>
+            <div className="footer-col-rule" style={{ marginBottom: '0.75rem' }} />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: '0.75rem' }}>
+              {/* Tamil Address */}
+              <div className="space-y-1" style={{ fontSize: '0.8rem', color: 'rgba(245,240,232,0.85)', lineHeight: 1.5, fontFamily: '"Noto Sans Tamil", sans-serif' }}>
+                <p className="font-bold text-gold" style={{ color: '#C9973B' }}>சுவடியியல் புலம்</p>
+                <p>செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்</p>
+                <p>செம்மொழிச் சாலை</p>
+                <p>பெரும்பாக்கம்</p>
+                <p>சென்னை - 600100.</p>
+              </div>
+
+              {/* English Address */}
+              <div className="space-y-1" style={{ fontSize: '0.8rem', color: 'rgba(245,240,232,0.85)', lineHeight: 1.5, fontFamily: '"Inter", sans-serif' }}>
+                <p className="font-bold text-gold" style={{ color: '#C9973B' }}>Faculty of Manuscriptology</p>
+                <p>Central Institute Classical Tamil</p>
+                <p>Semmozhi Salai</p>
+                <p>Perumbakkam</p>
+                <p>Chennai - 600100.</p>
+              </div>
             </div>
-            <span style={{ fontFamily: '"Cinzel", serif', fontSize: '0.55rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(201,151,59,0.55)', fontWeight: 700 }}>
-              CENTRAL INSTITUTE OF CLASSICAL TAMIL
-            </span>
-          </div>
 
-          {/* ── Resources ── */}
-          <div>
-            <p className="footer-col-heading">{t('வளங்கள்', 'RESOURCES')}</p>
-            <div className="footer-col-rule" />
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {[
-                { label: t('செவ்வியல் நூல்கள்', 'Classical Texts'), path: '/classical-texts' },
-                { label: t('மின் நூலகம்', 'Digital Library'), path: '/ebooks' },
-                { label: t('சுவடித் தேடல்', 'Manuscript Search'), path: '/search' },
-                { label: t('மின் நூல்கள்', 'E-Books'), path: '/ebooks' },
-                { label: t('கருத்துக்கள் - பதிவு', 'Feedback / Remarks'), path: '/feedback' },
-                { label: t('பதிவிறக்கங்கள்', 'Downloads'), path: '/' },
-              ].map((item, i) => (
-                <li key={i}>
-                  <Link to={item.path} className="footer-link">
-                    <span className="footer-link-arrow">›</span>
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* ── Institution ── */}
-          <div>
-            <p className="footer-col-heading">{t('நிறுவனம்', 'INSTITUTION')}</p>
-            <div className="footer-col-rule" />
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {[
-                { label: t('நிறுவனத்தைப் பற்றி', 'About the Institute'), path: '/team' },
-                { label: t('நிர்வாகம்', 'Administration'), path: '/team' },
-                { label: t('ஆய்வு', 'Research'), path: '/search' },
-                { label: t('குழு', 'Team'), path: '/team' },
-                { label: t('செய்திகள்', 'News & Updates'), path: '/' },
-                { label: t('தொடர்புக்கு', 'Contact Us'), path: '/contact' },
-              ].map((item, i) => (
-                <li key={i}>
-                  <Link to={item.path} className="footer-link">
-                    <span className="footer-link-arrow">›</span>
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* ── Contact ── */}
-          <div style={{ position: 'relative', zIndex: 10 }}>
-            <p className="footer-col-heading">{t('தொடர்பு', 'CONTACT US')}</p>
-            <div className="footer-col-rule" />
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <li style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
-                <svg style={{ width: '1.1rem', height: '1.1rem', color: '#C9973B', flexShrink: 0, marginTop: '0.1rem' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span style={{ fontSize: '0.82rem', color: 'rgba(245,240,232,0.72)', lineHeight: 1.6 }}>
-                  Central Institute of Classical Tamil<br />
-                  Semmozhi Salai, Perumbakkam,<br />
-                  Chennai - 600 100, Tamil Nadu, India
+            {/* Additional Contact Channels */}
+            <div className="pt-3 border-t border-gold/15 space-y-1.5" style={{ fontSize: '0.8rem' }}>
+              <div className="flex items-center gap-3">
+                <span className="text-gold font-semibold" style={{ color: '#C9973B', minWidth: '130px', fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif' }}>
+                  {t('தொலைபேசி', 'Phone')}:
                 </span>
-              </li>
-              <li style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-                <svg style={{ width: '1.1rem', height: '1.1rem', color: '#C9973B', flexShrink: 0 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <span style={{ fontSize: '0.82rem', color: 'rgba(245,240,232,0.72)' }}>+91 44 4990 4200</span>
-              </li>
-              <li style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-                <svg style={{ width: '1.1rem', height: '1.1rem', color: '#C9973B', flexShrink: 0 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span style={{ fontSize: '0.82rem', color: 'rgba(245,240,232,0.72)' }}>cict@tn.gov.in</span>
-              </li>
-              <li style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-                <svg style={{ width: '1.1rem', height: '1.1rem', color: '#C9973B', flexShrink: 0 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span style={{ fontSize: '0.82rem', color: 'rgba(245,240,232,0.72)' }}>Mon - Sat : 10:00 AM - 05:30 PM</span>
-              </li>
-            </ul>
-          </div>
-        </div>
+                <a href="tel:+914422540125" className="hover:text-gold transition-colors" style={{ color: 'rgba(245,240,232,0.85)' }}>
+                  +91-44-22540125
+                </a>
+              </div>
 
-        {/* ── Bottom Bar ── */}
-        <div className="footer-bottom">
-          {/* Ornamental center separator */}
-          <div className="footer-bottom-ornament">
-            <div className="orn-line" />
-            <div className="orn-dot" />
-            <div className="orn-diamond" />
-            <div className="orn-dot" />
-            <div className="orn-line-rev" />
-          </div>
+              <div className="flex items-center gap-3">
+                <span className="text-gold font-semibold" style={{ color: '#C9973B', minWidth: '130px', fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif' }}>
+                  {t('நிறுவன இணைய முகவரி', 'Website')}:
+                </span>
+                <a href="https://www.cict.in" target="_blank" rel="noopener noreferrer" className="hover:text-gold transition-colors" style={{ color: 'rgba(245,240,232,0.85)' }}>
+                  www.cict.in
+                </a>
+              </div>
 
-          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <p style={{ fontSize: '0.72rem', color: 'rgba(245,240,232,0.45)', fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif', margin: 0 }}>
-              © 2025 {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}. {t('அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை.', 'All Rights Reserved.')}
-            </p>
-            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-              {['Privacy Policy', 'Terms of Use', 'Accessibility'].map((item, i, arr) => (
-                <React.Fragment key={i}>
-                  <span style={{ fontSize: '0.72rem', color: 'rgba(245,240,232,0.45)', cursor: 'pointer', transition: 'color 0.3s' }}
-                    onMouseEnter={e => e.target.style.color = '#C9973B'}
-                    onMouseLeave={e => e.target.style.color = 'rgba(245,240,232,0.45)'}>
-                    {item}
-                  </span>
-                  {i < arr.length - 1 && (
-                    <span style={{ color: 'rgba(201,151,59,0.30)', fontSize: '0.7rem' }}>|</span>
-                  )}
-                </React.Fragment>
-              ))}
+              <div className="flex items-center gap-3">
+                <span className="text-gold font-semibold" style={{ color: '#C9973B', minWidth: '130px', fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Inter", sans-serif' }}>
+                  {t('மின்னஞ்சல்', 'Email')}:
+                </span>
+                <a href="mailto:suvadi@cict.in" className="hover:text-gold transition-colors" style={{ color: 'rgba(245,240,232,0.85)' }}>
+                  suvadi@cict.in
+                </a>
+              </div>
             </div>
+
           </div>
         </div>
+
       </div>
     </footer>
   );

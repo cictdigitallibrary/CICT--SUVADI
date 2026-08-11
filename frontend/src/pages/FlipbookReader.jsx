@@ -273,31 +273,7 @@ export default function FlipbookReader() {
           <button onClick={() => setZoom(z => Math.min(z + 0.1, 1.8))} style={iBtn}><ZoomIn   size={13}/></button>
           <button onClick={toggleFS} style={iBtn}>{isFS ? <Minimize size={13}/> : <Maximize size={13}/>}</button>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              title={`Download ${decodeURIComponent(bookTitle)}.pdf`}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                background: downloading ? 'rgba(201,151,59,0.12)' : '#5C1A08',
-                border: '1px solid rgba(201,151,59,0.45)',
-                color: '#C9973B', padding: '6px 12px', cursor: downloading ? 'wait' : 'pointer',
-                fontSize: 9, fontFamily: 'Cinzel,serif', fontWeight: 700,
-                letterSpacing: '0.18em', textTransform: 'uppercase', borderRadius: 2,
-                opacity: downloading ? 0.7 : 1, transition: 'all 0.2s', flexShrink: 0,
-              }}
-            >
-              {downloading
-                ? <><span style={{ display: 'inline-block', width: 11, height: 11, border: '1.5px solid rgba(201,151,59,0.3)', borderTopColor: '#C9973B', borderRadius: '50%', animation: 'fbspin 0.8s linear infinite', marginRight: 2 }} />Downloading</>
-                : <><Download size={12} /><span className="hidden sm:inline">Download PDF</span></>}
-            </button>
-            {dlError && (
-              <span style={{ color: 'rgba(201,151,59,0.7)', fontSize: 7.5, fontFamily: 'Cinzel,serif', letterSpacing: '0.15em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-                PDF not available
-              </span>
-            )}
-          </div>
+
         </div>
       </header>
 

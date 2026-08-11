@@ -5,6 +5,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import ClassicalTexts from './pages/ClassicalTexts';
+import ClassicalTextsList from './pages/ClassicalTextsList';
 import ManuscriptSearch from './pages/ManuscriptSearch';
 import Team from './pages/Team';
 import EBooks from './pages/EBooks';
@@ -27,6 +28,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/classical-texts" element={<ClassicalTexts />} />
+              <Route path="/classical-texts-list" element={<ClassicalTextsList />} />
               <Route path="/search" element={<ManuscriptSearch />} />
               <Route path="/team" element={<Team />} />
               <Route path="/ebooks" element={<EBooks />} />
