@@ -15,6 +15,8 @@ process.on('unhandledRejection', (reason) => {
   console.error('❌ Unhandled Rejection:', reason);
 });
 
+const { initRetrieval, handleChatQuery } = require('./chatbot/retrieval');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -51,6 +53,9 @@ app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
+
+// Initialize Chatbot Deterministic Engine
+initRetrieval();
 
 // ── Asset Logging Middleware ──────────────────────────────────────────────────
 const fsSync = require('fs');
@@ -1396,6 +1401,20 @@ app.get('/health', (req, res) => res.send('OK'));
 app.get('/api/status', (req, res) =>
   res.json({ status: 'Suvadi API is live', db: 'PostgreSQL', timestamp: new Date() })
 );
+
+// ── Chatbot ──────────────────────────────────────────────────────────────────
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { query, history, sessionId } = req.body;
+    if (!query) return res.status(400).json({ error: 'Query is required' });
+    
+    const response = await handleChatQuery(query, history || [], sessionId);
+    res.json(response);
+  } catch (error) {
+    console.error('[Chatbot API Error]', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 // ── Robust server start ──────────────────────────────────────────────────────
 function startServer(port) {

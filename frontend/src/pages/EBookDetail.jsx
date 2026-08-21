@@ -82,7 +82,7 @@ const EBookDetail = () => {
         </h2>
         <Link
           to="/ebooks"
-          className="inline-flex items-center gap-2 text-gold hover:text-maroon font-bold font-cinzel text-xs tracking-widest uppercase transition-colors"
+          className="inline-flex items-center gap-2 text-gold hover:text-maroon font-bold tamil-label text-sm transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           {t('நூலகத்திற்குத் திரும்புக', 'BACK TO LIBRARY')}
@@ -173,7 +173,7 @@ const EBookDetail = () => {
           <div className="mb-12">
             <Link
               to="/ebooks"
-              className="inline-flex items-center gap-2 group text-stone/50 hover:text-maroon font-cinzel text-[10px] font-bold uppercase tracking-[0.3em] transition-colors"
+              className="inline-flex items-center gap-2 group text-stone/50 hover:text-maroon tamil-label text-sm font-bold transition-colors"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               {t('நூலகத்திற்குத் திரும்புக', 'BACK TO LIBRARY')}
@@ -267,7 +267,7 @@ const EBookDetail = () => {
                   <div className="mt-6 pt-6 border-t border-maroon/5 flex items-center justify-end gap-3">
                     <button
                       onClick={() => handleDownload(edition.id, edition.title_tamil)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-maroon hover:bg-maroon hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all border border-maroon/30 shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-maroon hover:bg-maroon hover:text-white tamil-label text-sm font-bold transition-all border border-maroon/30 shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
                     >
                       <span>{t('பதிவிறக்கு', 'DOWNLOAD')}</span>
                       <Download className="w-3.5 h-3.5" />
@@ -279,7 +279,7 @@ const EBookDetail = () => {
                         const title = encodeURIComponent(edition.title_tamil);
                         navigate(`/ebooks/${id}/read?edition=${edition.id}&title=${title}&back=${back}`);
                       }}
-                      className="inline-flex items-center gap-2 px-3 py-2 bg-maroon text-white hover:bg-gold hover:text-maroon text-[10px] font-bold uppercase tracking-widest transition-all shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-maroon text-white hover:bg-gold hover:text-maroon tamil-label text-sm font-bold transition-all shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
                     >
                       <span>{t('படிக்க', 'READ')}</span>
                       <BookOpen className="w-3.5 h-3.5" />

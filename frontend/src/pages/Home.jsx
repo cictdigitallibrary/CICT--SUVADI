@@ -662,7 +662,7 @@ const Home = () => {
                             className="h-full w-full object-contain p-1 group-hover:scale-110 transition-transform duration-700"
                           />
                         </div>
-                        <p className="tamil-label text-[10px] text-gold/90 text-center font-black group-hover:text-white transition-colors line-clamp-2 leading-snug">
+                        <p className="tamil-label text-[10px] text-gold/90 text-center font-black group-hover:text-white transition-colors line-clamp-3 leading-snug break-words">
                           {book.title_tamil}
                         </p>
                       </Link>

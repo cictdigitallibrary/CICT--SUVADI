@@ -174,10 +174,10 @@ const ClassicalTextsList = () => {
               </div>
 
               {/* Exact structured list content */}
-              <div className="columns-1 md:columns-2 gap-x-12 lg:gap-x-16 text-stone/90 text-[14px] md:text-[15px] w-full" style={{ fontFamily: '"Noto Sans Tamil", "Noto Sans", sans-serif' }}>
+              <div className="text-stone/90 text-[14px] md:text-[15px] w-full flex flex-col" style={{ fontFamily: '"Noto Sans Tamil", "Noto Sans", sans-serif' }}>
                 {CONTENT_LINES.map((line, idx) => {
                   if (line.type === 'space') {
-                    return <div key={idx} className="h-4 break-inside-avoid" />;
+                    return <div key={idx} className="h-10 md:h-14 break-inside-avoid" />;
                   }
 
                   if (line.type === 'heading1') {
@@ -199,7 +199,7 @@ const ClassicalTextsList = () => {
                   // Item layout: Number (left), Tamil title (center-left), English transliteration (solid black, right)
                   return (
                     <div key={idx} className="flex items-baseline py-1.5 mb-2.5 border-b border-stone/10 hover:bg-stone/5 transition-colors duration-150 rounded-sm px-1.5 md:px-3 break-inside-avoid shadow-sm">
-                      <span className="w-8 text-stone/50 font-cinzel text-xs font-semibold shrink-0 select-none">
+                      <span className="w-8 text-black font-cinzel text-xs font-semibold shrink-0 select-none">
                         {line.num}
                       </span>
                       <span className="text-[#2C1A0E] font-medium grow leading-relaxed">
