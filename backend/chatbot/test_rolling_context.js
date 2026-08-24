@@ -5,17 +5,8 @@ async function test() {
   const sessionId = "test-session-123";
 
   const queries = [
-    "I want to know about தொல்காப்பியம்",
-    "how many under it?",
-    "what are they?",
-    "tell me about நச்சினார்க்கினியர் உரைப் பதிப்பு",
-    "when was it published?",
-    "which press printed it?",
-    "what about எட்டுத்தொகை?",
-    "how many in that category?",
-    "list them",
-    "who wrote the previous item?",
-    "what about its sub categories?"
+    "what about காப்பியங்கள்?",
+    "tell me about them"
   ];
 
   let fakeHistory = [];

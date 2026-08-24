@@ -1,5 +1,5 @@
 const { buildKnowledgeBase, getNodeData, getImmediateChildren, searchHierarchy, searchDocx } = require('./knowledgeBase');
-const { expandQuery, getTokens, scoreMatch, hasContextPronoun } = require('./nlp');
+const { expandQuery, getTokens, scoreMatch, hasContextPronoun, FILLER_WORDS } = require('./nlp');
 
 // Manage multiple contexts keyed by sessionId
 const sessions = {};
@@ -85,19 +85,47 @@ async function handleChatQuery(rawQuery, history = [], sessionId = 'default') {
         const entityTokens = getTokens(expandQuery(active.name));
         const combinedTokens = Array.from(new Set([...searchTokens, ...entityTokens]));
         
-        const docxMatches = searchDocx(combinedTokens);
-        const hasSpecificQuestion = tokens.some(t => !entityTokens.includes(t) && !hasContextPronoun(t));
+        const hasSpecificQuestion = tokens.some(t => !entityTokens.includes(t) && !hasContextPronoun(t) && !FILLER_WORDS.includes(t));
         
-        if (docxMatches.length > 0 && (hasSpecificQuestion || isItem)) {
-          responseText = `### ${active.name}\n\n`;
-          docxMatches.forEach(match => {
-            responseText += `${match.text.replace(/\\n/g, '\n\n')}\n\n`;
-          });
-        } else if (!isItem) {
-          const children = getImmediateChildren(active.node);
-          responseText = `Category: ${active.name}\n${label.charAt(0).toUpperCase() + label.slice(1)}: ${children.length}\n\nAsk to list them or count them.`;
-        } else {
-           responseText = `### ${active.name}\n\nTitle identified in the hierarchy, but I couldn't extract more details from the document right now.`;
+        // If the user uses a pronoun to ask for details AND we have a lastList populated, they likely want details for those items
+        if (usesPronoun && session.lastList && session.lastList.length > 0 && !isCountIntent && !isListIntent) {
+           responseText = `### Details for ${active.name} items:\n\n`;
+           session.lastList.forEach(itemName => {
+              const itemTokens = getTokens(expandQuery(itemName));
+              const itemDocxMatches = searchDocx(itemTokens);
+              if (itemDocxMatches.length > 0) {
+                 responseText += `**${itemName}**\n`;
+                 itemDocxMatches.forEach(match => {
+                   responseText += `${match.text.replace(/\\n/g, '\n\n')}\n\n`;
+                 });
+                 responseText += `---\n\n`;
+              }
+           });
+           
+           if (responseText === `### Details for ${active.name} items:\n\n`) {
+             responseText = `I couldn't find specific document details for the items under ${active.name}.`;
+           }
+        }
+        else {
+          const docxMatches = searchDocx(combinedTokens);
+          
+          if (docxMatches.length > 0 && (hasSpecificQuestion || isItem)) {
+            responseText = `### ${active.name}\n\n`;
+            docxMatches.forEach(match => {
+              responseText += `${match.text.replace(/\\n/g, '\n\n')}\n\n`;
+            });
+          } else if (!isItem) {
+            const children = getImmediateChildren(active.node);
+            session.lastList = children; // Store in context
+            if (children.length > 0) {
+              responseText = `Category: ${active.name} — ${children.length} ${label}:\n`;
+              children.forEach((c, i) => { responseText += `${i + 1}. ${c}\n`; });
+            } else {
+              responseText = `Category: ${active.name}\n${label.charAt(0).toUpperCase() + label.slice(1)}: 0`;
+            }
+          } else {
+             responseText = `### ${active.name}\n\nTitle identified in the hierarchy, but I couldn't extract more details from the document right now.`;
+          }
         }
       }
     }

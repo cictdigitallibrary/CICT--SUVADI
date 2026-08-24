@@ -63,6 +63,11 @@ const CONTEXT_PRONOUNS = [
   "அவை", "இவை", "அது", "இது", "அவற்றின்", "இவற்றின்", "விவரங்கள்", "அவைகள்"
 ];
 
+const FILLER_WORDS = [
+  "what", "is", "under", "about", "tell", "me", "show", "give", "list", "are", "the", "in", "for", "a", "an", "know", "want", "to", "i", "can", "you",
+  "பற்றி", "சொல்", "காட்டு", "என்ன", "எவை", "யாவை"
+];
+
 const hasContextPronoun = (rawQuery) => {
   const norm = normalizeText(rawQuery);
   return CONTEXT_PRONOUNS.some(p => norm.includes(p));
@@ -81,4 +86,4 @@ const scoreMatch = (queryTokens, targetText) => {
   return score;
 };
 
-module.exports = { normalizeText, getTokens, expandQuery, scoreMatch, ALIASES, CONTEXT_PRONOUNS, hasContextPronoun };
+module.exports = { normalizeText, getTokens, expandQuery, scoreMatch, ALIASES, CONTEXT_PRONOUNS, FILLER_WORDS, hasContextPronoun };
