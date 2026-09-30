@@ -56,6 +56,7 @@ app.use(express.json());
 
 // Initialize Chatbot Deterministic Engine
 initRetrieval();
+console.log('[CHATBOT VERSION] conversational-context-v3 | retrieval:', require('path').resolve('./chatbot/retrieval.js'));
 
 // ── Asset Logging Middleware ──────────────────────────────────────────────────
 const fsSync = require('fs');
@@ -1407,12 +1408,26 @@ app.post('/api/chat', async (req, res) => {
   try {
     const { query, history, sessionId } = req.body;
     if (!query) return res.status(400).json({ error: 'Query is required' });
-    
+
+    // ── Detailed request logging ──────────────────────────────────────────────
+    console.log('[CHAT API] ►►►', JSON.stringify({
+      sessionId,
+      sessionIdType: typeof sessionId,
+      sessionIdFalsy: !sessionId,
+      query: query?.substring(0, 80)
+    }));
+
     const response = await handleChatQuery(query, history || [], sessionId);
+
+    console.log('[CHAT API] ◄◄◄', JSON.stringify({
+      sessionId,
+      responseText: response.text?.substring(0, 100)
+    }));
+
     res.json(response);
   } catch (error) {
-    console.error('[Chatbot API Error]', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('[Chatbot API Error]', error.message, error.stack);
+    res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
 });
 

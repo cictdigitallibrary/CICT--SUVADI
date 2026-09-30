@@ -6,12 +6,13 @@ const { expandQuery, getTokens, scoreMatch, ALIASES } = require('./nlp');
 let hierarchyData = null;
 let flatHierarchy = []; 
 let docxParagraphs = [];
+let firstEditionRecords = [];
 
 async function buildKnowledgeBase() {
   const hierarchyPath = path.join(__dirname, 'hierarchy.json');
   if (fs.existsSync(hierarchyPath)) {
     hierarchyData = JSON.parse(fs.readFileSync(hierarchyPath, 'utf8'));
-    flatHierarchy = [];
+    flatHierarchy.length = 0;
     flattenHierarchy(hierarchyData, null);
   }
 
@@ -19,7 +20,49 @@ async function buildKnowledgeBase() {
   if (fs.existsSync(docPath)) {
     const result = await mammoth.extractRawText({ path: docPath });
     docxParagraphs = result.value.split('\n').map(p => p.trim()).filter(p => p.length > 5);
+
+    firstEditionRecords.length = 0;
+    const items = flatHierarchy.filter(x => x.type === 'item');
+    docxParagraphs.forEach(text => {
+      if (text.length > 50) {
+        let bestItem = null;
+        let maxScore = 0;
+        items.forEach(item => {
+          const itemTokens = getTokens(expandQuery(item.name));
+          const score = scoreMatch(itemTokens, text);
+          if (score > maxScore) {
+            maxScore = score;
+            bestItem = item;
+          }
+        });
+        if (bestItem && maxScore >= 4) {
+          const yearMatch = text.match(/(?:^|[^\d])(18\d{2}|19\d{2}|20\d{2})(?:[^\d]|$)/);
+          firstEditionRecords.push({
+            title: bestItem.name,
+            year: yearMatch ? parseInt(yearMatch[1], 10) : null,
+            description: text,
+            node: null,
+            type: bestItem.type
+          });
+        }
+      }
+    });
   }
+}
+
+function getHierarchyPath(itemName) {
+  const path = [itemName];
+  let current = flatHierarchy.find(i => i.name === itemName);
+  while(current && current.parent) {
+    path.push(current.parent);
+    current = flatHierarchy.find(i => i.name === current.parent);
+  }
+  return path;
+}
+
+function isDescendant(childName, ancestorName) {
+  const path = getHierarchyPath(childName);
+  return path.includes(ancestorName);
 }
 
 function flattenHierarchy(node, parent) {
@@ -120,5 +163,7 @@ module.exports = {
   getImmediateChildren, 
   searchHierarchy, 
   searchDocx,
-  flatHierarchy
+  flatHierarchy,
+  firstEditionRecords,
+  isDescendant
 };

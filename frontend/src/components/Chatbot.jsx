@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User, Maximize2, Minimize2, RefreshCw } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 
 // Generate a random string for simple session tracking
 const generateSessionId = () => Math.random().toString(36).substring(2, 15);
+
+// ── Development version marker ─────────────────────────────────────────────
+const CHATBOT_VERSION = 'conversational-context-v3';
+console.log(`[CHATBOT VERSION] ${CHATBOT_VERSION}`);
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +19,7 @@ const Chatbot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState('');
   const messagesEndRef = useRef(null);
+  const dragControls = useDragControls();
 
   // Initialize session and restore messages from sessionStorage
   useEffect(() => {
@@ -59,22 +64,48 @@ const Chatbot = () => {
     e.preventDefault();
     if (!input.trim()) return;
 
+    // Guard: do not submit before sessionId is initialized
+    if (!sessionId) {
+      console.warn('[CHATBOT] sessionId not yet initialized — submission blocked');
+      return;
+    }
+
     const userMessage = { text: input, source: 'user', role: 'user' };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput("");
     setIsLoading(true);
 
+    const requestPayload = {
+      query: userMessage.text,
+      history: newMessages.filter(m => m.source !== 'System'),
+      sessionId: sessionId
+    };
+
+    console.log('[CHATBOT REQUEST]', {
+      sessionId,
+      query: userMessage.text,
+      historyLength: requestPayload.history.length
+    });
+
     try {
-      const response = await axios.post('http://localhost:3001/api/chat', {
-        query: userMessage.text,
-        history: newMessages.filter(m => m.source !== 'System'),
-        sessionId: sessionId // pass sessionId to keep dynamic backend context isolated
+      const response = await axios.post('http://localhost:3001/api/chat', requestPayload);
+
+      console.log('[CHATBOT RESPONSE]', {
+        sessionId,
+        status: response.status,
+        responseText: response.data.text?.substring(0, 120)
       });
 
       setMessages(prev => [...prev, { text: response.data.text, source: 'LLM', role: 'model' }]);
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error('[CHATBOT ERROR]', {
+        sessionId,
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        code: error.code
+      });
       setMessages(prev => [...prev, { text: "Sorry, I am having trouble connecting to the server.", source: 'System', role: 'model' }]);
     } finally {
       setIsLoading(false);
@@ -102,14 +133,23 @@ const Chatbot = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
             transition={{ type: "spring", bounce: 0.3 }}
-            className={`fixed bg-white shadow-2xl flex flex-col overflow-hidden z-50 border border-stone/10 transition-all duration-300 ease-in-out ${
+            className={`fixed bg-white shadow-2xl flex flex-col overflow-hidden z-50 border border-stone/10 transition-shadow duration-300 ease-in-out ${
               isMaximized 
                 ? 'top-[5vh] left-[5vw] w-[90vw] h-[90vh] md:top-[10vh] md:left-[15vw] md:w-[70vw] md:h-[80vh] rounded-3xl' 
                 : 'bottom-6 right-6 w-[350px] sm:w-[400px] h-[550px] rounded-2xl'
             }`}
+            drag={!isMaximized}
+            dragControls={dragControls}
+            dragListener={false}
+            dragMomentum={false}
           >
             {/* Header */}
-            <div className="bg-maroon text-ivory p-4 flex items-center justify-between shadow-md z-10">
+            <div 
+              className="bg-maroon text-ivory p-4 flex items-center justify-between shadow-md z-10 cursor-grab active:cursor-grabbing"
+              onPointerDown={(e) => {
+                if (!isMaximized) dragControls.start(e);
+              }}
+            >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gold/10 rounded-full flex items-center justify-center text-gold">
                   <Bot size={20} />
