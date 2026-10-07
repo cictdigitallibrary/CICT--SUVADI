@@ -510,32 +510,45 @@ const ManuscriptSearch = () => {
                 transition={{ duration: 0.4 }}
               >
                 <h2 className="tamil-heading text-2xl md:text-3xl text-maroon font-black mb-5">
-                  {language === 'ta' ? 'செவ்வியல் சுவடித் தேடல் (Online Classical Tamil Manuscripts Search Engine)' : 'Classical Manuscript Search (Online Classical Tamil Manuscripts Search Engine)'}
+                  செவ்வியல் சுவடித் தேடல் (Online Classical Tamil Manuscripts Search Engine)
                 </h2>
 
                 <p className="search-intro-p">
-                  {language === 'ta' ? 'ஆய்வாளர்கள் எளிதாகச் செவ்வியல் சுவடிகளைப் படிப்பதற்கும், பாடவேறுபாடு கண்டறிவதற்கும் ஏற்றவாறு இணைய வழிச் சுவடித் தேடலில் பாடலின் எண்ணிட்டுத் தேடும் வசதியும் பாடலின் குறிப்பிட்ட ஏதெனும் ஒரு சொல்லைக் கொண்டு தேடும் முறையும் உருவாக்கப்பட்டுள்ளது.' : 'To enable researchers to easily read classical manuscripts and identify textual variations, an online manuscript search has been developed with the facility to search by entering the song number and a method to search using any specific word from the song.'}
+                  ஆய்வாளர்கள் எளிதாகச் செவ்வியல் சுவடிகளைப் படிப்பதற்கும், பாடவேறுபாடு கண்டறிவதற்கும் ஏற்றவாறு இணைய வழிச் சுவடித் தேடலில் பாடலின் எண்ணிட்டுத் தேடும் வசதியும் பாடலின் குறிப்பிட்ட ஏதெனும் ஒரு சொல்லைக் கொண்டு தேடும் முறையும் உருவாக்கப்பட்டுள்ளது.
+                </p>
+                
+                <p className="search-intro-p">
+                  To enable researchers to easily read classical manuscripts and identify textual variations, an online manuscript search has been developed with the facility to search by entering the song number and a method to search using any specific word from the song.
                 </p>
 
                 <ul className="search-intro-steps">
                   {SEARCH_INTRO_STEPS.map((s, i) => (
                     <li key={i}>
                       <StepBadge n={i + 1} active />
-                      <span>{language === 'ta' ? s.ta : s.en}</span>
+                      <div className="flex flex-col gap-1">
+                        <span>{s.ta}</span>
+                        <span className="text-[0.9em] text-maroon/70">{s.en}</span>
+                      </div>
                     </li>
                   ))}
                 </ul>
 
                 <h3 className="search-intro-subheading">
-                  {language === 'ta' ? 'தேடல் குறிப்புகள்:' : 'Search Notes:'}
+                  தேடல் குறிப்புகள் / Search Notes:
                 </h3>
 
-                <div className="space-y-4 mb-8">
+                <div className="space-y-6 mb-8">
                   {SEARCH_INTRO_NOTES.map((note, i) => (
-                    <p key={i} className="search-intro-p">
-                      <strong className="text-maroon">{i + 1}.{language === 'ta' ? note.ta_title : note.en_title}</strong>
-                      {' '}{language === 'ta' ? note.ta : note.en}
-                    </p>
+                    <div key={i} className="flex flex-col gap-2">
+                      <p className="search-intro-p !mb-0">
+                        <strong className="text-maroon">{i + 1}. {note.ta_title}</strong>
+                        {' '}{note.ta}
+                      </p>
+                      <p className="search-intro-p !mb-0 text-maroon/70 ml-5 text-[0.95em]">
+                        <strong>{note.en_title}</strong>
+                        {' '}{note.en}
+                      </p>
+                    </div>
                   ))}
                 </div>
 

@@ -32,7 +32,7 @@ const Chatbot = () => {
     } else {
       const newSessionId = generateSessionId();
       setSessionId(newSessionId);
-      const initialMessage = { text: "Welcome to SUVADI! You can ask me questions about our classical texts, editions, publishers, or the number of books in a category.", source: 'System' };
+      const initialMessage = { text: "Welcome to SUVADI! You can ask me questions about our classical texts, editions, publishers, or the number of books in a category. Note: the chatbot is just to view the description of a book from the 41 literatures category if searched.", source: 'System' };
       setMessages([initialMessage]);
       sessionStorage.setItem('suvadi_chat_session', newSessionId);
       sessionStorage.setItem('suvadi_chat_messages', JSON.stringify([initialMessage]));
@@ -54,7 +54,7 @@ const Chatbot = () => {
   const handleNewChat = () => {
     const newSessionId = generateSessionId();
     setSessionId(newSessionId);
-    const initialMessage = { text: "Welcome to SUVADI! You can ask me questions about our classical texts, editions, publishers, or the number of books in a category.", source: 'System' };
+    const initialMessage = { text: "Welcome to SUVADI! You can ask me questions about our classical texts, editions, publishers, or the number of books in a category. Note: the chatbot is just to view the description of a book from the 41 literatures category if searched.", source: 'System' };
     setMessages([initialMessage]);
     sessionStorage.setItem('suvadi_chat_session', newSessionId);
     sessionStorage.setItem('suvadi_chat_messages', JSON.stringify([initialMessage]));
