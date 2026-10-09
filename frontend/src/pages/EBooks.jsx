@@ -81,9 +81,13 @@ const EBooks = () => {
   return (
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
       <style>{`
-        .ebooks-hero-bg {
-          min-height: calc(100vw * 555 / 1920) !important;
-          background-position: center !important;
+        @media (min-width: 640px) {
+          .ebooks-hero-bg {
+            aspect-ratio: 1920 / 555 !important;
+            min-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+          }
         }
       `}</style>
 
@@ -100,8 +104,8 @@ const EBooks = () => {
         heroClass="ebooks-hero-bg"
         headingStyle={
           language === 'ta'
-            ? { fontSize: 'clamp(1.2rem, 3.5vw, 2.8rem)', whiteSpace: 'nowrap' }
-            : { fontSize: 'clamp(1.7rem, 4.8vw, 3.5rem)' }
+            ? { fontSize: 'clamp(1rem, 3.5vw, 2.8rem)', whiteSpace: 'normal', wordBreak: 'break-word' }
+            : { fontSize: 'clamp(1.2rem, 4.8vw, 3.5rem)', whiteSpace: 'normal', wordBreak: 'break-word' }
         }
       />
 

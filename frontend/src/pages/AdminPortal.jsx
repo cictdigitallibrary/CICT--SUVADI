@@ -22,6 +22,15 @@ const API = 'http://localhost:3001/api/admin';
 const BASE = 'http://localhost:3001';
 const limit = 10;
 
+axios.interceptors.request.use(config => {
+  const token = sessionStorage.getItem('adminAuthToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+
 /* ─── tiny helpers ─── */
 const fmt = n => Number(n || 0).toLocaleString();
 const stripTags = s => (s || '').replace(/<[^>]+>/g, '').replace(/\r?\n/g, ' ');
@@ -450,11 +459,11 @@ const AdminPortal = () => {
   /* ── active tab meta ── */
   const activeMeta = tabs.find(t => t.id === activeTab) || tabs[0];
 
-  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem('adminAuth') === 'true');
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!sessionStorage.getItem('adminAuthToken'));
 
   if (!isAuthenticated) {
-    return <AdminLogin onLogin={() => {
-      sessionStorage.setItem('adminAuth', 'true');
+    return <AdminLogin onLogin={(token) => {
+      sessionStorage.setItem('adminAuthToken', token);
       setIsAuthenticated(true);
     }} />;
   }

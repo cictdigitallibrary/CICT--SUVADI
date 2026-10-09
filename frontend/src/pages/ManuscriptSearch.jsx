@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useSearchParams } from 'react-router-dom';
 import {
   Search, Eye, ChevronDown, BookOpen, ZoomIn, ZoomOut,
-  RotateCw, RefreshCw, X, Maximize, FileText, ChevronLeft, ChevronRight,
+  RotateCw, RefreshCw, X, Maximize, Minimize, FileText, ChevronLeft, ChevronRight,
   Scroll, Layers, SlidersHorizontal, Info, Languages
 } from 'lucide-react';
 import PageHero from '../components/PageHero';
@@ -186,6 +186,33 @@ const ManuscriptSearch = () => {
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(-1);
   const [fetchingCategoryList, setFetchingCategoryList] = useState(false);
   const [detailZoom, setDetailZoom] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFSChange = () => {
+      setIsFullscreen(!!(document.fullscreenElement || document.webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFSChange);
+    document.addEventListener('webkitfullscreenchange', handleFSChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFSChange);
+      document.removeEventListener('webkitfullscreenchange', handleFSChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
 
   useEffect(() => {
     if (isSearchVisible && !inlineViewerFolio) {
@@ -235,12 +262,20 @@ const ManuscriptSearch = () => {
 
   const handleFullscreen = () => {
     if (imageContainerRef.current) {
-      if (!document.fullscreenElement) {
-        imageContainerRef.current.requestFullscreen().catch(err => {
-          console.error(`Error attempting to enable fullscreen: ${err.message}`);
-        });
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (imageContainerRef.current.requestFullscreen) {
+          imageContainerRef.current.requestFullscreen().catch(err => {
+            console.error(`Error attempting to enable fullscreen: ${err.message}`);
+          });
+        } else if (imageContainerRef.current.webkitRequestFullscreen) {
+          imageContainerRef.current.webkitRequestFullscreen();
+        }
       } else {
-        document.exitFullscreen();
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
       }
     }
   };
@@ -463,13 +498,13 @@ const ManuscriptSearch = () => {
   return (
     <div className="min-h-screen bg-ivory selection:bg-maroon selection:text-white">
       <style>{`
-        .search-hero-bg {
-          min-height: calc(100vw * 555 / 1920) !important;
-          background-position: center !important;
-          display: flex !important;
-          align-items: center !important;
-          padding-top: 72px !important;
-          padding-bottom: 0 !important;
+        @media (min-width: 640px) {
+          .search-hero-bg {
+            aspect-ratio: 1920 / 555 !important;
+            min-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+          }
         }
       `}</style>
 
@@ -480,11 +515,13 @@ const ManuscriptSearch = () => {
         backgroundImage="/images/bg/search-hero-panoramic.png"
         heroClass="search-hero-bg"
         headingStyle={{
-          fontSize: 'clamp(1.2rem, 2.3vw, 2.5rem)',
+          fontSize: 'clamp(1rem, 3.5vw, 2.5rem)',
           lineHeight: '1.3',
           fontWeight: '800',
           letterSpacing: '0.02em',
-          whiteSpace: 'nowrap',
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          overflowWrap: 'break-word',
         }}
       />
 
@@ -1226,17 +1263,113 @@ const ManuscriptSearch = () => {
             </div>
 
             {/* Image Section */}
-            <div ref={imageContainerRef} className="relative w-full bg-[#FAF8F2] border border-gold/20 rounded-md overflow-hidden flex items-center justify-center p-2 sm:p-4 shadow-inner mb-4 min-h-[150px]">
+            <div
+              ref={imageContainerRef}
+              className={`relative w-full bg-[#FAF8F2] border border-gold/20 rounded-md overflow-hidden flex items-center justify-center p-2 sm:p-4 shadow-inner mb-4 transition-all duration-300 ${
+                isFullscreen
+                  ? 'fixed inset-0 z-[9999] bg-[#0c0202] border-none rounded-none p-4 flex flex-col justify-center items-center'
+                  : 'min-h-[150px]'
+              }`}
+            >
+              {/* Floating Overlay Controls (Full Screen & Mobile View) */}
+              <div
+                className={`absolute top-3 right-3 z-50 flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg border backdrop-blur-md shadow-2xl transition-all duration-200 ${
+                  isFullscreen
+                    ? 'bg-black/85 border-gold/50 text-white'
+                    : 'bg-[#FAF8F5]/90 border-gold/30 text-maroon sm:hidden'
+                }`}
+              >
+                {/* Zoom Out */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDetailZoom((z) => Math.max(0.5, z - 0.25));
+                  }}
+                  className={`p-1.5 sm:p-2 rounded transition-colors flex items-center justify-center ${
+                    isFullscreen ? 'hover:bg-gold/20 text-amber-200' : 'hover:bg-maroon/10 text-maroon'
+                  }`}
+                  title={t('குறைக்க', 'Zoom Out')}
+                >
+                  <ZoomOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+
+                {/* Reset Zoom Percentage */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDetailZoom(1);
+                  }}
+                  className={`px-2 sm:px-2.5 py-1 rounded text-xs font-bold font-cinzel transition-colors border ${
+                    isFullscreen
+                      ? 'border-gold/30 hover:bg-gold/20 text-amber-200'
+                      : 'border-maroon/20 hover:bg-maroon/10 text-maroon'
+                  }`}
+                  title={t('மீட்டமைக்க', 'Reset to 100%')}
+                >
+                  {Math.round(detailZoom * 100)}%
+                </button>
+
+                {/* Zoom In */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDetailZoom((z) => Math.min(3, z + 0.25));
+                  }}
+                  className={`p-1.5 sm:p-2 rounded transition-colors flex items-center justify-center ${
+                    isFullscreen ? 'hover:bg-gold/20 text-amber-200' : 'hover:bg-maroon/10 text-maroon'
+                  }`}
+                  title={t('பெரிதாக்க', 'Zoom In')}
+                >
+                  <ZoomIn className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+
+                {/* Reset View */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDetailZoom(1);
+                  }}
+                  className={`p-1.5 sm:p-2 rounded transition-colors flex items-center justify-center ${
+                    isFullscreen ? 'hover:bg-gold/20 text-amber-200' : 'hover:bg-maroon/10 text-maroon'
+                  }`}
+                  title={t('மீட்டமைக்க', 'Reset View')}
+                >
+                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                </button>
+
+                {/* ESC / Exit Fullscreen Button */}
+                {isFullscreen && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFullscreen();
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-red-950/90 hover:bg-red-800 text-amber-200 rounded text-xs font-black tracking-wide border border-red-500/40 shadow-sm transition-all ml-1"
+                    title={t('வெளியேறு', 'Exit Fullscreen (ESC)')}
+                  >
+                    <Minimize className="w-3.5 h-3.5 text-white" />
+                    <span className="text-white font-bold">ESC</span>
+                  </button>
+                )}
+              </div>
+
               <motion.div
                 animate={{ scale: detailZoom }}
                 drag
-                dragConstraints={{ top: -300, bottom: 300, left: -300, right: 300 }}
+                dragConstraints={{ top: -400, bottom: 400, left: -400, right: 400 }}
                 className="relative flex items-center justify-center w-full h-auto cursor-grab active:cursor-grabbing"
               >
                 {inlineViewerFolio.image_url ? (
                   <img
                     src={`${API}${inlineViewerFolio.image_url}`}
-                    className="w-full h-auto max-h-[70vh] object-contain drop-shadow-xl"
+                    className={`w-full h-auto object-contain drop-shadow-xl ${
+                      isFullscreen ? 'max-h-[90vh]' : 'max-h-[70vh]'
+                    }`}
                     alt="Manuscript Folio"
                     draggable={false}
                   />
@@ -1247,7 +1380,6 @@ const ManuscriptSearch = () => {
                   </div>
                 )}
               </motion.div>
-
             </div>
 
             {/* Details Section */}

@@ -87,12 +87,12 @@ const ClassicalTextsList = () => {
         </div>
 
         {/* Left illustration */}
-        <div className="absolute left-[4%] top-1/2 -translate-y-1/2 w-[22vw] max-w-[300px] min-w-[180px] pointer-events-none select-none hidden xl:block z-10">
+        <div className="absolute left-[2%] md:left-[4%] top-1/2 -translate-y-1/2 w-[35vw] md:w-[22vw] max-w-[300px] min-w-[120px] pointer-events-none select-none z-0 xl:z-10 opacity-30 xl:opacity-100">
           <img src="/images/book_transparent.png" alt="" className="w-full h-auto object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)]" />
         </div>
 
         {/* Right illustration */}
-        <div className="absolute right-[4%] top-1/2 -translate-y-1/2 w-[20vw] max-w-[260px] min-w-[160px] pointer-events-none select-none hidden xl:block z-10 opacity-25">
+        <div className="absolute right-[2%] md:right-[4%] top-1/2 -translate-y-1/2 w-[35vw] md:w-[20vw] max-w-[260px] min-w-[120px] pointer-events-none select-none z-0 xl:z-10 opacity-10 xl:opacity-25">
           <img src="/images/temple_transparent.png" alt="" className="w-full h-auto object-contain" />
         </div>
 

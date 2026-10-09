@@ -20,6 +20,10 @@ const { initRetrieval, handleChatQuery } = require('./chatbot/retrieval');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_suvadi_key_123';
+
 // ── PostgreSQL Pool ──────────────────────────────────────────────────────────
 const pool = new Pool({
   host:     process.env.DB_HOST     || '192.168.0.169',
@@ -98,7 +102,7 @@ const fs = require('fs');
 // ── Multer config for song uploads ───────────────────────────────────────────
 const songStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const { cid } = req.body;
+    const cid = req.body.cid || 'temp';
     const dir = path.join(SONGS_PATH, String(cid));
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
@@ -845,6 +849,44 @@ async function ensureTables() {
 }
 ensureTables();
 
+// ── ADMIN AUTHENTICATION ─────────────────────────────────────────────────────
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const { rows } = await db.query('SELECT * FROM sv_users WHERE username=$1 LIMIT 1', [username]);
+    
+    if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
+    const user = rows[0];
+    
+    // Support legacy plain text or new bcrypt hashes
+    const isMatch = password === user.password || bcrypt.compareSync(password, user.password);
+    
+    if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+    if (user.status !== 1) return res.status(403).json({ error: 'Account disabled' });
+    
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '8h' });
+    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+const adminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+// Apply auth middleware to all admin routes below this point
+app.use('/api/admin', adminAuth);
+
 // ── DASHBOARD STATS ──────────────────────────────────────────────────────────
 app.get('/api/admin/dashboard-stats', async (req, res) => {
   try {
@@ -1144,7 +1186,7 @@ app.post('/api/admin/songs', uploadSong.single('image'), async (req, res) => {
     let primaryId = null;  // first row owns the physical file
 
     for (let i = 0; i < rawFids.length; i++) {
-      const fid   = rawFids[i]   || '';
+      const fid   = parseInt(rawFids[i], 10) || 0;
       const fname = rawFnames[i] || '';
       // Rows after the first point to the first row's file via group_id
       const groupId = (i === 0) ? 0 : primaryId;
@@ -1153,7 +1195,7 @@ app.post('/api/admin/songs', uploadSong.single('image'), async (req, res) => {
         `INSERT INTO sv_songs (cid, fid, fname, filename, description, author, group_id, status, upload_date)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8, TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'))
          RETURNING id`,
-        [cid, fid, fname, imageOriginalName, fname, 'System', groupId, status ?? 1]
+        [parseInt(cid, 10), fid, fname, imageOriginalName, fname, 'System', groupId, parseInt(status ?? 1, 10)]
       );
       const newId = rows[0].id;
       insertedIds.push(newId);
@@ -1176,11 +1218,15 @@ app.put('/api/admin/songs/:id', uploadSong.single('image'), async (req, res) => 
   try {
     const { cid, fid, fname, status } = req.body;
     const songId = req.params.id;
+    const cleanFid = parseInt(fid, 10) || 0;
+    const cleanCid = parseInt(cid, 10);
+    const cleanStatus = parseInt(status, 10) ?? 1;
+
     if (req.file) {
       const imageOriginalName = req.file.originalname;
       await db.query(
         'UPDATE sv_songs SET cid=$1, fid=$2, fname=$3, filename=$4, description=$5, status=$6 WHERE id=$7',
-        [cid, fid, fname || '', imageOriginalName, fname || '', status, songId]
+        [cleanCid, cleanFid, fname || '', imageOriginalName, fname || '', cleanStatus, songId]
       );
       const newPath = path.join(path.dirname(req.file.path), `${songId}_${imageOriginalName}`);
       fs.renameSync(req.file.path, newPath);
@@ -1189,7 +1235,7 @@ app.put('/api/admin/songs/:id', uploadSong.single('image'), async (req, res) => 
       // No new file — keep existing filename, only update text fields
       await db.query(
         'UPDATE sv_songs SET cid=$1, fid=$2, fname=$3, description=$4, status=$5 WHERE id=$6',
-        [cid, fid, fname || '', fname || '', status, songId]
+        [cleanCid, cleanFid, fname || '', fname || '', cleanStatus, songId]
       );
     }
     res.json({ success: true });
@@ -1246,9 +1292,10 @@ app.get('/api/admin/users', async (req, res) => {
 app.post('/api/admin/users', async (req, res) => {
   try {
     const { username, password, email, role } = req.body;
+    const hashedPassword = bcrypt.hashSync(password, 10);
     const { rows } = await db.query(
       'INSERT INTO sv_users (username, password, email, role) VALUES ($1,$2,$3,$4) RETURNING id',
-      [username, password, email, role || 'admin']
+      [username, hashedPassword, email, role || 'admin']
     );
     res.json({ id: rows[0].id });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -1257,9 +1304,10 @@ app.put('/api/admin/users/:id', async (req, res) => {
   try {
     const { username, password, email, role, status } = req.body;
     if (password) {
+      const hashedPassword = bcrypt.hashSync(password, 10);
       await db.query(
         'UPDATE sv_users SET username=$1, password=$2, email=$3, role=$4, status=$5 WHERE id=$6',
-        [username, password, email, role, status, req.params.id]
+        [username, hashedPassword, email, role, status, req.params.id]
       );
     } else {
       await db.query(

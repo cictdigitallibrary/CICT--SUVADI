@@ -238,7 +238,7 @@ const Home = () => {
         className="home-hero relative w-full overflow-hidden bg-[#1A0303]"
         style={{
           backgroundImage: "url('/images/bg/home_hero_final.png')",
-          backgroundSize: 'cover',
+          backgroundSize: '100% 100%',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
           aspectRatio: '1920 / 555',
@@ -296,11 +296,12 @@ const Home = () => {
                 <motion.h1
                   className="tamil-heading text-maroon italic"
                   style={{
-                    fontSize: 'clamp(0.95rem, 1.95vw, 2.2rem)',
+                    fontSize: 'clamp(12px, 2.2vw, 2.2rem)',
                     textShadow: '0 2px 20px rgba(201,151,59,0.15)',
                     lineHeight: '1.2',
                     margin: 0,
-                    whiteSpace: 'nowrap',
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-word',
                   }}
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}
                 >
@@ -311,13 +312,14 @@ const Home = () => {
                 <motion.h2
                   className="tamil-heading text-maroon italic uppercase"
                   style={{
-                    fontSize: language === 'ta' ? 'clamp(0.75rem, 1.52vw, 1.7rem)' : 'clamp(0.85rem, 1.72vw, 1.9rem)',
+                    fontSize: language === 'ta' ? 'clamp(10px, 1.8vw, 1.7rem)' : 'clamp(10px, 2vw, 1.9rem)',
                     textShadow: '0 2px 15px rgba(201,151,59,0.15)',
                     marginTop: '0.25rem',
                     marginBottom: 0,
                     letterSpacing: '0.02em',
                     lineHeight: '1.3',
-                    whiteSpace: 'nowrap',
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-word',
                   }}
                   initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 1 }}
                 >
@@ -623,22 +625,22 @@ const Home = () => {
           <div className="absolute right-0 top-0 h-full w-[3px] bg-gradient-to-b from-transparent via-gold/25 to-transparent" style={{ zIndex: 3 }} />
 
           {/* Palm-leaf bundle — bottom left */}
-          <img src="/images/palm_manuscript.png" alt="Decorative Manuscript" className="home-ebooks-palm-left object-contain" aria-hidden="true" />
+          <img src="/images/palm_manuscript.png" alt="Decorative Manuscript" className="home-ebooks-palm-left object-contain hidden sm:block" aria-hidden="true" />
 
           {/* Palm-leaf bundle — bottom right (mirrored) */}
-          <img src="/images/palm_manuscript.png" alt="Decorative Manuscript" className="home-ebooks-palm-right object-contain" aria-hidden="true" />
+          <img src="/images/palm_manuscript.png" alt="Decorative Manuscript" className="home-ebooks-palm-right object-contain hidden sm:block" aria-hidden="true" />
 
-          <div className="container mx-auto px-6 max-w-6xl" style={{ position: 'relative', zIndex: 4 }}>
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
+          <div className="container mx-auto px-4 sm:px-6 max-w-6xl" style={{ position: 'relative', zIndex: 4 }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
               <div>
                 <span className="home-section-label text-gold/60 block mb-2">
                   {t('மின் நூலகம்', 'Digital Repository')}
                 </span>
-                <h2 className="tamil-heading text-3xl md:text-4xl text-white">
+                <h2 className="tamil-heading text-2xl sm:text-3xl md:text-4xl text-white">
                   {t('முதல் அச்சுப் பதிப்புகள்', 'First Printed Editions Online')}
                 </h2>
               </div>
-              <Link to="/ebooks" className="btn-browse-library">
+              <Link to="/ebooks" className="btn-browse-library self-start sm:self-auto">
                 <span className="tamil-label font-black uppercase tracking-widest">{t('மின் நூல்கள் காண்க', 'Browse Library')}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -646,33 +648,34 @@ const Home = () => {
               </Link>
             </div>
 
-            <div className="flex items-center gap-3">
-
-
-              <div className="flex-1 overflow-hidden">
-                <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="flex gap-4">
-                  {ebooks.slice(0, 8).map((book, idx) => (
-                    <motion.div key={book.id} variants={fadeUp}
-                      className="group home-ebook-card flex-1 min-w-0">
-                      <Link to={`/ebooks/${book.id}`} className="block w-full h-full p-3 cursor-pointer">
-                        <div className="aspect-[3/4] bg-white/5 flex items-center justify-center mb-3 overflow-hidden rounded-sm">
-                          <img
-                            src={getBookCover(book)}
-                            alt={book.title_tamil}
-                            className="h-full w-full object-contain p-1 group-hover:scale-110 transition-transform duration-700"
-                          />
-                        </div>
-                        <p className="tamil-label text-[10px] text-gold/90 text-center font-black group-hover:text-white transition-colors line-clamp-3 leading-snug break-words">
-                          {book.title_tamil}
-                        </p>
-                      </Link>
-                    </motion.div>
-                  ))}
+            {/* Book grid — 3 cols on mobile, 4 on sm, 8 on lg */}
+            <motion.div
+              variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+              className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3 md:gap-4 pb-2 sm:pb-0"
+            >
+              <style>{`
+                @media (max-width: 639px) {
+                  .home-ebook-grid-item:nth-child(n+7) { display: none; }
+                }
+              `}</style>
+              {ebooks.slice(0, 8).map((book, idx) => (
+                <motion.div key={book.id} variants={fadeUp}
+                  className="home-ebook-card home-ebook-grid-item w-full">
+                  <Link to={`/ebooks/${book.id}`} className="block w-full h-full p-2 sm:p-3 cursor-pointer">
+                    <div className="aspect-[3/4] bg-white/5 flex items-center justify-center mb-2 overflow-hidden rounded-sm">
+                      <img
+                        src={getBookCover(book)}
+                        alt={book.title_tamil}
+                        className="h-full w-full object-contain p-1 group-hover:scale-110 transition-transform duration-700"
+                      />
+                    </div>
+                    <p className="tamil-label text-[9px] sm:text-[10px] text-gold/90 text-center font-black group-hover:text-white transition-colors line-clamp-2 leading-snug break-words">
+                      {book.title_tamil}
+                    </p>
+                  </Link>
                 </motion.div>
-              </div>
-
-
-            </div>
+              ))}
+            </motion.div>
           </div>
         </section>
       )}

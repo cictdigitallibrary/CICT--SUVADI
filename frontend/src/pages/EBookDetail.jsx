@@ -93,8 +93,22 @@ const EBookDetail = () => {
 
   return (
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
+      {/* Responsive banner CSS */}
+      <style>{`
+        .ebook-detail-banner {
+          min-height: 220px;
+          aspect-ratio: auto;
+        }
+        @media (min-width: 640px) {
+          .ebook-detail-banner {
+            min-height: 0;
+            aspect-ratio: 1920 / 555;
+          }
+        }
+      `}</style>
+
       {id === '9' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
           <img
             src="/images/bg/hero_ebook_9_panoramic_fit1920.png"
             alt="Category Banner"
@@ -102,7 +116,7 @@ const EBookDetail = () => {
           />
         </section>
       ) : id === '13' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
           <img
             src="/images/bg/hero_ebook_13_panoramic_fit1920.png"
             alt="Category Banner"
@@ -110,7 +124,7 @@ const EBookDetail = () => {
           />
         </section>
       ) : id === '11' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
           <img
             src="/images/bg/hero_ebook_11_panoramic_fit1920.png"
             alt="Category Banner"
@@ -118,7 +132,7 @@ const EBookDetail = () => {
           />
         </section>
       ) : id === '15' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
           <img
             src="/images/bg/hero_ebook_15_panoramic_fit1920.png"
             alt="Category Banner"
@@ -126,7 +140,7 @@ const EBookDetail = () => {
           />
         </section>
       ) : id === '16' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
           <img
             src="/images/bg/hero_ebook_16_panoramic_fit1920.png"
             alt="Category Banner"
@@ -134,7 +148,7 @@ const EBookDetail = () => {
           />
         </section>
       ) : id === '17' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
           <img
             src="/images/bg/hero_ebook_17_panoramic_fit1920.png"
             alt="Category Banner"
@@ -142,7 +156,7 @@ const EBookDetail = () => {
           />
         </section>
       ) : id === '12' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
           <img
             src="/images/bg/hero_panoramic_12_fit1920.png"
             alt="Category Banner"
@@ -150,7 +164,7 @@ const EBookDetail = () => {
           />
         </section>
       ) : id === '10' ? (
-        <section className="relative w-full overflow-hidden bg-[#1A0303]" style={{ aspectRatio: '1920 / 555' }}>
+        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
           <img
             src="/hero_ebook_10.jpg"
             alt="Ettuthogai Banner"

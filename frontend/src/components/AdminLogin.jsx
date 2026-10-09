@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, ArrowRight, Lock } from 'lucide-react';
+import axios from 'axios';
 
 const AdminLogin = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'suvadii123') {
-      onLogin();
-    } else {
+    try {
+      const res = await axios.post('http://localhost:3001/api/admin/login', { username, password });
+      if (res.data && res.data.token) {
+        onLogin(res.data.token);
+      }
+    } catch (err) {
       setError(true);
       setTimeout(() => setError(false), 3000);
     }

@@ -41,6 +41,16 @@ const Contact = () => {
 
   return (
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
+      <style>{`
+        @media (min-width: 640px) {
+          .contact-hero-bg {
+            aspect-ratio: 1920 / 555 !important;
+            min-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+          }
+        }
+      `}</style>
 
       <PageHero
         label={t('தொடர்பு', 'GET IN TOUCH')}
@@ -52,7 +62,10 @@ const Contact = () => {
         glyphs={['தொ', 'ட', 'ர்', 'பு', 'அணு', 'கல்']}
         backgroundImage="/images/bg/Contact.png"
         heroClass="contact-hero-bg"
-        headingStyle={language === 'ta' ? { fontSize: 'clamp(2rem, 5vw, 4rem)', lineHeight: 1.08 } : { fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}
+        headingStyle={language === 'ta'
+          ? { fontSize: 'clamp(1.3rem, 6vw, 4rem)', lineHeight: 1.15, whiteSpace: 'normal', wordBreak: 'break-word' }
+          : { fontSize: 'clamp(1.5rem, 7vw, 4.5rem)', whiteSpace: 'normal', wordBreak: 'break-word' }
+        }
       />
 
       <div className="container mx-auto px-6 max-w-6xl py-20 relative">

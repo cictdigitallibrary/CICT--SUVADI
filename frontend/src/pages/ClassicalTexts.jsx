@@ -112,12 +112,12 @@ const ClassicalTexts = () => {
         </div>
 
         {/* Left Hero Illustration - Open book & quill */}
-        <div className="absolute left-[4%] top-1/2 -translate-y-1/2 w-[24vw] max-w-[320px] min-w-[200px] pointer-events-none select-none hidden xl:block z-10">
+        <div className="absolute left-[2%] md:left-[4%] top-1/2 -translate-y-1/2 w-[35vw] md:w-[24vw] max-w-[320px] min-w-[120px] pointer-events-none select-none z-0 xl:z-10 opacity-30 xl:opacity-100">
           <img src="/images/book_transparent.png" alt="Ancient book and manuscripts with quill" className="w-full h-auto object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)]" />
         </div>
 
         {/* Right Hero Illustration - South Indian Dravidian Temple line-art */}
-        <div className="absolute right-[4%] top-1/2 -translate-y-1/2 w-[22vw] max-w-[280px] min-w-[180px] pointer-events-none select-none hidden xl:block z-10 opacity-30">
+        <div className="absolute right-[2%] md:right-[4%] top-1/2 -translate-y-1/2 w-[35vw] md:w-[22vw] max-w-[280px] min-w-[120px] pointer-events-none select-none z-0 xl:z-10 opacity-10 xl:opacity-30">
           <img src="/images/temple_transparent.png" alt="Dravidian Temple Gopuram Line Art" className="w-full h-auto object-contain" />
         </div>
 
@@ -145,7 +145,7 @@ const ClassicalTexts = () => {
               <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold/60" />
             </div>
 
-            <h1 className="font-cinzel text-5xl md:text-7xl text-white font-bold tracking-wide" style={{ textShadow: '0 0 60px rgba(201,151,59,0.15)' }}>
+            <h1 className="font-cinzel text-white font-bold tracking-wide" style={{ textShadow: '0 0 60px rgba(201,151,59,0.15)', fontSize: 'clamp(1.5rem, 6vw, 4.5rem)', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.2' }}>
               {t('செம்பதிப்பின் தேவை', 'Classical Tamil Texts')}
             </h1>
 
