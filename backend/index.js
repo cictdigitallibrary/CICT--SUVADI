@@ -62,34 +62,10 @@ app.use(express.json());
 initRetrieval();
 console.log('[CHATBOT VERSION] conversational-context-v3 | retrieval:', require('path').resolve('./chatbot/retrieval.js'));
 
-// ── Asset Logging Middleware ──────────────────────────────────────────────────
+// ── Asset Middleware (silent - errors logged by express.static) ──────────────
 const fsSync = require('fs');
-app.use((req, res, next) => {
-  const isAsset = req.path.startsWith('/images') || req.path.startsWith('/songs') || 
-                  req.path.startsWith('/webinc') || req.path.startsWith('/storage');
-  if (isAsset) {
-    let targetRoot;
-    if (req.path.startsWith('/images')) targetRoot = IMAGES_PATH;
-    else if (req.path.startsWith('/songs')) targetRoot = SONGS_PATH;
-    else if (req.path.startsWith('/webinc')) targetRoot = WEBINC_PATH;
-    else if (req.path.startsWith('/storage')) targetRoot = STORAGE_PATH;
+app.use((req, res, next) => { next(); });
 
-    const mountPrefix = req.path.split('/')[1]; 
-    const relPath = req.path.replace(`/${mountPrefix}`, '') || '/';
-    const resolvedPath = path.join(targetRoot, decodeURIComponent(relPath));
-
-    try {
-      if (fsSync.existsSync(resolvedPath)) {
-        console.log(`[ASSET] ✅ SUCCESS | URL: ${req.url} | PATH: ${resolvedPath}`);
-      } else {
-        console.log(`[ASSET] ❌ NOT FOUND | URL: ${req.url} | PATH: ${resolvedPath}`);
-      }
-    } catch (err) {
-      console.log(`[ASSET] 💥 FS ERROR | URL: ${req.url} | PATH: ${resolvedPath} | REASON: ${err.message}`);
-    }
-  }
-  next();
-});
 
 app.use('/images',  express.static(IMAGES_PATH));
 app.use('/songs',   express.static(SONGS_PATH));
@@ -1457,21 +1433,7 @@ app.post('/api/chat', async (req, res) => {
     const { query, history, sessionId } = req.body;
     if (!query) return res.status(400).json({ error: 'Query is required' });
 
-    // ── Detailed request logging ──────────────────────────────────────────────
-    console.log('[CHAT API] ►►►', JSON.stringify({
-      sessionId,
-      sessionIdType: typeof sessionId,
-      sessionIdFalsy: !sessionId,
-      query: query?.substring(0, 80)
-    }));
-
     const response = await handleChatQuery(query, history || [], sessionId);
-
-    console.log('[CHAT API] ◄◄◄', JSON.stringify({
-      sessionId,
-      responseText: response.text?.substring(0, 100)
-    }));
-
     res.json(response);
   } catch (error) {
     console.error('[Chatbot API Error]', error.message, error.stack);

@@ -11,7 +11,7 @@ const AdminLogin = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:3001/api/admin/login', { username, password });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin/login`, { username, password });
       if (res.data && res.data.token) {
         onLogin(res.data.token);
       }

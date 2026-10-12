@@ -89,7 +89,7 @@ const Chatbot = () => {
     });
 
     try {
-      const response = await axios.post('http://localhost:3001/api/chat', requestPayload);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/chat`, requestPayload);
 
       console.log('[CHATBOT RESPONSE]', {
         sessionId,

@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useLanguage } from '../context/LanguageContext';
 import { getBookCover } from '../utils/bookCovers';
 
-const API = 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const CRITICAL_EDITIONS = [
   { ta: 'இறையனார் களவியல்', en: 'Irayanar Kalviyar', year: '2013', img: '/images/publications/opt_25.jpg' },
@@ -700,7 +700,7 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Calendar PDF */}
             <motion.a
-              href="https://suvadi.cict.in/asp/pdf/cyclic_list_of_tamilyears.pdf"
+              href="/pdf/cyclic_list_of_tamilyears.pdf"
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, x: -20 }}

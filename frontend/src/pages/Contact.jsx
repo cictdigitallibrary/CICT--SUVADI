@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 
-const API = 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const Contact = () => {
   const { t, language } = useLanguage();

@@ -7,7 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 import { getBookCover } from '../utils/bookCovers';
 
-const API = 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 
 

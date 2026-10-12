@@ -4,7 +4,7 @@
  * Priority: local /images/cover/ path > API-served cover_image field.
  */
 
-const API = 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const COVER_MAP = {
   'தொல்காப்பியம் - எழுத்து – நச்சர். – மழைவை மகாலிங்கையர் (1847)': '/images/cover/editions/thol_1.jpg',

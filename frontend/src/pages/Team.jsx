@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 
-const API = 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 // Source: suvadi.cict.in/asp/team.aspx — all 7 members in official order
 const TEAM_MEMBERS = [

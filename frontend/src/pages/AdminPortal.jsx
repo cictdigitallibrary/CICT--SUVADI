@@ -18,8 +18,8 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
-const API = 'http://localhost:3001/api/admin';
-const BASE = 'http://localhost:3001';
+const API = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin`;
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const limit = 10;
 
 axios.interceptors.request.use(config => {
@@ -514,7 +514,7 @@ const AdminPortal = () => {
           </div>
           <button 
             onClick={() => {
-              sessionStorage.removeItem('adminAuth');
+              sessionStorage.removeItem('adminAuthToken');
               setIsAuthenticated(false);
             }}
             className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all text-[10px] font-bold uppercase tracking-wider"
