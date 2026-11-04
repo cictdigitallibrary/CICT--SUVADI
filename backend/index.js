@@ -73,10 +73,12 @@ const fsSync = require('fs');
 app.use((req, res, next) => { next(); });
 
 
-app.use('/images',  express.static(IMAGES_PATH));
-app.use('/songs',   express.static(SONGS_PATH));
-app.use('/webinc',  express.static(WEBINC_PATH));
-app.use('/storage', express.static(STORAGE_PATH));
+// Cache lifetimes: file names here are not content-hashed, so keep them modest
+// (ETag revalidation still applies). Scans and PDFs are effectively immutable.
+app.use('/images',  express.static(IMAGES_PATH,  { maxAge: '1d' }));
+app.use('/songs',   express.static(SONGS_PATH,   { maxAge: '7d' }));
+app.use('/webinc',  express.static(WEBINC_PATH,  { maxAge: '1d' }));
+app.use('/storage', express.static(STORAGE_PATH, { maxAge: '7d' }));
 
 const multer = require('multer');
 const fs = require('fs');
@@ -101,7 +103,12 @@ const uploadSong = multer({ storage: songStorage });
 // display scan thumbnails without knowing the owning song's id.
 const IMAGE_CACHE = {};
 function buildImageCache() {
-  if (!fs.existsSync(SONGS_PATH)) return;
+  try {
+    fs.accessSync(SONGS_PATH);
+  } catch (e) {
+    console.error(`❌ Manuscript scans unavailable: cannot access SONGS_PATH (${e.code || e.message}) as ${require('os').userInfo().username}`);
+    return;
+  }
   try {
     for (const dir of fs.readdirSync(SONGS_PATH)) {
       const dirPath = path.join(SONGS_PATH, dir);
@@ -122,6 +129,11 @@ function getImageUrl(cid, id, filename) {
   return null;
 }
 buildImageCache();
+// If the share was unreachable at startup, keep retrying so scans appear once
+// access is restored — without needing an application restart.
+setInterval(() => {
+  if (Object.keys(IMAGE_CACHE).length === 0) buildImageCache();
+}, 10 * 60 * 1000).unref();
 
 // Reads the first 4 bytes of a file and returns false if it is a PNG.
 function isRealScan(filePath) {
@@ -689,6 +701,15 @@ app.get('/api/proxy/transliterate', (req, res) => {
 });
 
 
+// Public response for an unreadable PDF: 404 only when the storage folder is
+// reachable but the file is absent; 503 when the storage share itself cannot be
+// reached. Paths and OS errors stay in the server log, not the response.
+async function sendPdfUnavailable(res) {
+  const storageReachable = await fs.promises.access(path.join(STORAGE_PATH, 'pdfs')).then(() => true, () => false);
+  if (storageReachable) return res.status(404).json({ error: 'PDF file not found' });
+  return res.status(503).json({ error: 'PDF storage is temporarily unavailable' });
+}
+
 // NEW PDF server — looks up by edition ID
 app.get('/api/proxy/pdf/:editionId', async (req, res) => {
   const { editionId } = req.params;
@@ -710,8 +731,8 @@ app.get('/api/proxy/pdf/:editionId', async (req, res) => {
       const stats = await fs.promises.stat(localPath);
       if (!stats.isFile() || stats.size < 1024) throw new Error('File missing or too small');
     } catch (err) {
-      console.error(`[PDF PROXY] Network Share / Filesystem error: ${err.message} | Path: ${localPath}`);
-      return res.status(404).json({ error: 'PDF not accessible on the network share', details: err.message, path: localPath });
+      console.error(`[PDF PROXY] Network Share / Filesystem error: ${err.code || ''} ${err.message} | Path: ${localPath}`);
+      return sendPdfUnavailable(res);
     }
 
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -753,11 +774,9 @@ app.get('/api/proxy/pdf', async (req, res) => {
       if (!stats.isFile() || stats.size < 1024) {
         throw new Error('File missing or too small');
       }
-    } catch (_) {
-      console.error(`[PDF] Local file not found or invalid: ${localPath}`);
-      return res.status(404).json({
-        error: 'PDF not available locally. Run: node backend/download_missing_pdfs.js',
-      });
+    } catch (err) {
+      console.error(`[PDF] Local file not found or invalid: ${err.code || ''} ${err.message} | Path: ${localPath}`);
+      return sendPdfUnavailable(res);
     }
 
     // Serve the file — Express handles Range requests, Content-Type, and streaming automatically

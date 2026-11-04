@@ -59,6 +59,22 @@ function redact(text) {
     console.log('backend/logs writable: true');
   } catch (e) { console.log('backend/logs writable: false', e.code); }
 
+  console.log('== Storage shares (PDFs and manuscript scans)');
+  console.log('running as:', require('os').userInfo().username, '| host:', require('os').hostname());
+  for (const [name, dir] of [['STORAGE_PATH/pdfs', process.env.STORAGE_PATH && path.join(process.env.STORAGE_PATH, 'pdfs')],
+                             ['SONGS_PATH', process.env.SONGS_PATH]]) {
+    if (!dir) { console.log(`${name}: (not set)`); continue; }
+    try {
+      const entries = fs.readdirSync(dir);
+      console.log(`${name}: readable (${entries.length} entries) -> ${dir}`);
+    } catch (e) { console.log(`${name}: NOT READABLE code=${e.code || ''} ${e.message.split(',')[0]} -> ${dir}`); }
+  }
+  if (process.env.STORAGE_PATH) {
+    const sample = path.join(process.env.STORAGE_PATH, 'pdfs', 'edition_1.pdf');
+    try { const st = fs.statSync(sample); console.log(`sample PDF edition_1.pdf: ${(st.size / 1048576).toFixed(1)} MB`); }
+    catch (e) { console.log(`sample PDF edition_1.pdf: NOT READABLE code=${e.code || ''}`); }
+  }
+
   console.log('== Latest application log (backend/logs)');
   try {
     const latest = fs.readdirSync(logDir).filter(f => /^app-.*\.log$/.test(f)).sort().pop();
