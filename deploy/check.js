@@ -60,7 +60,8 @@ function redact(text) {
   } catch (e) { console.log('backend/logs writable: false', e.code); }
 
   console.log('== Storage shares (PDFs and manuscript scans)');
-  console.log('running as:', require('os').userInfo().username, '| host:', require('os').hostname());
+  // os.userInfo() can throw under IIS app pool identities (uv_os_get_passwd ENOMEM)
+  console.log('running as:', process.env.USERNAME || process.env.USER || 'unknown account', '| host:', require('os').hostname());
   for (const [name, dir] of [['STORAGE_PATH/pdfs', process.env.STORAGE_PATH && path.join(process.env.STORAGE_PATH, 'pdfs')],
                              ['SONGS_PATH', process.env.SONGS_PATH]]) {
     if (!dir) { console.log(`${name}: (not set)`); continue; }

@@ -102,14 +102,19 @@ const uploadSong = multer({ storage: songStorage });
 // Maps `${cid}/${fname}` → first physical file found, so browse pages can
 // display scan thumbnails without knowing the owning song's id.
 const IMAGE_CACHE = {};
+// Account name for log messages only. os.userInfo() can throw under IIS app pool
+// identities (uv_os_get_passwd ENOMEM), so read the environment instead.
+function appAccount() {
+  return process.env.USERNAME || process.env.USER || 'unknown account';
+}
 function buildImageCache() {
   try {
-    fs.accessSync(SONGS_PATH);
-  } catch (e) {
-    console.error(`❌ Manuscript scans unavailable: cannot access SONGS_PATH (${e.code || e.message}) as ${require('os').userInfo().username}`);
-    return;
-  }
-  try {
+    try {
+      fs.accessSync(SONGS_PATH);
+    } catch (e) {
+      console.error(`❌ Manuscript scans unavailable: cannot access SONGS_PATH (${e.code || e.message}) as ${appAccount()}`);
+      return;
+    }
     for (const dir of fs.readdirSync(SONGS_PATH)) {
       const dirPath = path.join(SONGS_PATH, dir);
       if (!fs.statSync(dirPath).isDirectory()) continue;
