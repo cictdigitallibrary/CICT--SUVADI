@@ -7,7 +7,9 @@
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "frontend": "cd frontend && npm run dev",
     "backend": "cd backend && node src/server.js",
-    "init-db": "cd backend && node db/init.js"
+    "init-db": "cd backend && node db/init.js",
+    "deploy:plesk": "npm --prefix backend install --omit=dev --no-audit --no-fund && npm --prefix frontend ci --legacy-peer-deps --no-audit --no-fund && npm --prefix frontend run build && node deploy/write-iisnode-config.js",
+    "diag": "node deploy/check.js"
   },
   "keywords": [],
   "author": "",

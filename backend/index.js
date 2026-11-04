@@ -1,3 +1,5 @@
+// Must stay first: records startup failures (including missing modules) to backend/logs
+const runtimeLog = require('./runtime-log');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -20,6 +22,8 @@ process.on('unhandledRejection', (reason) => {
 const { initRetrieval, handleChatQuery } = require('./chatbot/retrieval');
 
 const app = express();
+app.use(runtimeLog.httpErrorLogger);
+// Under iisnode PORT is a named pipe (\\.\pipe\...); 3001 is the local-dev default
 const PORT = process.env.PORT || 3001;
 
 const jwt = require('jsonwebtoken');
@@ -1424,7 +1428,22 @@ app.delete('/api/admin/ebook-editions/:id', async (req, res) => {
 });
 
 // ── Health check ─────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => res.send('OK'));
+// Always 200 while the process is up; `database` reports PostgreSQL reachability
+app.get('/health', async (req, res) => {
+  let database = 'ok';
+  try {
+    await pool.query('SELECT 1');
+  } catch (e) {
+    database = 'unavailable';
+    console.error('❌ Health check DB error:', e.code || '', e.message);
+  }
+  res.set('Cache-Control', 'no-store').json({
+    status: 'ok',
+    database,
+    uptimeSeconds: Math.round(process.uptime()),
+    timestamp: new Date(),
+  });
+});
 app.get('/api/status', (req, res) =>
   res.json({ status: 'Suvadi API is live', db: 'PostgreSQL', timestamp: new Date() })
 );
@@ -1472,9 +1491,20 @@ app.use((req, res, next) => {
   res.sendFile(FRONTEND_INDEX);
 });
 
+// ── Final error handler ──────────────────────────────────────────────────────
+// Errors thrown (or rejected) inside routes land here; in production Express's
+// default handler would not log them anywhere.
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || 500;
+  if (status >= 500) console.error(`❌ ${req.method} ${req.path} failed:`, err.stack || err.message);
+  if (res.headersSent) return next(err);
+  res.status(status).json({ error: status >= 500 || !err.expose ? 'Internal Server Error' : err.message });
+});
+
 // ── Robust server start ──────────────────────────────────────────────────────
 function startServer(port) {
   const server = app.listen(port, () => {
+    runtimeLog.write('LISTENING', `db=${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
     console.log('');
     console.log('═══════════════════════════════════════════════════');
     console.log(`  ✅ Backend running  →  http://localhost:${port}`);
@@ -1486,13 +1516,18 @@ function startServer(port) {
   });
 
   server.on('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      const nextPort = port + 1;
+    const numericPort = Number(port);
+    if (err.code === 'EADDRINUSE' && Number.isInteger(numericPort)) {
+      // Local development only: try the next TCP port
+      const nextPort = numericPort + 1;
       console.warn(`⚠️  Port ${port} busy — trying port ${nextPort}...`);
       server.close();
       startServer(nextPort);
     } else {
-      console.error('❌ Server error:', err.message);
+      // Cannot listen (e.g. on the iisnode pipe): exit so the host restarts us,
+      // instead of leaving an idle process holding database connections.
+      console.error('❌ Server failed to listen:', err.code || '', err.message);
+      process.exit(1);
     }
   });
 
