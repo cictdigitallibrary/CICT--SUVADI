@@ -314,7 +314,7 @@ const AdminPortal = () => {
     setChartLoading(true);
     try {
       // We only need the monthly aggregation from the backend now
-      const r = await axios.get(`http://localhost:3001/api/admin/dashboard/upload-stats?view=monthly`);
+      const r = await axios.get(`${API}/dashboard/upload-stats?view=monthly`);
       setChartData(r.data);
     } catch {}
     finally { setChartLoading(false); }

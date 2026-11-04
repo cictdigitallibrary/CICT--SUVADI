@@ -4,7 +4,9 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { Pool } = require('pg');
 const path = require('path');
-require('dotenv').config();
+// Load backend/.env by absolute path — under IIS/iisnode the working directory
+// is not guaranteed to be backend/, so a bare config() could miss the file.
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // ── Keep server alive: log errors but never exit ──────────────────────────
 process.on('uncaughtException', (err) => {
@@ -1439,6 +1441,35 @@ app.post('/api/chat', async (req, res) => {
     console.error('[Chatbot API Error]', error.message, error.stack);
     res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
+});
+
+// ── Frontend (production build) ──────────────────────────────────────────────
+// Serves frontend/dist from the same origin as the API, so relative /api and
+// /images URLs work. Registered after every API route so nothing is shadowed.
+const FRONTEND_DIST  = path.join(__dirname, '..', 'frontend', 'dist');
+const FRONTEND_INDEX = path.join(FRONTEND_DIST, 'index.html');
+
+app.use(express.static(FRONTEND_DIST, {
+  index: false,
+  setHeaders: (res, filePath) => {
+    // Vite emits content-hashed files under assets/ — safe to cache long-term
+    if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  },
+}));
+
+// React Router fallback: page URLs (no file extension) get index.html.
+// API/media paths and missing files fall through to the normal 404.
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  if (/^\/(api|images|songs|webinc|storage|health)(\/|$)/.test(req.path)) return next();
+  if (path.extname(req.path)) return next();
+  if (!fsSync.existsSync(FRONTEND_INDEX)) return next();
+  // helmet's default CSP would block the SPA's fonts, maps and blob URLs
+  res.removeHeader('Content-Security-Policy');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.sendFile(FRONTEND_INDEX);
 });
 
 // ── Robust server start ──────────────────────────────────────────────────────
