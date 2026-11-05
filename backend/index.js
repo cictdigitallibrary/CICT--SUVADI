@@ -742,7 +742,8 @@ app.get('/api/proxy/pdf/:editionId', async (req, res) => {
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Range, Content-Length, Content-Type');
-    return res.sendFile(localPath);
+    // Browser cache (ETag revalidation still applies): reopening an edition reuses fetched ranges
+    return res.sendFile(localPath, { maxAge: '1d' });
   } catch (err) {
     console.error('[PDF NEW] Error:', err.message);
     if (!res.headersSent) res.status(500).json({ error: err.message });
@@ -787,7 +788,7 @@ app.get('/api/proxy/pdf', async (req, res) => {
     // Serve the file — Express handles Range requests, Content-Type, and streaming automatically
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Range, Content-Length, Content-Type');
-    return res.sendFile(localPath);
+    return res.sendFile(localPath, { maxAge: '1d' });
 
   } catch (err) {
     console.error('[PDF] Error:', err.message);
