@@ -28,12 +28,19 @@ const playFlipSound = () => {
 /* ─────────────────────────────────────────────────────────────────────────────
    PDFPage — lazy, only renders when within RENDER_WIN of current page
 ───────────────────────────────────────────────────────────────────────────── */
-const PDFPage = React.forwardRef(({ pageNum, currentPage, pageHeight }, ref) => {
+const PDFPage = React.forwardRef(({ pageNum, currentPage, pageWidth, pageHeight }, ref) => {
   const inView = Math.abs(pageNum - currentPage) <= RENDER_WIN;
+  // Fit the page inside its slot: pages wider than the slot are sized by width,
+  // so no edge is cut off by the slot's overflow clipping.
+  const [ratio, setRatio] = useState(null);
+  const onPageLoad = useCallback(p => setRatio(p.originalWidth / p.originalHeight), []);
+  const byWidth = ratio !== null && ratio > pageWidth / pageHeight;
   return (
     <div ref={ref} style={{ width: '100%', height: '100%', background: '#fff', overflow: 'hidden', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
       {inView ? (
-        <Page pageNumber={pageNum} height={pageHeight} renderTextLayer={false} renderAnnotationLayer={false} />
+        <Page pageNumber={pageNum} onLoadSuccess={onPageLoad}
+          {...(byWidth ? { width: pageWidth } : { height: pageHeight })}
+          renderTextLayer={false} renderAnnotationLayer={false} />
       ) : (
         <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#f7f4ef,#ede8e0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ color: '#c9973b40', fontFamily: 'Cinzel,serif', fontSize: 11 }}>{pageNum}</span>
@@ -96,10 +103,15 @@ export default function FlipbookReader() {
     disableAutoFetch: fallbackMode
   }), [fallbackMode]);
 
-  const onDocumentLoadSuccess = useCallback(({ numPages }) => {
-    console.log('[FlipbookReader] Document load success. Pages:', numPages);
-    setPdfTotal(numPages);
-    setPdfReady(true);
+  // Page shape (width / height) taken from the PDF's first page; 794x1024 until known
+  const [pageRatio, setPageRatio] = useState(794 / 1024);
+
+  const onDocumentLoadSuccess = useCallback((pdf) => {
+    console.log('[FlipbookReader] Document load success. Pages:', pdf.numPages);
+    pdf.getPage(1)
+      .then(p => { const v = p.getViewport({ scale: 1 }); if (v.width > 0 && v.height > 0) setPageRatio(v.width / v.height); })
+      .catch(() => {})
+      .finally(() => { setPdfTotal(pdf.numPages); setPdfReady(true); });
   }, []);
 
   const onDocumentLoadError = useCallback((err) => {
@@ -161,7 +173,7 @@ export default function FlipbookReader() {
     }
   }, [proxyUrl, bookTitle]);
 
-  /* Responsive sizing — page aspect ratio 794x1024 */
+  /* Responsive sizing — fits one (portrait) or two pages of the PDF's own aspect ratio */
   const [sz, setSz] = useState({ w: 450, h: 580 });
   useEffect(() => {
     const calc = () => {
@@ -169,7 +181,7 @@ export default function FlipbookReader() {
       const vh = window.innerHeight - 130;
       const narrow = vw < 680;
       setPortrait(narrow);
-      const ratio = 794 / 1024;
+      const ratio = pageRatio;
       if (narrow) {
         const maxW = vw - 24;
         const maxH = Math.floor(vh * 0.88);
@@ -185,9 +197,12 @@ export default function FlipbookReader() {
       }
     };
     calc();
-    window.addEventListener('resize', calc);
-    return () => window.removeEventListener('resize', calc);
-  }, []);
+    // Debounced: every size change rebuilds the flipbook (see fbKey below)
+    let t;
+    const onResize = () => { clearTimeout(t); t = setTimeout(calc, 150); };
+    window.addEventListener('resize', onResize);
+    return () => { clearTimeout(t); window.removeEventListener('resize', onResize); };
+  }, [pageRatio]);
 
   /* Navigation */
   const flipNext = useCallback(() => bookRef.current?.pageFlip()?.flipNext(), []);
@@ -203,20 +218,23 @@ export default function FlipbookReader() {
     return () => window.removeEventListener('keydown', h);
   }, [flipNext, flipPrev]);
 
-  /* Fullscreen */
+  /* Fullscreen — state follows the browser, so leaving with Esc updates the icon */
+  useEffect(() => {
+    const h = () => setIsFS(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', h);
+    return () => document.removeEventListener('fullscreenchange', h);
+  }, []);
   const toggleFS = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFS(true);
-    } else {
-      document.exitFullscreen().catch(() => {});
-      setIsFS(false);
-    }
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen().catch(() => {});
   };
 
   const scaledW    = Math.round(sz.w * zoom);
   const scaledH    = Math.round(sz.h * zoom);
   const bookTotalW = portrait ? scaledW : scaledW * 2;
+  // react-pageflip reads width/height only when it is created, so a new size
+  // needs a new instance — otherwise zoomed pages are clipped to the old size.
+  const fbKey = `${scaledW}x${scaledH}-${portrait ? 'p' : 'l'}`;
 
   /* No source guard */
   if (!proxyUrl) {
@@ -231,6 +249,7 @@ export default function FlipbookReader() {
 
   /* Shared flipbook props */
   const fbProps = {
+    startPage: Math.max(page - 1, 0),
     ref: bookRef, width: scaledW, height: scaledH, size: 'fixed',
     minWidth: 150, maxWidth: 900, minHeight: 200, maxHeight: 1400,
     maxShadowOpacity: 0.2,
@@ -269,9 +288,10 @@ export default function FlipbookReader() {
           <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: 9, fontFamily: 'Cinzel,serif', whiteSpace: 'nowrap', marginRight: 4 }}>
             {page} / {total || '...'}
           </span>
-          <button onClick={() => setZoom(z => Math.max(z - 0.1, 0.5))} style={iBtn}><ZoomOut  size={13}/></button>
-          <button onClick={() => setZoom(z => Math.min(z + 0.1, 1.8))} style={iBtn}><ZoomIn   size={13}/></button>
-          <button onClick={toggleFS} style={iBtn}>{isFS ? <Minimize size={13}/> : <Maximize size={13}/>}</button>
+          <button onClick={() => setZoom(z => Math.max(+(z - 0.1).toFixed(1), 0.5))} style={iBtn} aria-label="Zoom out"><ZoomOut  size={13}/></button>
+          <button onClick={() => setZoom(1)} style={{ ...iBtn, fontSize: 9, fontFamily: 'Cinzel,serif', minWidth: 40 }} title="Fit page" aria-label="Fit page">{Math.round(zoom * 100)}%</button>
+          <button onClick={() => setZoom(z => Math.min(+(z + 0.1).toFixed(1), 1.8))} style={iBtn} aria-label="Zoom in"><ZoomIn   size={13}/></button>
+          <button onClick={toggleFS} style={iBtn} aria-label="Fullscreen">{isFS ? <Minimize size={13}/> : <Maximize size={13}/>}</button>
 
 
         </div>
@@ -306,7 +326,10 @@ export default function FlipbookReader() {
           )}
         </AnimatePresence>
 
-        {/* FLIPBOOK */}
+        {/* FLIPBOOK — own scroll area: when zoomed wider than the screen the book
+            starts at the left edge (auto margins collapse) and every edge can be
+            scrolled to, instead of being centred past the unscrollable left side. */}
+        <div style={{ alignSelf: 'stretch', overflowX: 'auto', overflowY: 'hidden', paddingBottom: 30, zIndex: 1 }}>
         <div style={{
           position: 'relative', opacity: ready ? 1 : 0, transition: 'opacity 0.5s ease',
           zIndex: 1, width: bookTotalW, margin: '0 auto',
@@ -351,10 +374,10 @@ export default function FlipbookReader() {
                   </div>
                 </div>
               ) : pdfTotal > 0 ? (
-                <HTMLFlipBook {...fbProps}>
+                <HTMLFlipBook key={fbKey} {...fbProps}>
                   {Array.from({ length: pdfTotal + (pdfTotal % 2) }, (_, i) => i + 1).map(n =>
                     n <= pdfTotal ? (
-                      <PDFPage key={n} pageNum={n} currentPage={page} pageHeight={scaledH} />
+                      <PDFPage key={n} pageNum={n} currentPage={page} pageWidth={scaledW} pageHeight={scaledH} />
                     ) : (
                       <div key={n} style={{ background: '#fff' }} />
                     )
@@ -363,6 +386,7 @@ export default function FlipbookReader() {
               ) : null}
             </Document>
           </div>
+        </div>
         </div>
 
         {/* NAVIGATION */}

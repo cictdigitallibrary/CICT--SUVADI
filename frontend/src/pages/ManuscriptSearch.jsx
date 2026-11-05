@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -187,6 +187,14 @@ const ManuscriptSearch = () => {
   const [fetchingCategoryList, setFetchingCategoryList] = useState(false);
   const [detailZoom, setDetailZoom] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  /* Folio pan position: re-centred whenever the zoom or the folio changes, so a
+     dragged image never stays shifted (and clipped) after zooming back out. */
+  const panX = useMotionValue(0);
+  const panY = useMotionValue(0);
+  const folioImgRef = useRef(null);
+  // jump() also stops a running drag-momentum animation, which set() would not
+  useEffect(() => { panX.jump(0); panY.jump(0); }, [detailZoom, inlineViewerFolio, isFullscreen, panX, panY]);
 
   useEffect(() => {
     const handleFSChange = () => {
@@ -1360,12 +1368,22 @@ const ManuscriptSearch = () => {
 
               <motion.div
                 animate={{ scale: detailZoom }}
-                drag
-                dragConstraints={{ top: -400, bottom: 400, left: -400, right: 400 }}
-                className="relative flex items-center justify-center w-full h-auto cursor-grab active:cursor-grabbing"
+                style={{ x: panX, y: panY }}
+                // Pan only when zoomed in (keeps page scrolling on touch screens at 100%),
+                // and far enough to reach every edge of the scaled image.
+                drag={detailZoom > 1}
+                dragConstraints={(() => {
+                  const img = folioImgRef.current, box = imageContainerRef.current;
+                  if (!img || !box || detailZoom <= 1) return { top: 0, bottom: 0, left: 0, right: 0 };
+                  const dx = Math.max(0, (img.offsetWidth * detailZoom - box.clientWidth) / 2);
+                  const dy = Math.max(0, (img.offsetHeight * detailZoom - box.clientHeight) / 2);
+                  return { top: -dy, bottom: dy, left: -dx, right: dx };
+                })()}
+                className={`relative flex items-center justify-center w-full h-auto ${detailZoom > 1 ? 'cursor-grab active:cursor-grabbing' : ''}`}
               >
                 {inlineViewerFolio.image_url ? (
                   <img
+                    ref={folioImgRef}
                     src={`${API}${inlineViewerFolio.image_url}`}
                     className={`w-full h-auto object-contain drop-shadow-xl ${
                       isFullscreen ? 'max-h-[90vh]' : 'max-h-[70vh]'

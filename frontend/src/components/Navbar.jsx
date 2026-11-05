@@ -61,7 +61,7 @@ const Navbar = () => {
         {/* ── Right side container ── */}
         <div className="flex items-center gap-4 lg:gap-6 ml-auto">
           {/* ── Desktop Nav links ── */}
-          <div className="hidden lg:flex items-center gap-10">
+          <div className="hidden lg:flex items-center gap-5 xl:gap-10">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
             return (
@@ -88,7 +88,7 @@ const Navbar = () => {
           <button
             onClick={toggleLanguage}
             id="lang-toggle-btn"
-            className="flex items-center gap-2 px-6 py-2.5 text-[12px] font-black uppercase tracking-[0.2em] border-2 transition-all duration-300 shadow-lg border-gold/30 text-gold hover:bg-gold hover:text-maroon"
+            className="flex items-center gap-2 px-4 xl:px-6 py-2.5 text-[12px] font-black uppercase tracking-[0.2em] border-2 transition-all duration-300 shadow-lg border-gold/30 text-gold hover:bg-gold hover:text-maroon"
             style={{ fontFamily: '"Cinzel", serif' }}
           >
             <span className="text-sm">🌐</span>
