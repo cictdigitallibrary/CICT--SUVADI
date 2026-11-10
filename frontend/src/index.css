@@ -472,7 +472,7 @@ a {
 .home-faculty-artwork {
   position: absolute;
   inset: 0;
-  background-image: url('/images/bg/faculty-bg.png');
+  background-image: var(--artwork-bg, url('/images/bg/faculty-bg.png'));
   background-size: cover;
   background-position: center center;
   /* More visible — show the parchment texture clearly */
@@ -576,7 +576,7 @@ a {
 .home-research-artwork {
   position: absolute;
   inset: 0;
-  background-image: url('/images/bg/research-bg.png');
+  background-image: var(--artwork-bg, url('/images/bg/research-bg.png'));
   background-size: cover;
   background-position: center center;
 }
@@ -696,7 +696,7 @@ a {
 .home-editions-artwork {
   position: absolute;
   inset: 0;
-  background-image: url('/images/bg/editions-floral-left.png'), url('/images/bg/editions-floral-right.png');
+  background-image: var(--artwork-left, url('/images/bg/editions-floral-left.png')), var(--artwork-right, url('/images/bg/editions-floral-right.png'));
   background-position: left center, right center;
   background-size: auto 90%, auto 90%;
   background-repeat: no-repeat, no-repeat;
@@ -757,7 +757,7 @@ a {
 .home-ebooks-artwork {
   position: absolute;
   inset: 0;
-  background-image: url('/images/bg/ebooks-bg.png'),
+  background-image: var(--artwork-bg, url('/images/bg/ebooks-bg.png')),
     url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9973B' fill-opacity='0.07'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   background-size: cover, 60px 60px;
   background-position: center center, 0 0;

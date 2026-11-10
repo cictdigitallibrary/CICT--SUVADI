@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import FallbackImg from './FallbackImg';
 
 const Navbar = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -51,9 +52,9 @@ const Navbar = () => {
         {/* ── Logo ── */}
         <Link to="/" className="flex items-center gap-5 group flex-shrink-0">
           <div className="w-[72px] h-[72px] flex items-center justify-center transition-transform duration-500 flex-shrink-0 group-hover:scale-105">
-            <img src="/images/cict_emblem.png" alt="CICT Emblem"
+            <FallbackImg src="/images/cict_emblem.png" alt="CICT Emblem"
               className="w-full h-full object-contain drop-shadow-md"
-              onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-white text-xs font-bold">CICT</span>'; }}
+              fallback={<span className="text-white text-xs font-bold">CICT</span>}
             />
           </div>
         </Link>

@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
+import { useImageRetry } from '../utils/imageRetry';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const Contact = () => {
   const { t, language } = useLanguage();
+  const mapBg = useImageRetry('/images/bg/contact-map.jpg');
   const feedbackFormRef = useRef(null);
 
   const contactInfo = [
@@ -40,7 +42,9 @@ const Contact = () => {
   ];
 
   return (
-    <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
+    // overflow-x: clip — the corner ornaments reach 1.5rem past the container, which
+    // overflowed the screen (sideways scroll) wherever the container is full-width
+    <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white" style={{ overflowX: 'clip' }}>
       <style>{`
         @media (min-width: 640px) {
           .contact-hero-bg {
@@ -196,7 +200,7 @@ const Contact = () => {
         <div className="mt-24 bg-stone/5 rounded-2xl border border-gold/25 shadow-lg overflow-hidden relative group h-[360px] z-10">
           {/* Real map — Central Institute of Classical Tamil (CICT), Perumbakkam, Chennai */}
           <div className="absolute inset-0 bg-cover bg-center scale-100 group-hover:scale-105 transition-transform duration-[1200ms] ease-out"
-            style={{ backgroundImage: "url('/images/bg/contact-map.jpg')" }} />
+            style={{ backgroundImage: `url('${mapBg}')` }} />
 
           {/* Heritage overlay — keeps pin/label/button legible over the map */}
           <div className="absolute inset-0 bg-gradient-to-b from-ivory/25 via-ivory/18 to-maroon/22" />

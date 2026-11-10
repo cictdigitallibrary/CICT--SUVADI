@@ -14,7 +14,9 @@ import 'react-pdf/dist/Page/TextLayer.css';
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 const BACKEND = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-const RENDER_WIN = 6; // render pages within ±N of current page
+// Render pages within ±N of the current page: the visible spread plus the pages
+// revealed while flipping either way. Larger windows fetch and render pages nobody sees.
+const RENDER_WIN = 3;
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Page flip sound
@@ -26,26 +28,49 @@ const playFlipSound = () => {
 };
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   PDFPage — lazy, only renders when within RENDER_WIN of current page
+   PDFPage — renders the PDF page only while `active` (see FlipbookReader)
+
+   The outer div belongs to page-flip: it rewrites that element's style.cssText
+   when laying out and flipping, which wiped the white background, centring and
+   clipping React had set there (pages then showed the maroon stage through them).
+   All page styling therefore lives on the inner div / .suvadi-page class.
 ───────────────────────────────────────────────────────────────────────────── */
-const PDFPage = React.forwardRef(({ pageNum, currentPage, pageWidth, pageHeight }, ref) => {
-  const inView = Math.abs(pageNum - currentPage) <= RENDER_WIN;
-  // Fit the page inside its slot: pages wider than the slot are sized by width,
-  // so no edge is cut off by the slot's overflow clipping.
+const PDFPage = React.forwardRef(({ pageNum, active, pdf, pageWidth, pageHeight, onRendered, onFailed }, ref) => {
+  // Page shape, read before the first draw so the page is drawn once at its final
+  // size (pages wider than the slot are fitted by width, so no edge is cut off).
   const [ratio, setRatio] = useState(null);
-  const onPageLoad = useCallback(p => setRatio(p.originalWidth / p.originalHeight), []);
+
+  useEffect(() => {
+    if (!active || ratio !== null || !pdf) return undefined;
+    let alive = true;
+    pdf.getPage(pageNum)
+      .then(p => { const v = p.getViewport({ scale: 1 }); if (alive) setRatio(v.width / v.height); })
+      .catch(() => { if (alive) setRatio(pageWidth / pageHeight); }); // <Page> reports its own load error
+    return () => { alive = false; };
+  }, [active, ratio, pdf, pageNum, pageWidth, pageHeight]);
+
+  // A failed load/draw (e.g. a byte-range request refused by the server) is reported
+  // to the reader, which reloads the document (see onPageFailed). Cancelled draws are
+  // not errors and never reach here.
+  const onPageError = useCallback(() => onFailed?.(pageNum), [onFailed, pageNum]);
+  const handleRendered = useCallback(() => onRendered?.(pageNum), [onRendered, pageNum]);
   const byWidth = ratio !== null && ratio > pageWidth / pageHeight;
+
   return (
-    <div ref={ref} style={{ width: '100%', height: '100%', background: '#fff', overflow: 'hidden', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
-      {inView ? (
-        <Page pageNumber={pageNum} onLoadSuccess={onPageLoad}
-          {...(byWidth ? { width: pageWidth } : { height: pageHeight })}
-          renderTextLayer={false} renderAnnotationLayer={false} />
-      ) : (
-        <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#f7f4ef,#ede8e0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ color: '#c9973b40', fontFamily: 'Cinzel,serif', fontSize: 11 }}>{pageNum}</span>
-        </div>
-      )}
+    <div ref={ref} className="suvadi-page">
+      <div style={{ width: '100%', height: '100%', background: '#fff', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {active && ratio !== null ? (
+          <Page pageNumber={pageNum}
+            {...(byWidth ? { width: pageWidth } : { height: pageHeight })}
+            onRenderSuccess={handleRendered} onRenderError={onPageError} onLoadError={onPageError}
+            loading={null} error={null}
+            renderTextLayer={false} renderAnnotationLayer={false} />
+        ) : (
+          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#f7f4ef,#ede8e0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#c9973b40', fontFamily: 'Cinzel,serif', fontSize: 11 }}>{pageNum}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 });
@@ -88,7 +113,7 @@ export default function FlipbookReader() {
   const [retryKey, setRetryKey] = useState(Date.now());
 
   const [zoom,        setZoom]        = useState(1.0);
-  const [portrait,    setPortrait]    = useState(false);
+  const [pdfDoc,      setPdfDoc]      = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [dlError,     setDlError]     = useState(false);
   
@@ -97,11 +122,15 @@ export default function FlipbookReader() {
   const total = pdfTotal;
 
   // Memoize options so <Document> doesn't re-render and abort on every state change
-  const documentOptions = useMemo(() => ({
-    ...PDF_OPTIONS,
-    disableStream: fallbackMode,
-    disableAutoFetch: fallbackMode
-  }), [fallbackMode]);
+  // Range-only loading: fetch just the byte ranges of the pages being shown (HTTP 206),
+  // instead of streaming the whole file (up to 660 MB) in the background.
+  // 512 KB chunks keep the number of range requests low.
+  // Fallback (after a load error): plain whole-file streaming, for the case where
+  // byte-range responses are what failed — retrying the same options would not help.
+  const documentOptions = useMemo(() => (fallbackMode
+    ? { ...PDF_OPTIONS, disableRange: true }
+    : { ...PDF_OPTIONS, disableStream: true, disableAutoFetch: true, rangeChunkSize: 512 * 1024 }
+  ), [fallbackMode]);
 
   // Page shape (width / height) taken from the PDF's first page; 794x1024 until known
   const [pageRatio, setPageRatio] = useState(794 / 1024);
@@ -111,7 +140,7 @@ export default function FlipbookReader() {
     pdf.getPage(1)
       .then(p => { const v = p.getViewport({ scale: 1 }); if (v.width > 0 && v.height > 0) setPageRatio(v.width / v.height); })
       .catch(() => {})
-      .finally(() => { setPdfTotal(pdf.numPages); setPdfReady(true); });
+      .finally(() => { setPdfDoc(pdf); setPdfTotal(pdf.numPages); setPdfReady(true); });
   }, []);
 
   const onDocumentLoadError = useCallback((err) => {
@@ -173,36 +202,35 @@ export default function FlipbookReader() {
     }
   }, [proxyUrl, bookTitle]);
 
-  /* Responsive sizing — fits one (portrait) or two pages of the PDF's own aspect ratio */
-  const [sz, setSz] = useState({ w: 450, h: 580 });
+  /* Responsive sizing — fits one (portrait) or two pages of the PDF's own aspect ratio.
+     Computed during render (not in an effect), so the flipbook is first created at
+     its final size instead of being created and immediately rebuilt. */
+  const [viewport, setViewport] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
   useEffect(() => {
-    const calc = () => {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight - 130;
-      const narrow = vw < 680;
-      setPortrait(narrow);
-      const ratio = pageRatio;
-      if (narrow) {
-        const maxW = vw - 24;
-        const maxH = Math.floor(vh * 0.88);
-        let w = Math.min(maxW, Math.floor(maxH * ratio));
-        let h = Math.round(w / ratio);
-        setSz({ w: Math.max(w, 180), h: Math.max(h, 240) });
-      } else {
-        const maxPageW = Math.floor(vw * 0.44);
-        const maxH = Math.floor(vh * 0.92);
-        let w = Math.min(maxPageW, Math.floor(maxH * ratio));
-        let h = Math.round(w / ratio);
-        setSz({ w: Math.max(w, 220), h: Math.max(h, 280) });
-      }
-    };
-    calc();
     // Debounced: every size change rebuilds the flipbook (see fbKey below)
     let t;
-    const onResize = () => { clearTimeout(t); t = setTimeout(calc, 150); };
+    const onResize = () => { clearTimeout(t); t = setTimeout(() => setViewport({ w: window.innerWidth, h: window.innerHeight }), 150); };
     window.addEventListener('resize', onResize);
     return () => { clearTimeout(t); window.removeEventListener('resize', onResize); };
-  }, [pageRatio]);
+  }, []);
+  const { sz, portrait } = useMemo(() => {
+    const vw = viewport.w;
+    const vh = viewport.h - 130;
+    const narrow = vw < 680;
+    const ratio = pageRatio;
+    if (narrow) {
+      const maxW = vw - 24;
+      const maxH = Math.floor(vh * 0.88);
+      const w = Math.min(maxW, Math.floor(maxH * ratio));
+      const h = Math.round(w / ratio);
+      return { portrait: true, sz: { w: Math.max(w, 180), h: Math.max(h, 240) } };
+    }
+    const maxPageW = Math.floor(vw * 0.44);
+    const maxH = Math.floor(vh * 0.92);
+    const w = Math.min(maxPageW, Math.floor(maxH * ratio));
+    const h = Math.round(w / ratio);
+    return { portrait: false, sz: { w: Math.max(w, 220), h: Math.max(h, 280) } };
+  }, [viewport, pageRatio]);
 
   /* Navigation */
   const flipNext = useCallback(() => bookRef.current?.pageFlip()?.flipNext(), []);
@@ -235,6 +263,39 @@ export default function FlipbookReader() {
   // react-pageflip reads width/height only when it is created, so a new size
   // needs a new instance — otherwise zoomed pages are clipped to the old size.
   const fbKey = `${scaledW}x${scaledH}-${portrait ? 'p' : 'l'}`;
+
+  /* Visible pages first: neighbours (pre-rendered for flipping) start only after the
+     pages on screen have been drawn, so they do not compete with them for the
+     byte-range downloads and the PDF worker. Tracked per flipbook instance (fbKey). */
+  const drawKey = `${fbKey}#${retryKey}`;
+  const [drawn, setDrawn] = useState({ key: '', pages: new Set() });
+  const onPageRendered = useCallback((n) => {
+    setDrawn(d => {
+      if (d.key === drawKey && d.pages.has(n)) return d;
+      const pages = new Set(d.key === drawKey ? d.pages : []);
+      pages.add(n);
+      return { key: drawKey, pages };
+    });
+  }, [drawKey]);
+  // Landscape shows spreads 1-2, 3-4, …; `page` can be either side of a spread
+  const visiblePages = portrait ? [page] : (page % 2 ? [page, page + 1] : [page - 1, page]);
+  const spreadDrawn = visiblePages
+    .filter(n => n >= 1 && n <= total)
+    .every(n => drawn.key === drawKey && drawn.pages.has(n));
+
+  /* A page that fails to load (e.g. a byte range refused by the server) cannot be
+     retried inside the same document: PDF.js keeps the failed ranges marked as
+     pending and never requests them again. So the document is reloaded — first with
+     the same range loading, then once more as a whole-file stream. */
+  const reloads = useRef(0);
+  const onPageFailed = useCallback(() => {
+    if (reloads.current >= 2) return;
+    reloads.current += 1;
+    if (reloads.current === 2) setFallbackMode(true);
+    setPdfDoc(null);
+    setRetryKey(Date.now());
+  }, []);
+  const isActive = n => visiblePages.includes(n) || (spreadDrawn && Math.abs(n - page) <= RENDER_WIN);
 
   /* No source guard */
   if (!proxyUrl) {
@@ -276,9 +337,12 @@ export default function FlipbookReader() {
         </button>
 
         <div style={{ flex: 1, textAlign: 'center', overflow: 'hidden', minWidth: 0 }}>
-          <div style={{ color: 'rgba(201,151,59,0.45)', fontSize: 7, fontFamily: 'Cinzel,serif', letterSpacing: '0.45em', textTransform: 'uppercase' }}>
-            READING EDITION
-          </div>
+          {/* No room beside the controls on phones: it wrapped to "READIN / EDITIO" */}
+          {!portrait && (
+            <div style={{ color: 'rgba(201,151,59,0.45)', fontSize: 7, fontFamily: 'Cinzel,serif', letterSpacing: '0.45em', textTransform: 'uppercase' }}>
+              READING EDITION
+            </div>
+          )}
           <div style={{ color: '#fff', fontSize: 13, fontFamily: '"Noto Sans Tamil",sans-serif', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {decodeURIComponent(bookTitle)}
           </div>
@@ -377,9 +441,9 @@ export default function FlipbookReader() {
                 <HTMLFlipBook key={fbKey} {...fbProps}>
                   {Array.from({ length: pdfTotal + (pdfTotal % 2) }, (_, i) => i + 1).map(n =>
                     n <= pdfTotal ? (
-                      <PDFPage key={n} pageNum={n} currentPage={page} pageWidth={scaledW} pageHeight={scaledH} />
+                      <PDFPage key={n} pageNum={n} active={isActive(n)} pdf={pdfDoc} pageWidth={scaledW} pageHeight={scaledH} onRendered={onPageRendered} onFailed={onPageFailed} />
                     ) : (
-                      <div key={n} style={{ background: '#fff' }} />
+                      <div key={n} className="suvadi-page" />
                     )
                   )}
                 </HTMLFlipBook>
@@ -421,13 +485,18 @@ export default function FlipbookReader() {
         .suvadi-flipbook .stf__parent { background: transparent !important; margin: 0 !important; padding: 0 !important; }
         .suvadi-flipbook .stf__wrapper { margin: 0 !important; padding: 0 !important; }
         .suvadi-flipbook .stf__item    { margin: 0 !important; padding: 0 !important; border: none !important; outline: none !important; }
+        /* Page elements: page-flip owns their inline style, so paper colour and clipping come from the class */
+        .suvadi-flipbook .suvadi-page  { background: #fff; overflow: hidden; }
         .react-pdf__Page          { margin: 0 !important; }
         .react-pdf__Page canvas   { display: block !important; margin: 0 !important; }
         .react-pdf__Page__canvas  { margin: 0 !important; }
-        .suvadi-flipbook [class*="--left"] .react-pdf__Page canvas,
-        .suvadi-flipbook [class*="--left"] .react-pdf__Page__canvas {
-          left: auto !important; right: 0 !important;
-        }
+        /* page-flip's stylesheet makes every canvas in the book position:absolute
+           (meant for its own canvas mode). Kept in flow, the page box takes the
+           canvas size and the slot can centre it. */
+        .suvadi-flipbook .react-pdf__Page canvas { position: static !important; }
+        /* Pages narrower than their slot sit against the spine */
+        .suvadi-flipbook .suvadi-page.--left  > div { justify-content: flex-end !important; }
+        .suvadi-flipbook .suvadi-page.--right > div { justify-content: flex-start !important; }
       `}</style>
     </div>
   );

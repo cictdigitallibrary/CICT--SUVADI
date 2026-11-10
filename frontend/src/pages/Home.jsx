@@ -5,8 +5,14 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useLanguage } from '../context/LanguageContext';
 import { getBookCover } from '../utils/bookCovers';
+import { useImageRetry } from '../utils/imageRetry';
+import FallbackImg from '../components/FallbackImg';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+// Inline override of a section artwork's CSS variable (index.css), set only when
+// the image had to be retried — otherwise the stylesheet's own URL is used.
+const artworkVar = (name, original, current) => (current !== original ? { [name]: `url('${current}')` } : undefined);
 
 const CRITICAL_EDITIONS = [
   { ta: 'இறையனார் களவியல்', en: 'Irayanar Kalviyar', year: '2013', img: '/images/publications/opt_25.jpg' },
@@ -192,6 +198,14 @@ const Home = () => {
   const { language, t } = useLanguage();
   const scrollRef = useRef(null);
 
+  // Banner and section backgrounds, recovered if the server refuses the first request
+  const heroBg = useImageRetry('/images/bg/home_hero_final.png');
+  const facultyBg = useImageRetry('/images/bg/faculty-bg.png');
+  const researchBg = useImageRetry('/images/bg/research-bg.png');
+  const floralLeft = useImageRetry('/images/bg/editions-floral-left.png');
+  const floralRight = useImageRetry('/images/bg/editions-floral-right.png');
+  const ebooksBg = useImageRetry('/images/bg/ebooks-bg.png');
+
   const { data: stats } = useQuery({
     queryKey: ['stats'],
     queryFn: async () => (await axios.get(`${API}/api/stats`)).data,
@@ -237,7 +251,7 @@ const Home = () => {
       <section
         className="home-hero relative w-full overflow-hidden bg-[#1A0303]"
         style={{
-          backgroundImage: "url('/images/bg/home_hero_final.png')",
+          backgroundImage: `url('${heroBg}')`,
           backgroundSize: '100% 100%',
           backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
@@ -361,7 +375,7 @@ const Home = () => {
 
       <section className="home-faculty-section py-24">
         {/* Generated parchment artwork background */}
-        <div className="home-faculty-artwork" />
+        <div className="home-faculty-artwork" style={artworkVar('--artwork-bg', '/images/bg/faculty-bg.png', facultyBg)} />
         <div className="home-faculty-overlay" />
         {/* Decorative vertical Tamil text strip */}
         <div className="palm-leaf-side-deco" style={{ left: '1.5rem', zIndex: 2 }}>
@@ -465,7 +479,7 @@ const Home = () => {
       ══════════════════════════════════════════ */}
       <section className="home-research-section relative py-14 md:py-18 overflow-hidden">
         {/* Generated maroon manuscript artwork background */}
-        <div className="home-research-artwork" />
+        <div className="home-research-artwork" style={artworkVar('--artwork-bg', '/images/bg/research-bg.png', researchBg)} />
         <div className="home-research-overlay" />
         {/* Gold wave dividers */}
         <div className="section-wave-top" />
@@ -542,7 +556,10 @@ const Home = () => {
       ══════════════════════════════════════════ */}
       <section className="home-editions-section py-14 md:py-16 overflow-hidden">
         {/* Generated archival paper artwork background with mandala decorations */}
-        <div className="home-editions-artwork" />
+        <div className="home-editions-artwork" style={{
+          ...artworkVar('--artwork-left', '/images/bg/editions-floral-left.png', floralLeft),
+          ...artworkVar('--artwork-right', '/images/bg/editions-floral-right.png', floralRight),
+        }} />
         <div className="home-editions-overlay" />
 
         <div className="container mx-auto px-6 max-w-6xl relative" style={{ zIndex: 2 }}>
@@ -578,11 +595,12 @@ const Home = () => {
                       className="group home-book-card h-full flex flex-col justify-between cursor-pointer"
                     >
                       <div className="relative aspect-[3/4] bg-stone/5 flex items-center justify-center overflow-hidden">
-                        <img
+                        <FallbackImg
                           src={ed.img.startsWith('/images/publications') ? ed.img : `${API}${ed.img}`}
                           alt={ed.ta}
+                          loading="lazy" decoding="async"
                           className="h-full w-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
-                          onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📚</span>'; }}
+                          fallback={<span className="text-4xl">📚</span>}
                         />
                         {/* Year badge */}
                         <div className="edition-year-badge">{ed.year}</div>
@@ -616,7 +634,7 @@ const Home = () => {
       {ebooks.length > 0 && (
         <section className="home-ebooks-section relative overflow-hidden" style={{ paddingTop: '3rem', paddingBottom: '4rem' }}>
           {/* Heritage green artwork background */}
-          <div className="home-ebooks-artwork" />
+          <div className="home-ebooks-artwork" style={artworkVar('--artwork-bg', '/images/bg/ebooks-bg.png', ebooksBg)} />
           <div className="home-ebooks-overlay" />
           {/* Gold wave top divider */}
           <div className="section-wave-top" />
@@ -625,10 +643,10 @@ const Home = () => {
           <div className="absolute right-0 top-0 h-full w-[3px] bg-gradient-to-b from-transparent via-gold/25 to-transparent" style={{ zIndex: 3 }} />
 
           {/* Palm-leaf bundle — bottom left */}
-          <img src="/images/palm_manuscript.png" alt="Decorative Manuscript" className="home-ebooks-palm-left object-contain hidden sm:block" aria-hidden="true" />
+          <img src="/images/palm_manuscript.png" alt="Decorative Manuscript" className="home-ebooks-palm-left object-contain hidden sm:block" aria-hidden="true" loading="lazy" decoding="async" />
 
           {/* Palm-leaf bundle — bottom right (mirrored) */}
-          <img src="/images/palm_manuscript.png" alt="Decorative Manuscript" className="home-ebooks-palm-right object-contain hidden sm:block" aria-hidden="true" />
+          <img src="/images/palm_manuscript.png" alt="Decorative Manuscript" className="home-ebooks-palm-right object-contain hidden sm:block" aria-hidden="true" loading="lazy" decoding="async" />
 
           <div className="container mx-auto px-4 sm:px-6 max-w-6xl" style={{ position: 'relative', zIndex: 4 }}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
@@ -648,16 +666,18 @@ const Home = () => {
               </Link>
             </div>
 
-            {/* Book grid — 3 cols on mobile, 4 on sm, 8 on lg */}
+            {/* Book grid — 3 cols on mobile, 4 on sm, 8 on lg.
+                The <style> stays outside the grid: inside it, it counted as the first
+                child, so nth-child(n+7) hid the 6th book and left a gap on mobile. */}
+            <style>{`
+              @media (max-width: 639px) {
+                .home-ebook-grid-item:nth-child(n+7) { display: none; }
+              }
+            `}</style>
             <motion.div
               variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
               className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3 md:gap-4 pb-2 sm:pb-0"
             >
-              <style>{`
-                @media (max-width: 639px) {
-                  .home-ebook-grid-item:nth-child(n+7) { display: none; }
-                }
-              `}</style>
               {ebooks.slice(0, 8).map((book, idx) => (
                 <motion.div key={book.id} variants={fadeUp}
                   className="home-ebook-card home-ebook-grid-item w-full">
@@ -666,6 +686,7 @@ const Home = () => {
                       <img
                         src={getBookCover(book)}
                         alt={book.title_tamil}
+                        loading="lazy" decoding="async"
                         className="h-full w-full object-contain p-1 group-hover:scale-110 transition-transform duration-700"
                       />
                     </div>

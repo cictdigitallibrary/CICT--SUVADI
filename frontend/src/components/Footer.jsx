@@ -87,7 +87,7 @@ const Footer = () => {
 
       {/* Realistic Manuscript Bundle — right side, bottom corner */}
       <div className="absolute bottom-[-20px] right-[-150px] pointer-events-none select-none" style={{ zIndex: 1, width: '400px' }}>
-        <img src="/images/palm_manuscript.png" alt="Decorative Footer Manuscript" aria-hidden="true" className="w-full h-auto object-contain" style={{ opacity: 0.9 }} />
+        <img src="/images/palm_manuscript.png" alt="Decorative Footer Manuscript" aria-hidden="true" loading="lazy" decoding="async" className="w-full h-auto object-contain" style={{ opacity: 0.9 }} />
       </div>
 
       <div className="footer-inner container mx-auto px-6" style={{ position: 'relative', zIndex: 2 }}>

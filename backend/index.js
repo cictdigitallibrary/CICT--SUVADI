@@ -1499,6 +1499,11 @@ app.use(express.static(FRONTEND_DIST, {
     // Vite emits content-hashed files under assets/ — safe to cache long-term
     if (filePath.includes(`${path.sep}assets${path.sep}`)) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (!/pdf\.worker/.test(filePath)) {
+      // Files copied from frontend/public (backgrounds, ornaments, covers): same
+      // 1-day lifetime as /images, so repeat visits do not re-request them.
+      // The PDF.js worker stays revalidated: it must match the bundled PDF.js version.
+      res.setHeader('Cache-Control', 'public, max-age=86400');
     }
   },
 }));

@@ -63,18 +63,9 @@ const EBookDetail = () => {
     enabled: !!id,
   });
 
-  if (isBookLoading || isEditionsLoading) {
-    return (
-      <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white flex flex-col items-center justify-center py-40 space-y-4">
-        <div className="w-12 h-12 border-2 border-maroon/10 border-t-gold rounded-full animate-spin" />
-        <p className="font-cinzel tracking-[0.4em] text-bronze animate-pulse uppercase text-[10px]">
-          {t('பதிவேடுகளைத் திரட்டுகிறது…', 'RETRIEVING EDITIONS…')}
-        </p>
-      </div>
-    );
-  }
-
-  if (isBookError || !book) {
+  // The banner is static, so it renders straight away; only the editions list
+  // waits for the API (previously the whole page, banner included, waited).
+  if (isBookError || (!isBookLoading && !book)) {
     return (
       <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white flex flex-col items-center justify-center py-40 text-center">
         <h2 className="tamil-heading text-2xl text-maroon mb-6">
@@ -112,6 +103,7 @@ const EBookDetail = () => {
           <img
             src="/images/bg/hero_ebook_9_panoramic_fit1920.png"
             alt="Category Banner"
+            fetchPriority="high"
             className="w-full h-full object-cover"
           />
         </section>
@@ -120,6 +112,7 @@ const EBookDetail = () => {
           <img
             src="/images/bg/hero_ebook_13_panoramic_fit1920.png"
             alt="Category Banner"
+            fetchPriority="high"
             className="w-full h-full object-cover"
           />
         </section>
@@ -128,6 +121,7 @@ const EBookDetail = () => {
           <img
             src="/images/bg/hero_ebook_11_panoramic_fit1920.png"
             alt="Category Banner"
+            fetchPriority="high"
             className="w-full h-full object-cover"
           />
         </section>
@@ -136,6 +130,7 @@ const EBookDetail = () => {
           <img
             src="/images/bg/hero_ebook_15_panoramic_fit1920.png"
             alt="Category Banner"
+            fetchPriority="high"
             className="w-full h-full object-cover"
           />
         </section>
@@ -144,6 +139,7 @@ const EBookDetail = () => {
           <img
             src="/images/bg/hero_ebook_16_panoramic_fit1920.png"
             alt="Category Banner"
+            fetchPriority="high"
             className="w-full h-full object-cover"
           />
         </section>
@@ -152,6 +148,7 @@ const EBookDetail = () => {
           <img
             src="/images/bg/hero_ebook_17_panoramic_fit1920.png"
             alt="Category Banner"
+            fetchPriority="high"
             className="w-full h-full object-cover"
           />
         </section>
@@ -160,6 +157,7 @@ const EBookDetail = () => {
           <img
             src="/images/bg/hero_panoramic_12_fit1920.png"
             alt="Category Banner"
+            fetchPriority="high"
             className="w-full h-full object-cover"
           />
         </section>
@@ -168,14 +166,15 @@ const EBookDetail = () => {
           <img
             src="/hero_ebook_10.jpg"
             alt="Ettuthogai Banner"
+            fetchPriority="high"
             className="w-full h-full object-contain p-8 md:p-12 drop-shadow-2xl"
           />
         </section>
       ) : (
         <PageHero
           label={t('மின் நூலகம் · பதிப்புகள்', 'DIGITAL LIBRARY · EDITIONS')}
-          title={book.title_tamil}
-          subtitle={book.title_english}
+          title={book?.title_tamil}
+          subtitle={book?.title_english}
           badge={editions.length > 0 ? `${editions.length} ${t('பதிப்புகள்', 'Editions Available')}` : t('பதிப்புகள் இல்லை', 'No Editions')}
           glyphs={['நூல்', 'அச்சு', 'எழுத்து', 'சொல்', 'பொருள்']}
         />
@@ -201,12 +200,21 @@ const EBookDetail = () => {
             <h2 className="tamil-label text-2xl text-maroon">
               {t('பதிப்புகளின் விவரங்கள்', 'Edition Catalogues')}
             </h2>
-            <div className="hidden md:block text-[10px] font-bold text-bronze uppercase tracking-[0.3em]">
-              {editions.length} {t('பதிப்புகள்', 'Editions Listed')}
-            </div>
+            {!isEditionsLoading && (
+              <div className="hidden md:block text-[10px] font-bold text-bronze uppercase tracking-[0.3em]">
+                {editions.length} {t('பதிப்புகள்', 'Editions Listed')}
+              </div>
+            )}
           </div>
 
-          {editions.length === 0 ? (
+          {isBookLoading || isEditionsLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <div className="w-12 h-12 border-2 border-maroon/10 border-t-gold rounded-full animate-spin" />
+              <p className="font-cinzel tracking-[0.4em] text-bronze animate-pulse uppercase text-[10px]">
+                {t('பதிவேடுகளைத் திரட்டுகிறது…', 'RETRIEVING EDITIONS…')}
+              </p>
+            </div>
+          ) : editions.length === 0 ? (
             <div className="text-center py-20 bg-white border border-maroon/10 shadow-lg">
               <p className="font-cinzel text-stone/40 text-[10px] tracking-[0.4em] uppercase">
                 {t('பதிப்புகள் எதுவும் ஆவணப்படுத்தப்படவில்லை', 'No editions documented for this volume')}
@@ -220,7 +228,7 @@ const EBookDetail = () => {
               viewport={{ once: true, amount: 0.05 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             >
-              {editions.map((edition) => (
+              {editions.map((edition, idx) => (
                 <motion.div
                   key={edition.id}
                   variants={fadeUp}
@@ -238,6 +246,8 @@ const EBookDetail = () => {
                           <img
                             src={getBookCover(edition)}
                             alt={edition.title_tamil}
+                            // First row (up to 3 on desktop) loads immediately; the rest as they near the screen
+                            loading={idx < 3 ? 'eager' : 'lazy'} decoding="async"
                             className="w-full h-full object-contain p-1"
                           />
                           {/* Lighting overlay on hover */}

@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 import { getBookCover } from '../utils/bookCovers';
+import FallbackImg from '../components/FallbackImg';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -511,11 +512,12 @@ const EBooks = () => {
                     <div className="relative bg-transparent flex items-center justify-center p-8 pb-4 pt-10 overflow-hidden">
                       {getBookCover(book) ? (
                         <div className="w-[95%] max-w-[280px] aspect-[2/3] shadow-[0_10px_30px_rgba(0,0,0,0.15)] transition-transform duration-300 group-hover:scale-[1.04]">
-                          <img
+                          <FallbackImg
                             src={getBookCover(book)}
                             alt={book.title_tamil}
+                            loading="lazy" decoding="async"
                             className="w-full h-full object-contain pointer-events-none"
-                            onError={e => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl">📜</span>'; }}
+                            fallback={<span className="text-4xl">📜</span>}
                           />
                         </div>
                       ) : (

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LanguageProvider } from './context/LanguageContext';
@@ -10,14 +10,21 @@ import ManuscriptSearch from './pages/ManuscriptSearch';
 import Team from './pages/Team';
 import EBooks from './pages/EBooks';
 import EBookDetail from './pages/EBookDetail';
-import FlipbookReader from './pages/FlipbookReader';
 import CriticalEditionNeed from './pages/CriticalEditionNeed';
 import Contact from './pages/Contact';
 import Feedback from './pages/Feedback';
-import AdminPortal from './pages/AdminPortal';
 import Publication from './pages/Publication';
 
-const queryClient = new QueryClient();
+// Loaded on demand: the PDF reader (react-pdf / PDF.js / page-flip) and the admin
+// portal are large and not needed to render the public pages.
+const FlipbookReader = lazy(() => import('./pages/FlipbookReader'));
+const AdminPortal = lazy(() => import('./pages/AdminPortal'));
+
+// Library data changes rarely: reuse fetched lists across page visits instead of
+// re-requesting them on every navigation and window focus.
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false } },
+});
 
 function App() {
   return (
@@ -25,6 +32,7 @@ function App() {
       <LanguageProvider>
         <Router>
           <Layout>
+            <Suspense fallback={null}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/classical-texts" element={<ClassicalTexts />} />
@@ -40,6 +48,7 @@ function App() {
               <Route path="/admin" element={<AdminPortal />} />
               <Route path="/publication/:id" element={<Publication />} />
             </Routes>
+            </Suspense>
           </Layout>
         </Router>
       </LanguageProvider>

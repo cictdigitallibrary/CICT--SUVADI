@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useImageRetry } from '../utils/imageRetry';
 
 /**
  * PageHero — Shared premium hero banner for inner pages.
@@ -15,6 +16,8 @@ import { motion } from 'framer-motion';
 const DEFAULT_GLYPHS = ['அ', 'ம்', 'ழ்', 'ல்', 'ர்', 'ஓம்'];
 
 const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, light = false, backgroundImage = null, heroClass = '', headingStyle = {}, align = 'center' }) => {
+  // Banner image, recovered if the server refuses the first request
+  const bannerSrc = useImageRetry(backgroundImage);
   if (light) {
     return (
       <header className="relative pt-36 pb-16 overflow-hidden bg-ivory selection:bg-maroon selection:text-white">
@@ -69,7 +72,7 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
       <header
         className={`relative selection:bg-white selection:text-maroon flex flex-col items-center justify-center page-hero-bg-banner${heroClass ? ` ${heroClass}` : ''}`}
         style={backgroundImage ? {
-          backgroundImage: `url('${backgroundImage}')`,
+          backgroundImage: `url('${bannerSrc}')`,
           backgroundRepeat: 'no-repeat',
           backgroundColor: '#1A0303',
         } : { overflow: 'hidden', paddingTop: '10rem', paddingBottom: '6rem' }}
