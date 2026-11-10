@@ -117,7 +117,7 @@ const ClassicalTextsList = () => {
             <div className="flex items-center justify-center gap-5">
               <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold/60" />
               <p className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-gold/80 font-bold">
-                {t('செّمொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
+                {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
               </p>
               <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold/60" />
             </div>
