@@ -4,7 +4,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const { Pool } = require('pg');
 const path = require('path');
 // Load backend/.env by absolute path — under IIS/iisnode the working directory
 // is not guaranteed to be backend/, so a bare config() could miss the file.
@@ -31,25 +30,28 @@ const bcrypt = require('bcryptjs');
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_suvadi_key_123';
 
 // ── PostgreSQL Pool ──────────────────────────────────────────────────────────
-const pool = new Pool({
-  host:     process.env.DB_HOST     || '192.168.0.169',
-  port:     parseInt(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME     || 'suvadi',
-  user:     process.env.DB_USER     || 'postgres',
-  password: process.env.DB_PASSWORD || 'cict26',
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-});
+// One shared pool per process, with back-off and monitoring: see db.js
+const { db, POOL_MAX, DB_UNAVAILABLE_MESSAGE } = require('./db');
 
-pool.on('error', (err) => {
-  console.error('❌ PostgreSQL Pool Error:', err.message);
+// Routes answer failures with res.status(500).json({ error: e.message }). When the
+// cause is that the database could not be reached, send 503 + Retry-After instead,
+// so clients see a temporary condition (the message is already the generic one
+// from db.js; PostgreSQL's own wording stays in the server log).
+app.use((req, res, next) => {
+  const json = res.json.bind(res);
+  res.json = (body) => {
+    if (res.statusCode >= 500 && body && body.error === DB_UNAVAILABLE_MESSAGE) {
+      res.status(503).set('Retry-After', String(db.breakerOpen() ? db.retryAfterSeconds() : 5));
+    }
+    return json(body);
+  };
+  next();
 });
 
 // Test DB connection on start
-pool.query('SELECT NOW()')
-  .then(r => console.log('✅ PostgreSQL connected:', r.rows[0].now))
-  .catch(e => console.error('❌ PostgreSQL connection failed:', e.message));
+db.query('SELECT NOW()')
+  .then(r => console.log(`✅ PostgreSQL connected: ${r.rows[0].now} (pool max ${POOL_MAX})`))
+  .catch(e => console.error('❌ PostgreSQL connection failed:', e.cause ? e.cause.message : e.message));
 
 // ── Static paths ─────────────────────────────────────────────────────────────
 // PDFs and manuscript scans are on the UNC server share (set in .env).
@@ -218,10 +220,6 @@ const EDITION_3D_COVERS = {
   49: '/images/mutholayiram/muthol_1905.jpg',
 };
 
-// ── Helper ───────────────────────────────────────────────────────────────────
-const db = {
-  query: (text, params) => pool.query(text, params),
-};
 
 // ══════════════════════════════════════════════════════════════════════════════
 // PUBLIC API ROUTES
@@ -343,7 +341,7 @@ app.get('/api/manuscripts/search', async (req, res) => {
 let hasTrgm = false;
 (async () => {
   try {
-    const r = await pool.query("SELECT extname FROM pg_extension WHERE extname='pg_trgm'");
+    const r = await db.query("SELECT extname FROM pg_extension WHERE extname='pg_trgm'");
     hasTrgm = r.rows.length > 0;
     console.log(`✅ pg_trgm: ${hasTrgm ? 'available (fast trigram search enabled)' : 'not installed (falling back to ILIKE)'}`);
   } catch { hasTrgm = false; }
@@ -843,7 +841,7 @@ async function ensureTables() {
     )`,
   ];
   for (const q of queries) {
-    await pool.query(q).catch(e => console.error('Table ensure error:', e.message));
+    await db.query(q).catch(e => console.error('Table ensure error:', e.message));
   }
 
   // ── Migrate sv_ebook_editions: add columns missing from older deployments ──
@@ -857,7 +855,7 @@ async function ensureTables() {
     `ALTER TABLE sv_ebook_editions ADD COLUMN IF NOT EXISTS year_published  INTEGER`,
   ];
   for (const q of editionColumns) {
-    await pool.query(q).catch(e => console.error('Edition column migration:', e.message));
+    await db.query(q).catch(e => console.error('Edition column migration:', e.message));
   }
 
   console.log('✅ Support tables verified');
@@ -1460,15 +1458,42 @@ app.delete('/api/admin/ebook-editions/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ── Database pool diagnostics (admin only — /api/admin requires a login token) ──
+// Pool usage of this process; ?server=1 adds the server-wide connection count and
+// limit, grouped by application name (no client addresses, no query text).
+app.get('/api/admin/db-pool', async (req, res) => {
+  const report = db.snapshot();
+  if (req.query.server) {
+    try {
+      // One query at a time: the diagnostics use a single connection
+      const { rows: [limits] } = await db.query(
+        `SELECT current_setting('max_connections')::int AS max_connections,
+                current_setting('superuser_reserved_connections')::int AS reserved_for_superuser,
+                (SELECT count(*)::int FROM pg_stat_activity WHERE backend_type = 'client backend') AS client_connections`
+      );
+      const { rows: byApplication } = await db.query(
+        `SELECT COALESCE(NULLIF(application_name, ''), '(not set)') AS application, state, count(*)::int AS connections
+           FROM pg_stat_activity WHERE backend_type = 'client backend'
+          GROUP BY 1, 2 ORDER BY 3 DESC`
+      );
+      report.server = { ...limits, byApplication };
+    } catch (e) {
+      report.server = { error: e.code === 'DB_UNAVAILABLE' ? DB_UNAVAILABLE_MESSAGE : 'Could not read server statistics' };
+    }
+  }
+  res.set('Cache-Control', 'no-store').json(report);
+});
+
 // ── Health check ─────────────────────────────────────────────────────────────
 // Always 200 while the process is up; `database` reports PostgreSQL reachability
 app.get('/health', async (req, res) => {
   let database = 'ok';
   try {
-    await pool.query('SELECT 1');
+    await db.query('SELECT 1');
   } catch (e) {
     database = 'unavailable';
-    console.error('❌ Health check DB error:', e.code || '', e.message);
+    const cause = e.cause || e;
+    console.error('❌ Health check DB error:', cause.code || '', cause.message);
   }
   res.set('Cache-Control', 'no-store').json({
     status: 'ok',
