@@ -8,6 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 import CategoryBanner from '../components/CategoryBanner';
 import { getBookCover } from '../utils/bookCovers';
+import { downloadPdf } from '../utils/downloadPdf';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -51,23 +52,8 @@ const EBookDetail = () => {
     };
   }, []);
 
-  const handleDownload = async (editionId, bookTitle) => {
-    const proxyUrl = `${API}/api/proxy/pdf/${editionId}`;
-    try {
-      const res = await fetch(proxyUrl);
-      if (!res.ok) throw new Error('fetch failed');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${bookTitle}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-    } catch {
-      window.open(proxyUrl, '_blank', 'noopener');
-    }
+  const handleDownload = (editionId, bookTitle) => {
+    downloadPdf(`${API}/api/proxy/pdf/${editionId}`, bookTitle);
   };
 
   // Fetch Parent Book Info

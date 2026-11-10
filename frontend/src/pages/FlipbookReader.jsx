@@ -8,6 +8,7 @@ import {
   ZoomIn, ZoomOut, AlertCircle, Maximize, Minimize, Download
 } from 'lucide-react';
 
+import { downloadPdf } from '../utils/downloadPdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -121,8 +122,6 @@ export default function FlipbookReader() {
 
   const [zoom,        setZoom]        = useState(1.0);
   const [pdfDoc,      setPdfDoc]      = useState(null);
-  const [downloading, setDownloading] = useState(false);
-  const [dlError,     setDlError]     = useState(false);
   
   const bookRef = useRef(null);
   const total = pdfTotal;
@@ -185,27 +184,8 @@ export default function FlipbookReader() {
   }, [editionId]);
 
   /* Download handler */
-  const handleDownload = useCallback(async () => {
-    if (!proxyUrl) return;
-    setDlError(false);
-    setDownloading(true);
-    try {
-      const res = await fetch(proxyUrl);
-      if (!res.ok) throw new Error('fetch failed');
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
-      a.download = `${decodeURIComponent(bookTitle)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-    } catch {
-      window.open(proxyUrl, '_blank', 'noopener');
-    } finally {
-      setDownloading(false);
-    }
+  const handleDownload = useCallback(() => {
+    if (proxyUrl) downloadPdf(proxyUrl, decodeURIComponent(bookTitle));
   }, [proxyUrl, bookTitle]);
 
   /* Responsive sizing — fits one (portrait) or two pages of the PDF's own aspect ratio.

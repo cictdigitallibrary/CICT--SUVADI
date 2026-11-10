@@ -742,6 +742,14 @@ app.get('/api/proxy/pdf/:editionId', async (req, res) => {
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Range, Content-Length, Content-Type');
+    // ?download=1 — sent as an attachment, so the browser's own download manager saves
+    // the file as it streams (progress shown immediately), instead of the page
+    // buffering the whole PDF in memory first. ?name= is the suggested file name.
+    if (req.query.download) {
+      const name = String(req.query.name || `edition_${parseInt(editionId, 10)}`)
+        .replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 150) || 'edition';
+      res.attachment(/\.pdf$/i.test(name) ? name : `${name}.pdf`);
+    }
     // Browser cache (ETag revalidation still applies): reopening an edition reuses fetched ranges
     return res.sendFile(localPath, { maxAge: '1d' });
   } catch (err) {
