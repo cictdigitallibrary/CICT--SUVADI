@@ -31,6 +31,26 @@ const EBookDetail = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
+  // Preload the reader (its code and the PDF.js worker it starts) once this page has
+  // finished loading and the browser is idle, so pressing READ starts fetching the
+  // PDF straight away. Waits for 'load' so it never competes with this page's own
+  // banner and covers.
+  React.useEffect(() => {
+    let idle, timer;
+    const preload = () => { import('./FlipbookReader').catch(() => {}); };
+    const whenIdle = () => {
+      if ('requestIdleCallback' in window) idle = window.requestIdleCallback(preload, { timeout: 3000 });
+      else timer = setTimeout(preload, 1000);
+    };
+    if (document.readyState === 'complete') whenIdle();
+    else window.addEventListener('load', whenIdle, { once: true });
+    return () => {
+      window.removeEventListener('load', whenIdle);
+      if (idle && 'cancelIdleCallback' in window) window.cancelIdleCallback(idle);
+      clearTimeout(timer);
+    };
+  }, []);
+
   const handleDownload = async (editionId, bookTitle) => {
     const proxyUrl = `${API}/api/proxy/pdf/${editionId}`;
     try {

@@ -14,6 +14,12 @@ import 'react-pdf/dist/Page/TextLayer.css';
 pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 const BACKEND = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+// One PDF.js worker for the session, started as soon as this module loads — the
+// edition page preloads it (EBookDetail), so opening a book does not first wait for
+// the 1 MB worker script to download and start. PDF.js only destroys workers it
+// created itself, so this one is reused by every book opened afterwards.
+const sharedWorker = new pdfjs.PDFWorker({ name: 'suvadi-reader' });
+
 // Render pages within ±N of the current page: the visible spread plus the pages
 // revealed while flipping either way. Larger windows fetch and render pages nobody sees.
 const RENDER_WIN = 3;
@@ -79,6 +85,7 @@ PDFPage.displayName = 'PDFPage';
 const PDF_OPTIONS = {
   cMapUrl: '/cmaps/',   // served locally from public/cmaps/ — no external CDN needed
   cMapPacked: true,
+  worker: sharedWorker,
 };
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -118,7 +125,6 @@ export default function FlipbookReader() {
   const [dlError,     setDlError]     = useState(false);
   
   const bookRef = useRef(null);
-  const ready = pdfReady || pdfErr !== null;
   const total = pdfTotal;
 
   // Memoize options so <Document> doesn't re-render and abort on every state change
@@ -279,22 +285,37 @@ export default function FlipbookReader() {
   }, [drawKey]);
   // Landscape shows spreads 1-2, 3-4, …; `page` can be either side of a spread
   const visiblePages = portrait ? [page] : (page % 2 ? [page, page + 1] : [page - 1, page]);
-  const spreadDrawn = visiblePages
-    .filter(n => n >= 1 && n <= total)
-    .every(n => drawn.key === drawKey && drawn.pages.has(n));
+  const onScreen = visiblePages.filter(n => n >= 1 && n <= total);
+  // Non-empty check: before the PDF has loaded there are no pages, and [].every() is true
+  const spreadDrawn = onScreen.length > 0 && onScreen.every(n => drawn.key === drawKey && drawn.pages.has(n));
 
   /* A page that fails to load (e.g. a byte range refused by the server) cannot be
      retried inside the same document: PDF.js keeps the failed ranges marked as
      pending and never requests them again. So the document is reloaded — first with
      the same range loading, then once more as a whole-file stream. */
+  /* The book is revealed only once the pages on screen have been drawn: until then the
+     loading overlay stays on the maroon stage, instead of showing blank white pages
+     while the first page downloads and decodes. Latched, so a later zoom or resize
+     rebuild does not bring the overlay back. */
+  const [firstSpreadShown, setFirstSpreadShown] = useState(false);
+  if (spreadDrawn && !firstSpreadShown) setFirstSpreadShown(true);
+  const ready = (pdfReady && firstSpreadShown) || pdfErr !== null;
+
   const reloads = useRef(0);
   const onPageFailed = useCallback(() => {
-    if (reloads.current >= 2) return;
+    if (reloads.current >= 2) {
+      // Still nothing on screen after both reloads: show the existing error panel
+      // (with Download) rather than leaving the loading overlay up indefinitely.
+      if (!firstSpreadShown) {
+        setPdfErr({ id: `ERR-PDF-${editionId || 'NA'}-${Date.now()}`, message: 'The first pages could not be loaded.', reason: 'Network or Proxy Failure' });
+      }
+      return;
+    }
     reloads.current += 1;
     if (reloads.current === 2) setFallbackMode(true);
     setPdfDoc(null);
     setRetryKey(Date.now());
-  }, []);
+  }, [firstSpreadShown, editionId]);
   const isActive = n => visiblePages.includes(n) || (spreadDrawn && Math.abs(n - page) <= RENDER_WIN);
 
   /* No source guard */
