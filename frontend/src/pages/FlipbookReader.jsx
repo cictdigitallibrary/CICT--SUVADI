@@ -1,11 +1,11 @@
-import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import HTMLFlipBook from 'react-pageflip';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, ChevronLeft, ChevronRight,
-  ZoomIn, ZoomOut, AlertCircle, Maximize, Minimize, Download
+  ZoomIn, ZoomOut, AlertCircle, Maximize, Minimize, Download, RotateCcw
 } from 'lucide-react';
 
 import { downloadPdf } from '../utils/downloadPdf';
@@ -20,6 +20,16 @@ const BACKEND = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 // the 1 MB worker script to download and start. PDF.js only destroys workers it
 // created itself, so this one is reused by every book opened afterwards.
 const sharedWorker = new pdfjs.PDFWorker({ name: 'suvadi-reader' });
+
+/* Fullscreen API, including the webkit-prefixed form (iPad Safari). iPhone Safari has
+   no element fullscreen at all; there the button switches to an in-page "immersive"
+   view instead (header hidden, book enlarged), see toggleFS. */
+const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+const HAS_NATIVE_FULLSCREEN = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+
+const ZOOM_MIN = 0.5, ZOOM_MAX = 1.8, ZOOM_STEP = 0.1;
+// Stage padding around the book, and room kept below it for its floor shadow
+const STAGE_PAD = 12, SHADOW_SPACE = 18;
 
 // Render pages within ±N of the current page: the visible spread plus the pages
 // revealed while flipping either way. Larger windows fetch and render pages nobody sees.
@@ -116,11 +126,12 @@ export default function FlipbookReader() {
   const [pdfReady,    setPdfReady]    = useState(false);
   const [pdfErr,      setPdfErr]      = useState(null);
   const [pdfProgress, setPdfProgress] = useState(0);
-  const [isFS,        setIsFS]        = useState(false);
   const [fallbackMode, setFallbackMode] = useState(false);
   const [retryKey, setRetryKey] = useState(Date.now());
 
   const [zoom,        setZoom]        = useState(1.0);
+  const [nativeFS,    setNativeFS]    = useState(() => !!fullscreenElement());
+  const [immersive,   setImmersive]   = useState(false); // in-page fullscreen (no Fullscreen API)
   const [pdfDoc,      setPdfDoc]      = useState(null);
   
   const bookRef = useRef(null);
@@ -189,34 +200,39 @@ export default function FlipbookReader() {
   }, [proxyUrl, bookTitle]);
 
   /* Responsive sizing — fits one (portrait) or two pages of the PDF's own aspect ratio.
-     Computed during render (not in an effect), so the flipbook is first created at
-     its final size instead of being created and immediately rebuilt. */
-  const [viewport, setViewport] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
+     The reader is a full-height column: header · stage · controls (see the styles
+     below). The book is sized from the stage's measured size, so it always fits
+     between the header and the controls — on any screen, and after rotation,
+     entering/leaving fullscreen, or the mobile address bar appearing, all of which
+     resize the stage. Debounced: every size change rebuilds the flipbook (fbKey). */
+  const stageRef = useRef(null);
+  const [stage, setStage] = useState(null);
   useEffect(() => {
-    // Debounced: every size change rebuilds the flipbook (see fbKey below)
+    const el = stageRef.current;
+    if (!el) return undefined;
     let t;
-    const onResize = () => { clearTimeout(t); t = setTimeout(() => setViewport({ w: window.innerWidth, h: window.innerHeight }), 150); };
-    window.addEventListener('resize', onResize);
-    return () => { clearTimeout(t); window.removeEventListener('resize', onResize); };
+    const measure = () => setStage(s => (s && s.w === el.clientWidth && s.h === el.clientHeight ? s : { w: el.clientWidth, h: el.clientHeight }));
+    // The first observation reports the initial size; later ones are debounced
+    let first = true;
+    const ro = new ResizeObserver(() => {
+      if (first) { first = false; measure(); return; }
+      clearTimeout(t); t = setTimeout(measure, 150);
+    });
+    ro.observe(el);
+    return () => { clearTimeout(t); ro.disconnect(); };
   }, []);
   const { sz, portrait } = useMemo(() => {
-    const vw = viewport.w;
-    const vh = viewport.h - 130;
-    const narrow = vw < 680;
+    if (!stage) return { portrait: false, sz: null };
+    const availW = stage.w - STAGE_PAD * 2;
+    const availH = stage.h - STAGE_PAD * 2 - SHADOW_SPACE;
+    const narrow = stage.w < 680;
     const ratio = pageRatio;
-    if (narrow) {
-      const maxW = vw - 24;
-      const maxH = Math.floor(vh * 0.88);
-      const w = Math.min(maxW, Math.floor(maxH * ratio));
-      const h = Math.round(w / ratio);
-      return { portrait: true, sz: { w: Math.max(w, 180), h: Math.max(h, 240) } };
-    }
-    const maxPageW = Math.floor(vw * 0.44);
-    const maxH = Math.floor(vh * 0.92);
-    const w = Math.min(maxPageW, Math.floor(maxH * ratio));
-    const h = Math.round(w / ratio);
-    return { portrait: false, sz: { w: Math.max(w, 220), h: Math.max(h, 280) } };
-  }, [viewport, pageRatio]);
+    // Single page on narrow screens; two pages otherwise, each at most 44% of the width
+    const maxPageW = narrow ? availW : Math.min(Math.floor(stage.w * 0.44), Math.floor(availW / 2));
+    const w = Math.max(Math.min(maxPageW, Math.floor(availH * ratio)), 100);
+    const h = Math.max(Math.floor(w / ratio), 130);
+    return { portrait: narrow, sz: { w, h } };
+  }, [stage, pageRatio]);
 
   /* Navigation */
   const flipNext = useCallback(() => bookRef.current?.pageFlip()?.flipNext(), []);
@@ -227,24 +243,72 @@ export default function FlipbookReader() {
     const h = e => {
       if (e.key === 'ArrowRight') flipNext();
       if (e.key === 'ArrowLeft')  flipPrev();
+      // Native fullscreen exits on Esc by itself; the in-page fallback view does the same
+      if (e.key === 'Escape') setImmersive(false);
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, [flipNext, flipPrev]);
 
-  /* Fullscreen — state follows the browser, so leaving with Esc updates the icon */
+  /* Fullscreen — state follows the browser, so leaving with Esc or the mobile
+     browser's own controls updates the button. The layout re-fits by itself: the
+     fullscreen change resizes the stage (see the sizing above). */
   useEffect(() => {
-    const h = () => setIsFS(!!document.fullscreenElement);
+    const h = () => setNativeFS(!!fullscreenElement());
     document.addEventListener('fullscreenchange', h);
-    return () => document.removeEventListener('fullscreenchange', h);
+    document.addEventListener('webkitfullscreenchange', h);
+    return () => {
+      document.removeEventListener('fullscreenchange', h);
+      document.removeEventListener('webkitfullscreenchange', h);
+    };
   }, []);
-  const toggleFS = () => {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
-    else document.exitFullscreen().catch(() => {});
-  };
+  const isFS = nativeFS || immersive;
+  const toggleFS = useCallback(() => {
+    if (immersive) { setImmersive(false); return; }
+    if (!HAS_NATIVE_FULLSCREEN) { setImmersive(true); return; }
+    const el = document.documentElement;
+    try {
+      if (fullscreenElement()) {
+        Promise.resolve((document.exitFullscreen || document.webkitExitFullscreen).call(document)).catch(() => {});
+      } else {
+        // Refused (e.g. inside an iframe without permission): use the in-page view instead
+        Promise.resolve((el.requestFullscreen || el.webkitRequestFullscreen).call(el)).catch(() => setImmersive(true));
+      }
+    } catch { setImmersive(true); }
+  }, [immersive]);
 
-  const scaledW    = Math.round(sz.w * zoom);
-  const scaledH    = Math.round(sz.h * zoom);
+  /* Zoom (the single existing zoom value) and panning (scrolling the stage).
+     Zooming keeps the point at the centre of the stage in place; Reset View returns
+     to the fitted size, centred, without changing the page. */
+  const zoomAnchor = useRef(null);
+  const changeZoom = useCallback((next) => {
+    const el = stageRef.current;
+    if (el) {
+      zoomAnchor.current = {
+        x: (el.scrollLeft + el.clientWidth / 2) / Math.max(el.scrollWidth, 1),
+        y: (el.scrollTop + el.clientHeight / 2) / Math.max(el.scrollHeight, 1),
+      };
+    }
+    setZoom(next);
+  }, []);
+  const zoomIn  = () => changeZoom(Math.min(+(zoom + ZOOM_STEP).toFixed(1), ZOOM_MAX));
+  const zoomOut = () => changeZoom(Math.max(+(zoom - ZOOM_STEP).toFixed(1), ZOOM_MIN));
+  const resetView = useCallback(() => {
+    zoomAnchor.current = null;
+    setZoom(1);
+    requestAnimationFrame(() => { stageRef.current?.scrollTo({ left: 0, top: 0 }); window.scrollTo(0, 0); });
+  }, []);
+  useLayoutEffect(() => {
+    const a = zoomAnchor.current;
+    const el = stageRef.current;
+    if (!a || !el) return;
+    zoomAnchor.current = null;
+    el.scrollLeft = a.x * el.scrollWidth - el.clientWidth / 2;
+    el.scrollTop = a.y * el.scrollHeight - el.clientHeight / 2;
+  }, [zoom]);
+
+  const scaledW    = sz ? Math.round(sz.w * zoom) : 0;
+  const scaledH    = sz ? Math.round(sz.h * zoom) : 0;
   const bookTotalW = portrait ? scaledW : scaledW * 2;
   // react-pageflip reads width/height only when it is created, so a new size
   // needs a new instance — otherwise zoomed pages are clipped to the old size.
@@ -324,14 +388,15 @@ export default function FlipbookReader() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(155deg,#140202 0%,#3a0606 45%,#551608 75%,#140202 100%)' }}>
+    <div className="suvadi-reader" style={{ background: 'linear-gradient(155deg,#140202 0%,#3a0606 45%,#551608 75%,#140202 100%)' }}>
 
-      {/* TOP BAR */}
-      <header style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 500,
-        height: 56, background: 'rgba(14,1,1,0.97)', backdropFilter: 'blur(20px)',
+      {/* TOP BAR — hidden in the in-page fullscreen view (phones without the Fullscreen API) */}
+      {!immersive && (
+      <header className="suvadi-reader-header" style={{
+        position: 'relative', zIndex: 500,
+        background: 'rgba(14,1,1,0.97)', backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(201,151,59,0.12)',
-        display: 'flex', alignItems: 'center', padding: '0 20px', gap: 14, boxSizing: 'border-box',
+        display: 'flex', alignItems: 'center', gap: 14, boxSizing: 'border-box',
       }}>
         <button onClick={() => navigate(backTo)} style={hBtn}>
           <ArrowLeft size={14} /> Back
@@ -349,25 +414,13 @@ export default function FlipbookReader() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-          <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: 9, fontFamily: 'Cinzel,serif', whiteSpace: 'nowrap', marginRight: 4 }}>
-            {page} / {total || '...'}
-          </span>
-          <button onClick={() => setZoom(z => Math.max(+(z - 0.1).toFixed(1), 0.5))} style={iBtn} aria-label="Zoom out"><ZoomOut  size={13}/></button>
-          <button onClick={() => setZoom(1)} style={{ ...iBtn, fontSize: 9, fontFamily: 'Cinzel,serif', minWidth: 40 }} title="Fit page" aria-label="Fit page">{Math.round(zoom * 100)}%</button>
-          <button onClick={() => setZoom(z => Math.min(+(z + 0.1).toFixed(1), 1.8))} style={iBtn} aria-label="Zoom in"><ZoomIn   size={13}/></button>
-          <button onClick={toggleFS} style={iBtn} aria-label="Fullscreen">{isFS ? <Minimize size={13}/> : <Maximize size={13}/>}</button>
-
-
-        </div>
+        {/* Balances the Back button so the title stays centred (controls are in the toolbar) */}
+        <div className="suvadi-header-spacer" aria-hidden="true" />
       </header>
+      )}
 
-      {/* STAGE */}
-      <main style={{
-        paddingTop: 56, minHeight: '100vh',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        gap: 20, padding: '74px 12px 24px', boxSizing: 'border-box', position: 'relative',
-      }}>
+      {/* STAGE — the space between header and controls; scrolls (pans) when zoomed */}
+      <main ref={stageRef} className="suvadi-reader-stage">
         {/* Ambient glow */}
         <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 320, background: 'radial-gradient(ellipse,rgba(201,151,59,0.05) 0%,transparent 70%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
 
@@ -375,7 +428,9 @@ export default function FlipbookReader() {
         <AnimatePresence>
           {!ready && (
             <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ position: 'fixed', inset: 0, top: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, zIndex: 100 }}
+              // pointerEvents none: purely visual, so it never blocks the header or the
+              // controls (it covers the whole screen, and stays during its fade-out)
+              style={{ position: 'fixed', inset: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 20, zIndex: 100 }}
             >
               <div style={{ width: 46, height: 46, border: '2px solid rgba(201,151,59,0.15)', borderTopColor: '#C9973B', borderRadius: '50%', animation: 'fbspin 0.9s linear infinite' }} />
               <p style={{ color: 'rgba(201,151,59,0.85)', fontSize: 10, fontFamily: 'Cinzel,serif', letterSpacing: '0.4em', textTransform: 'uppercase', margin: 0 }}>
@@ -391,15 +446,14 @@ export default function FlipbookReader() {
           )}
         </AnimatePresence>
 
-        {/* FLIPBOOK — own scroll area: when zoomed wider than the screen the book
-            starts at the left edge (auto margins collapse) and every edge can be
-            scrolled to, instead of being centred past the unscrollable left side. */}
-        <div style={{ alignSelf: 'stretch', overflowX: 'auto', overflowY: 'hidden', paddingBottom: 30, zIndex: 1 }}>
-        <div style={{
+        {/* FLIPBOOK — centred in the stage by auto margins. When zoomed larger than the
+            stage the margins collapse, so the book starts at the top-left and every
+            edge can be panned to (centring would push the left edge out of reach). */}
+        <div className="suvadi-book" style={{
           position: 'relative', opacity: ready ? 1 : 0, transition: 'opacity 0.5s ease',
-          zIndex: 1, width: bookTotalW, margin: '0 auto',
+          zIndex: 1, width: bookTotalW, paddingBottom: SHADOW_SPACE,
         }}>
-          <div style={{ position: 'absolute', bottom: -22, left: '4%', width: '92%', height: 28, background: 'rgba(0,0,0,0.6)', filter: 'blur(22px)', borderRadius: '50%' }} />
+          <div style={{ position: 'absolute', bottom: 0, left: '4%', width: '92%', height: 28, background: 'rgba(0,0,0,0.6)', filter: 'blur(22px)', borderRadius: '50%' }} />
           <div style={{
             boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,151,59,0.12)',
             position: 'relative', width: bookTotalW, height: scaledH, overflow: 'hidden',
@@ -438,7 +492,7 @@ export default function FlipbookReader() {
                     </button>
                   </div>
                 </div>
-              ) : pdfTotal > 0 ? (
+              ) : pdfTotal > 0 && sz ? (
                 <HTMLFlipBook key={fbKey} {...fbProps}>
                   {Array.from({ length: pdfTotal + (pdfTotal % 2) }, (_, i) => i + 1).map(n =>
                     n <= pdfTotal ? (
@@ -452,36 +506,102 @@ export default function FlipbookReader() {
             </Document>
           </div>
         </div>
+      </main>
+
+      {/* CONTROLS — below the book (never over it), and always in view at any zoom
+          because only the stage above scrolls */}
+      <div className="suvadi-reader-controls">
+        {/* NAVIGATION + page numbers. Kept in the layout (hidden) until the book appears,
+            so the stage — and the book's size — does not change when they show up. */}
+        <div className="suvadi-nav-row" style={{ visibility: ready && total > 0 ? 'visible' : 'hidden' }}>
+          <button onClick={flipPrev} disabled={page <= 1} aria-label="Previous page" title="Previous page"
+            className="suvadi-nav-btn"
+            style={{ ...nBtn, opacity: page <= 1 ? 0.3 : 1, cursor: page <= 1 ? 'not-allowed' : 'pointer' }}>
+            <ChevronLeft size={18} />
+            <span className="suvadi-nav-label" style={{ fontSize: 9, fontFamily: 'Cinzel,serif', letterSpacing: '0.2em' }}>PREV</span>
+          </button>
+          <div style={{ display: 'flex', gap: 5, alignItems: 'center', whiteSpace: 'nowrap' }} aria-label={`Page ${page} of ${total}`}>
+            <span style={{ color: '#C9973B', fontFamily: 'Cinzel,serif', fontSize: 14, fontWeight: 700 }}>{page}</span>
+            <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 10 }}>of</span>
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Cinzel,serif', fontSize: 14 }}>{total}</span>
+          </div>
+          <button onClick={flipNext} disabled={page >= total} aria-label="Next page" title="Next page"
+            className="suvadi-nav-btn"
+            style={{ ...nBtn, opacity: page >= total ? 0.3 : 1, cursor: page >= total ? 'not-allowed' : 'pointer' }}>
+            <span className="suvadi-nav-label" style={{ fontSize: 9, fontFamily: 'Cinzel,serif', letterSpacing: '0.2em' }}>NEXT</span>
+            <ChevronRight size={18} />
+          </button>
         </div>
 
-        {/* NAVIGATION */}
-        {ready && total > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18, zIndex: 1 }}>
-            <button onClick={flipPrev} disabled={page <= 1}
-              style={{ ...nBtn, opacity: page <= 1 ? 0.3 : 1, cursor: page <= 1 ? 'not-allowed' : 'pointer' }}>
-              <ChevronLeft size={18} />
-              <span style={{ fontSize: 9, fontFamily: 'Cinzel,serif', letterSpacing: '0.2em' }}>PREV</span>
-            </button>
-            <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-              <span style={{ color: '#C9973B', fontFamily: 'Cinzel,serif', fontSize: 14, fontWeight: 700 }}>{page}</span>
-              <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 10 }}>of</span>
-              <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'Cinzel,serif', fontSize: 14 }}>{total}</span>
-            </div>
-            <button onClick={flipNext} disabled={page >= total}
-              style={{ ...nBtn, opacity: page >= total ? 0.3 : 1, cursor: page >= total ? 'not-allowed' : 'pointer' }}>
-              <span style={{ fontSize: 9, fontFamily: 'Cinzel,serif', letterSpacing: '0.2em' }}>NEXT</span>
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        )}
+        {/* VIEW TOOLBAR — directly below the page numbers */}
+        <div className="suvadi-toolbar" role="toolbar" aria-label="Reader view controls">
+          <button className="suvadi-tool" onClick={zoomOut} disabled={zoom <= ZOOM_MIN} aria-label="Zoom out" title="Zoom out">
+            <ZoomOut size={20} />
+          </button>
+          <span className="suvadi-zoom-level" aria-live="polite" aria-label={`Zoom ${Math.round(zoom * 100)} percent`}>
+            {Math.round(zoom * 100)}%
+          </span>
+          <button className="suvadi-tool" onClick={zoomIn} disabled={zoom >= ZOOM_MAX} aria-label="Zoom in" title="Zoom in">
+            <ZoomIn size={20} />
+          </button>
+          <button className="suvadi-tool" onClick={resetView} aria-label="Reset view" title="Reset view (fit and centre the book)">
+            <RotateCcw size={20} />
+          </button>
+          <button className="suvadi-tool" onClick={toggleFS} aria-pressed={isFS}
+            aria-label={isFS ? 'Exit fullscreen' : 'Enter fullscreen'} title={isFS ? 'Exit fullscreen' : 'Fullscreen'}>
+            {isFS ? <Minimize size={20} /> : <Maximize size={20} />}
+          </button>
+        </div>
 
-        <p style={{ color: 'rgba(255,255,255,0.12)', fontSize: 8, fontFamily: 'Cinzel,serif', letterSpacing: '0.25em', textTransform: 'uppercase', margin: 0, zIndex: 1 }}>
+        <p className="suvadi-hint" style={{ color: 'rgba(255,255,255,0.12)', fontSize: 8, fontFamily: 'Cinzel,serif', letterSpacing: '0.25em', textTransform: 'uppercase', margin: 0 }}>
           — Arrow keys or click page edges to flip —
         </p>
-      </main>
+      </div>
 
       <style>{`
         @keyframes fbspin { to { transform: rotate(360deg); } }
+
+        /* Reader layout: exactly the visible viewport (dvh follows mobile address bars
+           and fullscreen), split into header · stage · controls. Only the stage scrolls. */
+        .suvadi-reader { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+        .suvadi-reader-header { flex: none; height: 56px; padding: 0 20px; }
+        .suvadi-header-spacer { width: 86px; flex-shrink: 0; }
+        .suvadi-reader-stage {
+          flex: 1 1 auto; min-height: 0; display: flex; overflow: auto; position: relative;
+          padding: ${STAGE_PAD}px; box-sizing: border-box; overscroll-behavior: contain;
+        }
+        .suvadi-book { flex: none; margin: auto; }
+        .suvadi-reader-controls {
+          flex: none; display: flex; flex-direction: column; align-items: center; gap: 10px;
+          padding: 6px 12px calc(10px + env(safe-area-inset-bottom, 0px)); position: relative; z-index: 2;
+        }
+        .suvadi-nav-row { display: flex; align-items: center; justify-content: center; gap: 18px; }
+        .suvadi-nav-btn { min-height: 44px; }
+        .suvadi-toolbar { display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .suvadi-tool {
+          width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+          border-radius: 6px; background: rgba(201,151,59,0.16); border: 1px solid rgba(201,151,59,0.5);
+          color: #E0B45C; cursor: pointer; transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+        .suvadi-tool:hover:not(:disabled) { background: rgba(201,151,59,0.3); border-color: #C9973B; color: #F2D28A; }
+        .suvadi-tool:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(242,210,138,0.7); }
+        .suvadi-tool:disabled { opacity: 0.35; cursor: not-allowed; }
+        .suvadi-tool[aria-pressed="true"] { background: rgba(201,151,59,0.32); border-color: #C9973B; }
+        .suvadi-zoom-level { min-width: 52px; text-align: center; color: #E0B45C; font-family: Cinzel, serif; font-size: 13px; font-weight: 700; }
+        /* Phones: the keyboard hint does not apply to touch, and space is short */
+        @media (max-width: 679px) { .suvadi-hint { display: none; } }
+        @media (max-width: 400px) {
+          .suvadi-reader-header { padding: 0 12px; }
+          .suvadi-header-spacer, .suvadi-nav-label { display: none; }
+          .suvadi-nav-row { gap: 12px; }
+          .suvadi-toolbar { gap: 8px; }
+        }
+        /* Short screens (phones held sideways): slimmer header, controls in one row */
+        @media (max-height: 560px) {
+          .suvadi-reader-header { height: 44px; }
+          .suvadi-reader-controls { flex-direction: row; justify-content: center; gap: 20px; padding-top: 4px; padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+          .suvadi-nav-label, .suvadi-hint { display: none; }
+        }
         .suvadi-flipbook { display: block !important; }
         .suvadi-flipbook .stf__parent { background: transparent !important; margin: 0 !important; padding: 0 !important; }
         .suvadi-flipbook .stf__wrapper { margin: 0 !important; padding: 0 !important; }
@@ -510,11 +630,6 @@ const hBtn = {
   color: '#C9973B', padding: '7px 14px', cursor: 'pointer',
   fontSize: 10, fontFamily: 'Cinzel,serif', fontWeight: 700,
   letterSpacing: '0.2em', textTransform: 'uppercase', flexShrink: 0,
-};
-const iBtn = {
-  background: 'rgba(201,151,59,0.07)', border: '1px solid rgba(201,151,59,0.12)',
-  color: '#C9973B', padding: '6px 9px', cursor: 'pointer',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2,
 };
 const nBtn = {
   display: 'flex', alignItems: 'center', gap: 8,
