@@ -1506,6 +1506,10 @@ app.get('/api/status', (req, res) =>
   res.json({ status: 'Suvadi API is live', db: 'PostgreSQL', timestamp: new Date() })
 );
 
+// ── Visitor counter & visitor location statistics (public) ──────────────────
+// POST /api/analytics/visit, GET /api/analytics/stats, GET /api/analytics/location-stats
+require('./analytics').registerAnalyticsRoutes(app, db);
+
 // ── Chatbot ──────────────────────────────────────────────────────────────────
 app.post('/api/chat', async (req, res) => {
   try {
