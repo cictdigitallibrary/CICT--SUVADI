@@ -386,12 +386,6 @@ const Home = () => {
           {/* Section header */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
             className="text-center mb-10">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-1.5 h-1.5 bg-gold rounded-full" />
-              <span className="tamil-label text-xs text-bronze uppercase tracking-[0.3em] font-black">
-                {'நிறுவன அறிமுகம்'}
-              </span>
-            </div>
             <h2 className="tamil-heading text-5xl md:text-6xl text-maroon font-black italic">
               {'சுவடியியல் புலம்'}
             </h2>
