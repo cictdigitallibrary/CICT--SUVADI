@@ -864,7 +864,9 @@ const ManuscriptSearch = () => {
                               }
                             }}
                             placeholder=""
-                            className="flex-grow bg-white px-4 text-base text-maroon font-bold outline-none placeholder:text-stone/25"
+                            // min-w-0: a text input otherwise keeps a ~20-character minimum width,
+                            // which pushed the Search button past the edge on phones
+                            className="flex-grow min-w-0 w-full bg-white px-4 text-base text-maroon font-bold outline-none placeholder:text-stone/25"
                             style={{ fontFamily: '"Baloo Thambi 2", sans-serif' }}
                             autoComplete="off"
                             spellCheck={false}
@@ -880,7 +882,7 @@ const ManuscriptSearch = () => {
                           <button
                             type="submit"
                             disabled={loading}
-                            className="bg-maroon text-white px-8 flex items-center gap-2 text-xs font-black uppercase tracking-wider
+                            className="bg-maroon text-white px-4 sm:px-8 flex items-center gap-2 text-xs font-black uppercase tracking-wider whitespace-nowrap
                       hover:bg-maroon-light transition-colors disabled:opacity-35 shrink-0"
                           >
                             <Search className="w-4 h-4" />
@@ -1548,7 +1550,21 @@ const ManuscriptSearch = () => {
 const ResultsTable = ({ resultsList, t, query, onOpen }) => {
   return (
     <div className="bg-[#FAF8F5] border border-gold/30 rounded-md shadow-md overflow-hidden mb-6">
-      <table className="w-full text-left border-collapse table-fixed">
+      {/* Phones: two columns were too narrow (the title broke into fragments), so each
+          result is stacked — title, then verse — at full width. The verse keeps its line
+          breaks but drops the indentation spaces at the start of lines, and lines share
+          one even left edge. (Full justification spread the few long Tamil words of a
+          verse line far apart.) Tablets and desktop keep the two-column table. */}
+      <style>{`
+        @media (max-width: 640px) {
+          .results-table thead { display: none; }
+          .results-table, .results-table tbody, .results-table tr, .results-table td { display: block; width: 100% !important; }
+          .results-table td { padding: 1rem 1rem 0.35rem; border-left: 0 !important; }
+          .results-table td + td { padding-top: 0.35rem; padding-bottom: 1rem; }
+          .results-table .results-song { white-space: pre-line !important; text-align: left; }
+        }
+      `}</style>
+      <table className="results-table w-full text-left border-collapse table-fixed">
         <thead>
           <tr className="bg-maroon/[0.04] border-b border-gold/20">
             <th className="px-6 py-4 tamil-label text-xs font-black uppercase tracking-widest text-maroon/70 w-[35%]">
@@ -1582,7 +1598,7 @@ const ResultsTable = ({ resultsList, t, query, onOpen }) => {
                 <td className="px-6 py-5 align-top w-[65%] border-l border-gold/15 break-words">
                   {(res.snippet || res.text_content) ? (
                     <div
-                      className="tamil-heading text-sm text-stone/85 leading-relaxed"
+                      className="results-song tamil-heading text-sm text-stone/85 leading-relaxed"
                       style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
                     >
                       <HighlightText text={res.snippet || res.text_content} query={query} />
