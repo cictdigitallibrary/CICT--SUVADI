@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, CalendarDays, Users } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { SOCIAL_LINKS } from './socialLinks';
 import { getOrCreateSessionId, istDateString, resolveVisitorGeotag } from '../utils/visitor';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -99,49 +98,6 @@ const Footer = () => {
             </div>
 
             <div>
-              {/* Social media icons header */}
-              <p className="footer-col-heading" style={{ marginBottom: '0.5rem' }}>{t('சமூக ஊடகங்கள்', 'CONNECT WITH US')}</p>
-              <div className="flex flex-wrap items-center gap-2.5" style={{ marginBottom: '0.75rem' }}>
-                {SOCIAL_LINKS.map((s, i) => (
-                  <a
-                    key={i}
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={s.name}
-                    title={s.name}
-                    className="group"
-                    style={{
-                      width: '2rem',
-                      height: '2rem',
-                      borderRadius: '50%',
-                      border: '1px solid rgba(201,151,59,0.35)',
-                      backgroundColor: 'rgba(255,255,255,0.03)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#C9973B',
-                      transition: 'all 0.3s ease',
-                      flexShrink: 0,
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.borderColor = '#C9973B';
-                      e.currentTarget.style.backgroundColor = 'rgba(201,151,59,0.15)';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(201,151,59,0.2)';
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = 'rgba(201,151,59,0.35)';
-                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    {s.icon}
-                  </a>
-                ))}
-              </div>
-
               <span style={{ fontFamily: '"Cinzel", serif', fontSize: '0.6rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(201,151,59,0.65)', fontWeight: 700, display: 'block' }}>
                 CENTRAL INSTITUTE OF CLASSICAL TAMIL
               </span>
