@@ -90,17 +90,12 @@ const EBookDetail = () => {
 
   return (
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
-      {/* Responsive banner CSS */}
+      {/* Banner box: the banners' own 1920 × 555 shape at every screen width, so the
+          image always fills it exactly. (A fixed 220px minimum on phones left the
+          brown background showing below the shorter image.) */}
       <style>{`
         .ebook-detail-banner {
-          min-height: 220px;
-          aspect-ratio: auto;
-        }
-        @media (min-width: 640px) {
-          .ebook-detail-banner {
-            min-height: 0;
-            aspect-ratio: 1920 / 555;
-          }
+          aspect-ratio: 1920 / 555;
         }
       `}</style>
 
@@ -173,7 +168,7 @@ const EBookDetail = () => {
             src="/hero_ebook_10.jpg"
             alt="Ettuthogai Banner"
             fetchPriority="high"
-            className="w-full h-full object-contain p-8 md:p-12 drop-shadow-2xl"
+            className="w-full h-full object-contain p-2 sm:p-8 md:p-12 drop-shadow-2xl"
           />
         </section>
       ) : (
