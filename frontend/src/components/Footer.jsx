@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Eye, CalendarDays, Users } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getOrCreateSessionId, istDateString, resolveVisitorGeotag } from '../utils/visitor';
@@ -16,6 +16,27 @@ const postVisit = body => fetch(`${API}/api/analytics/visit`, {
 // One request of each kind at a time per page load (React may mount twice in development)
 let visitInFlight = false, geoInFlight = false;
 
+// The live server refuses some requests (HTTP 403) while a page is loading many files
+// at once (IIS concurrent-request limit). Counter requests therefore wait until the
+// page has loaded, and a refused request is tried again a few times before giving up.
+const RETRY_DELAYS = [2000, 5000, 10000];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function withRetry(attempt, isCancelled) {
+  for (let i = 0; ; i++) {
+    if (isCancelled()) return false;
+    if (await attempt()) return true;
+    if (i >= RETRY_DELAYS.length) return false;
+    await sleep(RETRY_DELAYS[i]);
+  }
+}
+// Resolves once the page's own images and files have loaded (at most `maxWait` ms)
+const afterPageLoad = (maxWait = 4000) => new Promise(resolve => {
+  if (document.readyState === 'complete') { resolve(); return; }
+  const done = () => { clearTimeout(timer); window.removeEventListener('load', done); resolve(); };
+  const timer = setTimeout(done, maxWait);
+  window.addEventListener('load', done);
+});
+
 /* Visitor tracking: count this browser once per IST day, add its approximate city
    once per tab session, and keep the counts fresh. Runs only where the Footer is
    shown (the public pages); failures are silent and never affect the page. */
@@ -23,37 +44,42 @@ function useVisitorStats() {
   const [stats, setStats] = useState(null);
   useEffect(() => {
     let cancelled = false;
+    const isCancelled = () => cancelled;
+    // true when the counts were loaded
     const load = () => fetch(`${API}/api/analytics/stats`, { cache: 'no-store' })
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (!cancelled && d) setStats(d); })
-      .catch(() => {});
+      .then(d => { if (!cancelled && d) setStats(d); return !!d; })
+      .catch(() => false);
 
-    const sessionId = getOrCreateSessionId();
-    if (sessionId) {
-      const today = istDateString();
-      if (store.get('localStorage', 'cict_visit_date') !== today && !visitInFlight) {
-        visitInFlight = true;
-        postVisit({ sessionId })
-          // once recorded, refresh so this visit shows in the counts at once
-          .then(ok => { if (ok) { store.set('localStorage', 'cict_visit_date', today); load(); } })
-          .finally(() => { visitInFlight = false; });
+    let timer;
+    afterPageLoad().then(() => {
+      if (cancelled) return;
+      const sessionId = getOrCreateSessionId();
+      if (sessionId) {
+        const today = istDateString();
+        if (store.get('localStorage', 'cict_visit_date') !== today && !visitInFlight) {
+          visitInFlight = true;
+          withRetry(() => postVisit({ sessionId }), isCancelled)
+            // once recorded, refresh so this visit shows in the counts at once
+            .then(ok => { if (ok) { store.set('localStorage', 'cict_visit_date', today); load(); } })
+            .finally(() => { visitInFlight = false; });
+        }
+        if (store.get('sessionStorage', 'cict_geo_synced') !== 'true' && !geoInFlight) {
+          geoInFlight = true;
+          resolveVisitorGeotag()
+            .then(geo => geo && withRetry(() => postVisit({ sessionId, ...geo }), isCancelled).then(ok => {
+              if (ok) {
+                store.set('sessionStorage', 'cict_geo_synced', 'true');
+                store.set('localStorage', 'cict_visit_date', today);
+              }
+            }))
+            .catch(() => {})
+            .finally(() => { geoInFlight = false; });
+        }
       }
-      if (store.get('sessionStorage', 'cict_geo_synced') !== 'true' && !geoInFlight) {
-        geoInFlight = true;
-        resolveVisitorGeotag()
-          .then(geo => geo && postVisit({ sessionId, ...geo }).then(ok => {
-            if (ok) {
-              store.set('sessionStorage', 'cict_geo_synced', 'true');
-              store.set('localStorage', 'cict_visit_date', today);
-            }
-          }))
-          .catch(() => {})
-          .finally(() => { geoInFlight = false; });
-      }
-    }
-
-    load();
-    const timer = setInterval(load, 60_000);
+      withRetry(load, isCancelled);
+      timer = setInterval(load, 60_000);
+    });
     return () => { cancelled = true; clearInterval(timer); };
   }, []);
   return stats;
@@ -72,7 +98,9 @@ const Footer = () => {
         style={{ background: 'linear-gradient(90deg, transparent 0%, #C9973B 25%, #E8B86D 50%, #C9973B 75%, transparent 100%)' }} />
 
       {/* Realistic Manuscript Bundle — right side, bottom corner */}
-      <div className="absolute bottom-[-20px] right-[-150px] pointer-events-none select-none" style={{ zIndex: 1, width: '400px' }}>
+      {/* Hidden on phones (like the Home page's palm-leaf images): there it sits right
+          behind the contact details and visitor counts and makes them hard to read */}
+      <div className="absolute bottom-[-20px] right-[-150px] pointer-events-none select-none hidden sm:block" style={{ zIndex: 1, width: '400px' }}>
         <img src="/images/palm_manuscript.png" alt="Decorative Footer Manuscript" aria-hidden="true" loading="lazy" decoding="async" className="w-full h-auto object-contain" style={{ opacity: 0.9 }} />
       </div>
 
@@ -123,7 +151,7 @@ const Footer = () => {
               <div className="space-y-1" style={{ fontSize: '0.8rem', color: 'rgba(245,240,232,0.85)', lineHeight: 1.5, fontFamily: '"Inter", sans-serif' }}>
                 <p className="font-bold text-gold" style={{ color: '#C9973B' }}>Faculty of Manuscriptology</p>
                 <p>Central Institute Classical Tamil</p>
-                <p>Semmozhi Salai</p>
+                <p>Chemmozhi Salai</p>
                 <p>Perumbakkam</p>
                 <p>Chennai - 600100.</p>
               </div>
@@ -169,14 +197,11 @@ const Footer = () => {
             { icon: CalendarDays, label: t('இம்மாதப் பார்வையாளர்கள்', 'Monthly Visitors'), value: visitorStats?.month },
             { icon: Users, label: t('இன்றைய பார்வையாளர்கள்', 'Today Visitors'), value: visitorStats?.today },
           ].map(({ icon: Icon, label, value }, i) => (
-            <React.Fragment key={i}>
-              {i > 0 && <span className="footer-visitors-sep" aria-hidden="true">·</span>}
-              <span className="footer-visitors-item">
-                <Icon size={14} aria-hidden="true" style={{ color: '#C9973B', flexShrink: 0 }} />
-                <span>{label}:</span>
-                <strong className="footer-visitors-count">{fmt(value)}</strong>
-              </span>
-            </React.Fragment>
+            <span key={i} className="footer-visitors-item">
+              <Icon size={14} aria-hidden="true" style={{ color: '#C9973B', flexShrink: 0 }} />
+              <span>{label}:</span>
+              <strong className="footer-visitors-count">{fmt(value)}</strong>
+            </span>
           ))}
           <span className="footer-visitors-live" title={t('ஒவ்வொரு நிமிடமும் புதுப்பிக்கப்படுகிறது', 'Updated every minute')}>
             <span className="footer-visitors-dot" aria-hidden="true" />LIVE
@@ -188,11 +213,12 @@ const Footer = () => {
         .footer-visitors {
           margin-top: 1.25rem; padding-top: 0.85rem; border-top: 1px solid rgba(201,151,59,0.15);
           display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-          column-gap: 0.75rem; row-gap: 0.4rem; font-size: 0.78rem; color: rgba(245,240,232,0.8);
+          column-gap: 1.75rem; row-gap: 0.5rem; font-size: 0.78rem; color: rgba(245,240,232,0.8);
         }
+        /* Spaced by gaps rather than "·" separators, which were left dangling at the end
+           of a line whenever the row wrapped */
         .footer-visitors-item { display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
         .footer-visitors-count { color: #C9973B; font-weight: 700; font-variant-numeric: tabular-nums; }
-        .footer-visitors-sep { color: rgba(201,151,59,0.5); }
         .footer-visitors-live {
           display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.1rem 0.5rem;
           border: 1px solid rgba(201,151,59,0.35); border-radius: 999px;
@@ -201,10 +227,10 @@ const Footer = () => {
         .footer-visitors-dot { width: 6px; height: 6px; border-radius: 50%; background: #6FCF7F; animation: footer-live-pulse 2s ease-in-out infinite; }
         @keyframes footer-live-pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(111,207,127,0.5); } 50% { opacity: 0.55; box-shadow: 0 0 0 4px rgba(111,207,127,0); } }
         @media (prefers-reduced-motion: reduce) { .footer-visitors-dot { animation: none; } }
-        /* Phones: one item per line, no dangling separators */
+        /* Phones: one item per line, as a block centred under the footer whose icons and
+           labels line up on one left edge */
         @media (max-width: 640px) {
-          .footer-visitors { flex-direction: column; }
-          .footer-visitors-sep { display: none; }
+          .footer-visitors { display: grid; grid-template-columns: auto; justify-content: center; justify-items: start; }
         }
       `}</style>
     </footer>

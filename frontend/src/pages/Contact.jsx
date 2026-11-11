@@ -17,7 +17,7 @@ const Contact = () => {
     {
       icon: '📍',
       label: t('அஞ்சல் முகவரி', 'ADDRESS'),
-      value: t('செம்மொழிச் சாலை, பெரும்பாக்கம், சென்னை – 600 100', 'Semmozhi Salai, Perumbakkam, Chennai – 600 100'),
+      value: t('செம்மொழிச் சாலை, பெரும்பாக்கம், சென்னை – 600 100', 'Chemmozhi Salai, Perumbakkam, Chennai – 600 100'),
       sub: t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil'),
     },
     {
