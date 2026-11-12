@@ -740,7 +740,39 @@ app.get('/api/ebooks/:id/editions', async (req, res) => {
       }
       return { ...r, pdf_version, edition_cover: EDITION_3D_COVERS[r.id] || null };
     }));
+    // Read / download counts (0 until an edition is first opened or downloaded)
+    const { rows: stats } = await db.query(
+      'SELECT edition_id, views, downloads FROM ebook_edition_stats WHERE edition_id = ANY($1::int[])',
+      [rows.map(r => r.id)]
+    ).catch(() => ({ rows: [] }));
+    const byId = new Map(stats.map(s => [s.edition_id, s]));
+    mapped.forEach(r => {
+      const s = byId.get(r.id);
+      r.views = s ? Number(s.views) : 0;
+      r.downloads = s ? Number(s.downloads) : 0;
+    });
     res.json(mapped);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 4d. Count a read of an edition (sent once by the reader when it opens). Only active
+// editions are counted. Downloads are counted where the file is served (PDF proxy).
+async function countEditionStat(editionId, column) {
+  const id = parseInt(editionId, 10);
+  if (!Number.isInteger(id) || id <= 0) return false;
+  const col = column === 'downloads' ? 'downloads' : 'views';
+  const { rowCount } = await db.query(
+    `INSERT INTO ebook_edition_stats (edition_id, ${col}, updated_at)
+       SELECT id, 1, NOW() FROM sv_ebook_editions WHERE id = $1 AND status = 1
+     ON CONFLICT (edition_id) DO UPDATE SET ${col} = ebook_edition_stats.${col} + 1, updated_at = NOW()`,
+    [id]
+  );
+  return rowCount > 0;
+}
+app.post('/api/ebooks/editions/:id/view', async (req, res) => {
+  try {
+    const counted = await countEditionStat(req.params.id, 'views');
+    res.status(counted ? 204 : 404).end();
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -857,6 +889,12 @@ app.get('/api/proxy/pdf/:editionId', async (req, res) => {
       const name = String(req.query.name || `edition_${parseInt(editionId, 10)}`)
         .replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 150) || 'edition';
       res.attachment(/\.pdf$/i.test(name) ? name : `${name}.pdf`);
+      // One download = the request that starts the file (a resumed download asks for a
+      // later byte range and is not counted again)
+      const range = String(req.headers.range || '');
+      if (!range || /^bytes=0-/.test(range)) {
+        countEditionStat(editionId, 'downloads').catch(e => console.error('Download count failed:', e.message));
+      }
     }
     // Browser cache (ETag revalidation still applies): reopening an edition reuses fetched ranges
     return res.sendFile(localPath, { maxAge: '1d' });
@@ -948,6 +986,14 @@ async function ensureTables() {
       display_order INTEGER DEFAULT 0,
       status INTEGER DEFAULT 1,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+    // Read / download counts per e-book edition, shown beside the READ and DOWNLOAD
+    // buttons. A separate table, so sv_ebook_editions itself is not altered.
+    `CREATE TABLE IF NOT EXISTS ebook_edition_stats (
+      edition_id INTEGER PRIMARY KEY,
+      views      BIGINT NOT NULL DEFAULT 0,
+      downloads  BIGINT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     )`,
   ];
   for (const q of queries) {

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import HTMLFlipBook from 'react-pageflip';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -196,6 +197,23 @@ export default function FlipbookReader() {
     return () => console.log('[FlipbookReader] Unmounted. Cleaning up edition:', editionId);
   }, [editionId]);
 
+  // Count this read once per browser tab (reloading the reader does not count again),
+  // and refresh the book page's counts when the reader is left
+  const { id: bookId } = useParams();
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!editionId) return undefined;
+    const key = `suvadi-viewed-${editionId}`;
+    let seen = false;
+    try { seen = sessionStorage.getItem(key) === '1'; } catch { /* storage unavailable */ }
+    if (!seen) {
+      fetch(`${BACKEND}/api/ebooks/editions/${encodeURIComponent(editionId)}/view`, { method: 'POST', keepalive: true })
+        .then(r => { if (r.ok) { try { sessionStorage.setItem(key, '1'); } catch { /* ignore */ } } })
+        .catch(() => {});
+    }
+    return () => { if (bookId) queryClient.invalidateQueries({ queryKey: ['ebook-editions', bookId] }); };
+  }, [editionId, bookId, queryClient]);
+
   /* Download handler */
   const handleDownload = useCallback(() => {
     if (proxyUrl) downloadPdf(proxyUrl, decodeURIComponent(bookTitle));
@@ -370,7 +388,7 @@ export default function FlipbookReader() {
       <div style={{ minHeight: '100vh', background: '#1a0303', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
         <AlertCircle color="#C9973B" size={40} />
         <p style={{ color: '#fff', fontFamily: 'Cinzel,serif', fontSize: 13 }}>No edition source specified.</p>
-        <button onClick={() => navigate(backTo)} style={sBtn}>Back to Library</button>
+        <button onClick={() => navigate(backTo)} style={sBtn}>Back</button>
       </div>
     );
   }
@@ -490,7 +508,7 @@ export default function FlipbookReader() {
                       <Download size={14} /> Download PDF
                     </button>
                     <button onClick={() => navigate(backTo)} style={hBtn}>
-                      Back to Library
+                      Back
                     </button>
                   </div>
                 </div>

@@ -1,9 +1,9 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BookOpen, Download } from 'lucide-react';
+import { ArrowLeft, BookOpen, Download, Eye } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 import CategoryBanner from '../components/CategoryBanner';
@@ -22,10 +22,14 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
 };
 
+// 12,345 → "12,345" (Indian grouping for large numbers: 1,23,456)
+const formatCount = n => new Intl.NumberFormat('en-IN').format(Number(n) || 0);
+
 const EBookDetail = () => {
   const { id } = useParams();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Scroll to absolute top immediately when the page loads
   React.useEffect(() => {
@@ -56,6 +60,9 @@ const EBookDetail = () => {
   // panel is never served from a browser's cached copy of the old one
   const handleDownload = (editionId, bookTitle, version) => {
     downloadPdf(`${API}/api/proxy/pdf/${editionId}${version ? `?v=${version}` : ''}`, bookTitle);
+    // The server counts the download; show it straight away without reloading the list
+    queryClient.setQueryData(['ebook-editions', id], list =>
+      Array.isArray(list) ? list.map(e => (e.id === editionId ? { ...e, downloads: (e.downloads || 0) + 1 } : e)) : list);
   };
 
   // Fetch Parent Book Info
@@ -84,7 +91,7 @@ const EBookDetail = () => {
           className="inline-flex items-center gap-2 text-gold hover:text-maroon font-bold tamil-label text-sm transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          {t('நூலகத்திற்குத் திரும்புக', 'BACK TO LIBRARY')}
+          {t('பின்செல்', 'BACK')}
         </Link>
       </div>
     );
@@ -184,18 +191,16 @@ const EBookDetail = () => {
       )}
 
       <div className={`container mx-auto px-6 max-w-6xl ${id === '10' ? 'pt-[24px] pb-16' : 'py-16'}`}>
-        {/* Back Link */}
-        {id !== '10' && (
-          <div className="mb-12">
-            <Link
-              to="/ebooks"
-              className="inline-flex items-center gap-2 group text-stone/50 hover:text-maroon tamil-label text-sm font-bold transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              {t('நூலகத்திற்குத் திரும்புக', 'BACK TO LIBRARY')}
-            </Link>
-          </div>
-        )}
+        {/* Back Link (every book, Ettuthogai included) */}
+        <div className={id === '10' ? 'mb-8' : 'mb-12'}>
+          <Link
+            to="/ebooks"
+            className="inline-flex items-center gap-2 group text-stone/50 hover:text-maroon tamil-label text-sm font-bold transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            {t('பின்செல்', 'BACK')}
+          </Link>
+        </div>
 
         {/* Editions Listing */}
         <div className="mb-20">
@@ -290,8 +295,28 @@ const EBookDetail = () => {
                     <div className="mt-auto" />
                   </div>
 
-                  {/* Footer / Read & Download Action */}
-                  <div className="mt-6 pt-6 border-t border-maroon/5 flex items-center justify-end gap-3">
+                  {/* Footer: read / download counts, then the Download & Read buttons. On
+                      narrow cards the buttons move below the counts instead of squeezing. */}
+                  <div className="mt-6 pt-6 border-t border-maroon/5 flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
+                    <div className="flex items-center gap-3 text-stone/60 text-xs font-bold tabular-nums">
+                      <span
+                        className="inline-flex items-center gap-1"
+                        title={t('பார்வைகள்', 'Views')}
+                        aria-label={`${t('பார்வைகள்', 'Views')}: ${formatCount(edition.views)}`}
+                      >
+                        <Eye className="w-4 h-4 text-bronze" aria-hidden="true" />
+                        {formatCount(edition.views)}
+                      </span>
+                      <span
+                        className="inline-flex items-center gap-1"
+                        title={t('பதிவிறக்கங்கள்', 'Downloads')}
+                        aria-label={`${t('பதிவிறக்கங்கள்', 'Downloads')}: ${formatCount(edition.downloads)}`}
+                      >
+                        <Download className="w-4 h-4 text-bronze" aria-hidden="true" />
+                        {formatCount(edition.downloads)}
+                      </span>
+                    </div>
+                    <div className="ml-auto flex items-center gap-3">
                     <button
                       onClick={() => handleDownload(edition.id, edition.title_tamil, edition.pdf_version)}
                       className="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-maroon hover:bg-maroon hover:text-white tamil-label text-sm font-bold transition-all border border-maroon/30 shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
@@ -312,6 +337,7 @@ const EBookDetail = () => {
                       <span>{t('படிக்க', 'READ')}</span>
                       <BookOpen className="w-3.5 h-3.5" />
                     </button>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -319,24 +345,6 @@ const EBookDetail = () => {
           )}
         </div>
 
-        {/* Decorative Institutional Note */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="bg-white border border-maroon/10 p-8 text-center max-w-3xl mx-auto shadow-lg relative"
-        >
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-gold flex items-center justify-center text-maroon text-[8px] font-bold shadow-md">
-            ✦
-          </div>
-          <p className="tamil-body text-xs text-stone/50 italic leading-loose">
-            {t(
-              'இங்குக் குறிப்பிடப்பட்டுள்ள மின் பதிப்புகள் அனைத்தும் ஆய்வாளர்களின் பயன்பாட்டிற்காகவே வழங்கப்படுகின்றன. எவ்வித வணிகப் பயன்பாட்டிற்கும் அனுமதி இல்லை.',
-              'All digitised publications provided here are exclusively for research and scholarly analysis. Commercial usage of these archives is strictly prohibited.'
-            )}
-          </p>
-        </motion.div>
       </div>
     </div>
   );
