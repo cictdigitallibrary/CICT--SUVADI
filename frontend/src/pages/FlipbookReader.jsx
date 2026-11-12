@@ -114,9 +114,11 @@ export default function FlipbookReader() {
   const bookTitle = params.get('title') || 'Edition';
   const backTo    = params.get('back')  || '/ebooks';
 
-  // Backend proxy URL — serves PDF directly by edition ID
+  // Backend proxy URL — serves PDF directly by edition ID. `v` (the PDF's last change,
+  // from the edition list) makes a replaced PDF a new URL, so no stale cached copy is used.
+  const pdfVersion = params.get('v');
   const proxyUrl = editionId
-    ? `${BACKEND}/api/proxy/pdf/${editionId}`
+    ? `${BACKEND}/api/proxy/pdf/${editionId}${pdfVersion ? `?v=${encodeURIComponent(pdfVersion)}` : ''}`
     : null;
 
   /* state */

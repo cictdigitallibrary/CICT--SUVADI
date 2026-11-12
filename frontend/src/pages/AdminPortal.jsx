@@ -239,6 +239,10 @@ const AdminPortal = () => {
   const [modalOpen, setModalOpen]     = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [fd, setFd]                   = useState({ status: 1 }); // form data
+  const [saving, setSaving]           = useState(false);
+  const [uploadPct, setUploadPct]     = useState(null);   // PDF / scan upload progress (%)
+  const [formError, setFormError]     = useState('');
+  const uploadAbort = useRef(null);   // AbortController of the save in progress
 
   /* Manuscripts trash toggle */
   const [showTrash, setShowTrash] = useState(false);
@@ -252,6 +256,11 @@ const AdminPortal = () => {
     { id: 'categories',    name: 'Main Category',  icon: Layers,          label: 'முதல் பிரிவு' },
     { id: 'subcategories', name: 'Sub-Category',   icon: Scroll,          label: 'துணை பிரிவு' },
     { id: 'songs',         name: 'Manuscripts',    icon: FileText,        label: 'பாடல்கள்' },
+    // E-book editions (PDF upload / replace), Team and Contacts: their screens and API
+    // routes are complete but had no tab since commit 697223c, so they were unreachable
+    { id: 'ebook-editions', name: 'E-book Editions', icon: BookOpen,      label: 'மின்நூல் பதிப்புகள்' },
+    { id: 'team',          name: 'Team Members',   icon: UserCheck,       label: 'குழுவினர்' },
+    { id: 'contacts',      name: 'Contacts',       icon: MessageSquare,   label: 'தொடர்பு' },
     { id: 'users',         name: 'Users',          icon: Shield,          label: 'உள்நுழைவு விவரங்கள்' },
   ];
 
@@ -344,7 +353,10 @@ const AdminPortal = () => {
     finally { setLoading(false); }
   };
 
-  const refresh = () => { fetchData(); fetchDashStats(); };
+  // After any change, also reload the book / sub-category dropdowns: they were loaded
+  // only once, so a newly created book or sub-category could not be picked in the other
+  // forms until the page was reloaded
+  const refresh = () => { fetchData(); fetchDashStats(); loadBooks(); loadAllSubcats(); };
 
   /* ── form helpers ── */
   const set = (k, v) => setFd(p => ({ ...p, [k]: v }));
@@ -354,7 +366,7 @@ const AdminPortal = () => {
     setFd({ status: 1 });
     setFmBookId(''); setFmCatId('');
     setSongRows([{ fid: '', fname: '' }]);
-    setModalOpen(true);
+    setFormError(''); setModalOpen(true);
   };
 
   const openEdit = item => {
@@ -374,7 +386,7 @@ const AdminPortal = () => {
     if (activeTab === 'ebook-editions') {
       setFmBookId(String(item.book_id || ''));
     }
-    setModalOpen(true);
+    setFormError(''); setModalOpen(true);
   };
 
   const rowId = item =>
@@ -382,8 +394,37 @@ const AdminPortal = () => {
     : activeTab === 'categories' ? item.cid
     : item.id;
 
+  // Server's error message (e.g. "Cannot delete: it still contains …"), else a generic one
+  const errorText = err => err?.response?.data?.error || err?.message || 'Something went wrong';
+  // Shows upload progress for large files (PDFs can be hundreds of MB)
+  const progressCfg = {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: ev => { if (ev.total) setUploadPct(Math.round((ev.loaded / ev.total) * 100)); },
+  };
+  // Closing the form while a save is running cancels it: the browser stops sending the
+  // file and the server discards the partial upload (nothing is saved for it)
+  const closeModal = () => { uploadAbort.current?.abort(); setModalOpen(false); };
+  // Same rules as the server, checked before a large file starts uploading
+  const SCAN_FILE = /\.(jpe?g|webp|gif|bmp|avif)$/i;
+  const fileProblem = () => {
+    if (activeTab === 'songs' && fd.imageFile && !SCAN_FILE.test(fd.imageFile.name))
+      return 'Manuscript scans must be JPEG, WebP, GIF, BMP or AVIF images (PNG and TIFF are not displayed on the website)';
+    if (activeTab === 'ebook-editions' && fd.pdfFile && !/\.pdf$/i.test(fd.pdfFile.name))
+      return 'Only PDF files can be uploaded as an edition';
+    return '';
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
+    if (saving) return;
+    const problem = fileProblem();
+    if (problem) { setFormError(problem); return; }
+    setSaving(true); setFormError(''); setUploadPct(null);
+    const abort = new AbortController();
+    uploadAbort.current = abort;
+    const cfg = { ...progressCfg, signal: abort.signal };
+    let recordSaved = false;   // edition record saved, its PDF upload still to come
+    let createdRecord = null;  // a record this save created (so a retry updates it instead)
     try {
       const ep = activeTab === 'ebook-editions' ? 'ebook-editions'
         : activeTab === 'team' ? 'team' : activeTab;
@@ -400,61 +441,82 @@ const AdminPortal = () => {
           const row = songRows[0] || { fid: '', fname: '' };
           formData.append('fid',   row.fid   ?? '');
           formData.append('fname', row.fname  ?? '');
-          await axios.put(`${API}/songs/${rowId(editingItem)}`, formData,
-            { headers: { 'Content-Type': 'multipart/form-data' } });
+          await axios.put(`${API}/songs/${rowId(editingItem)}`, formData, cfg);
         } else {
           // Create: each songRow → separate DB record sharing the same image
           songRows.forEach(row => {
             formData.append('fid',   row.fid   ?? '');
             formData.append('fname', row.fname  ?? '');
           });
-          await axios.post(`${API}/songs`, formData,
-            { headers: { 'Content-Type': 'multipart/form-data' } });
+          await axios.post(`${API}/songs`, formData, cfg);
         }
       } else {
         // All other tabs
-        let payload;
-        if (fd.imageFile) {
-          payload = new FormData();
-          Object.entries(fd).forEach(([k, v]) => { if (k !== 'imageFile') payload.append(k, v ?? ''); });
-          payload.append('image', fd.imageFile);
-        } else {
-          payload = { ...fd };
-          delete payload.imageFile;
-        }
-        const cfg = payload instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+        // The record itself is plain JSON; files are uploaded separately (edition PDF below)
+        const payload = { ...fd };
+        delete payload.imageFile;
+        delete payload.pdfFile;
+        let savedId = editingItem ? rowId(editingItem) : null;
         if (editingItem) {
-          await axios.put(`${API}/${ep}/${rowId(editingItem)}`, payload, cfg);
+          await axios.put(`${API}/${ep}/${savedId}`, payload, { signal: abort.signal });
         } else {
-          await axios.post(`${API}/${ep}`, payload, cfg);
+          const { data } = await axios.post(`${API}/${ep}`, payload, { signal: abort.signal });
+          savedId = data?.id;
+          createdRecord = { ...payload, id: savedId };
+        }
+        recordSaved = true;
+        // E-book edition PDF: uploaded after the record exists (a new edition needs its id)
+        if (activeTab === 'ebook-editions' && fd.pdfFile && savedId) {
+          const pdfData = new FormData();
+          pdfData.append('pdf', fd.pdfFile);
+          await axios.post(`${API}/ebook-editions/${savedId}/pdf`, pdfData, cfg);
         }
       }
 
       setModalOpen(false); setEditingItem(null); setFd({ status: 1 });
       setSongRows([{ fid: '', fname: '' }]);
       refresh();
-    } catch (err) { console.error('Submit error:', err); }
+    } catch (err) {
+      // The record exists now: saving again must update it, not create a second one
+      if (createdRecord) setEditingItem(createdRecord);
+      if (axios.isCancel(err)) {
+        // Cancelled by closing the form; an edition record saved before its PDF stays
+        if (recordSaved && activeTab === 'ebook-editions') window.alert('Upload cancelled. The edition details were saved, but its PDF was not uploaded.');
+        refresh();
+        return;
+      }
+      console.error('Submit error:', err);
+      // shown in the form; it stays open so nothing typed is lost
+      setFormError(!err.response
+        ? 'The upload was interrupted (network connection lost or the server did not answer). Nothing was saved for this file — please try again.'
+        : errorText(err));
+      refresh();                    // e.g. an edition saved but its PDF upload failed
+    } finally {
+      if (uploadAbort.current === abort) uploadAbort.current = null;
+      setSaving(false); setUploadPct(null);
+    }
+  };
+
+  // Every action reports a failure instead of silently doing nothing
+  const runAction = async (fn) => {
+    try { await fn(); refresh(); } catch (err) { window.alert(errorText(err)); }
   };
 
   const handleDelete = async (id, label = 'Delete this record?') => {
     if (!window.confirm(label)) return;
     const ep = activeTab === 'ebook-editions' ? 'ebook-editions'
       : activeTab === 'team' ? 'team' : activeTab;
-    try { await axios.delete(`${API}/${ep}/${id}`); refresh(); } catch {}
+    await runAction(() => axios.delete(`${API}/${ep}/${id}`));
   };
 
   const handleTrashSong  = id => handleDelete(id, 'Move this folio to trash?');
-  const handleRestoreSong = async id => {
-    try { await axios.put(`${API}/songs/${id}/restore`); refresh(); } catch {}
-  };
+  const handleRestoreSong = id => runAction(() => axios.put(`${API}/songs/${id}/restore`));
   const handlePurgeSong = async id => {
     if (!window.confirm('Permanently delete this record? This cannot be undone.')) return;
-    try { await axios.delete(`${API}/songs/${id}/purge`); refresh(); } catch {}
+    await runAction(() => axios.delete(`${API}/songs/${id}/purge`));
   };
 
-  const markContactRead = async id => {
-    try { await axios.put(`${API}/contacts/${id}/read`); refresh(); } catch {}
-  };
+  const markContactRead = id => runAction(() => axios.put(`${API}/contacts/${id}/read`));
 
   /* ── active tab meta ── */
   const activeMeta = tabs.find(t => t.id === activeTab) || tabs[0];
@@ -465,6 +527,10 @@ const AdminPortal = () => {
     return <AdminLogin onLogin={(token) => {
       sessionStorage.setItem('adminAuthToken', token);
       setIsAuthenticated(true);
+      // The data effects already ran (unauthorised) before signing in: load everything
+      // now, otherwise the dashboard and the dropdowns stay empty until a reload
+      loadBooks(); loadAllSubcats();
+      if (activeTab === 'dashboard') { fetchDashStats(); fetchChartData(); } else fetchData();
     }} />;
   }
 
@@ -1066,7 +1132,7 @@ const AdminPortal = () => {
         {modalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setModalOpen(false)} className="absolute inset-0 bg-ink/75 backdrop-blur-sm" />
+              onClick={closeModal} className="absolute inset-0 bg-ink/75 backdrop-blur-sm" />
             <motion.div
               initial={{ scale: 0.92, opacity: 0, y: 16 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -1081,7 +1147,7 @@ const AdminPortal = () => {
                     {activeMeta.name} · {activeMeta.label}
                   </p>
                 </div>
-                <button onClick={() => setModalOpen(false)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
+                <button onClick={closeModal} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -1138,7 +1204,7 @@ const AdminPortal = () => {
 
                     {/* 1. கோப்பினை தேர்ந்தெடு / Select a File */}
                     <Field label="கோப்பினை தேர்ந்தெடு / Select a File">
-                      <input type="file" accept="image/*"
+                      <input type="file" accept="image/jpeg,image/webp,image/gif,image/bmp,image/avif,.jpg,.jpeg,.webp,.gif,.bmp,.avif"
                         onChange={e => set('imageFile', e.target.files[0])}
                         className="w-full text-xs text-stone/50 cursor-pointer
                           file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0
@@ -1207,7 +1273,6 @@ const AdminPortal = () => {
                           புதிய குறிப்பு சேர்க்க/நீக்க:
                         </span>
                         <button type="button"
-                          disabled={songRows.length >= 10}
                           onClick={() => setSongRows(prev => [...prev, { fid: '', fname: '' }])}
                           className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white rounded-lg text-[11px] font-black hover:bg-emerald-600 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
                           <Plus className="w-3.5 h-3.5" /> சேர்
@@ -1240,7 +1305,20 @@ const AdminPortal = () => {
                       <input required type="text" value={fd.title_tamil || ''} onChange={e => set('title_tamil', e.target.value)}
                         className={TamilInputCls} placeholder="மின்நூல் தலைப்பு…" />
                     </Field>
-                    <Field label="Local PDF Path" hint="Relative path from project root, e.g. storage/pdfs/book.pdf">
+                    <Field label="Upload PDF / மின்நூல் கோப்பு" hint={editingItem?.local_pdf_url ? `Current: ${editingItem.local_pdf_url.split('/').pop()} — choose a file to replace it, or leave blank to keep it` : 'Saved as storage/pdfs/edition_<id>.pdf'}>
+                      <input type="file" accept="application/pdf,.pdf"
+                        onChange={e => set('pdfFile', e.target.files[0])}
+                        className="w-full text-xs text-stone/50 cursor-pointer
+                          file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0
+                          file:text-xs file:font-black file:uppercase file:tracking-wide
+                          file:bg-maroon/8 file:text-maroon hover:file:bg-maroon/15 file:transition-all" />
+                      {fd.pdfFile && (
+                        <p className="text-[10px] text-stone/50 mt-1.5">
+                          {fd.pdfFile.name} — {(fd.pdfFile.size / 1048576).toFixed(1)} MB
+                        </p>
+                      )}
+                    </Field>
+                    <Field label="Local PDF Path" hint="Set automatically when a PDF is uploaded above; or a file already on the server, e.g. storage/pdfs/book.pdf">
                       <input type="text" value={fd.local_pdf_url || ''} onChange={e => set('local_pdf_url', e.target.value)}
                         className={InputCls} placeholder="storage/pdfs/…" />
                     </Field>
@@ -1314,16 +1392,25 @@ const AdminPortal = () => {
                   </div>
                 )}
 
+                {/* Why the last save failed (server's message) */}
+                {formError && (
+                  <div role="alert" className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold">
+                    {formError}
+                  </div>
+                )}
+
                 {/* Status + submit */}
                 <div className="pt-2 border-t border-stone/8 flex items-center gap-4">
                   <StatusToggle value={fd.status} onChange={v => set('status', v)} />
                   <div className="flex gap-3 flex-1">
-                    <button type="submit"
-                      className="flex-1 bg-maroon text-white py-3.5 rounded-xl font-black uppercase tracking-widest hover:bg-maroon-dark transition-all shadow-lg shadow-maroon/20 flex items-center justify-center gap-2">
+                    <button type="submit" disabled={saving}
+                      className="flex-1 bg-maroon text-white py-3.5 rounded-xl font-black uppercase tracking-widest hover:bg-maroon-dark transition-all shadow-lg shadow-maroon/20 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait">
                       <Save className="w-4 h-4" />
-                      {editingItem ? 'Save Updates' : 'Create Record'}
+                      {saving
+                        ? (uploadPct === null ? 'Saving…' : uploadPct < 100 ? `Uploading ${uploadPct}%` : 'Processing…')
+                        : (editingItem ? 'Save Updates' : 'Create Record')}
                     </button>
-                    <button type="button" onClick={() => setModalOpen(false)}
+                    <button type="button" onClick={closeModal}
                       className="flex-1 bg-stone/5 text-stone/40 py-3.5 rounded-xl font-black uppercase tracking-widest hover:bg-stone/10 transition-all">
                       Cancel
                     </button>

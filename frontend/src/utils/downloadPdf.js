@@ -7,7 +7,8 @@
  * so nothing appeared to happen until it had completely arrived.
  */
 export function downloadPdf(proxyUrl, title) {
-  const href = `${proxyUrl}?download=1&name=${encodeURIComponent(title || '')}`;
+  const sep = proxyUrl.includes('?') ? '&' : '?'; // the URL may already carry ?v=<version>
+  const href = `${proxyUrl}${sep}download=1&name=${encodeURIComponent(title || '')}`;
   const a = document.createElement('a');
   a.href = href;
   a.rel = 'noopener';

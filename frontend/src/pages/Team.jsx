@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 
@@ -92,8 +94,26 @@ const fadeUp = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
 };
 
+// Members managed in the admin panel (Team tab), mapped to the fields this page shows.
+// Photo paths like "/images/team/x.jpg" are served by the backend.
+const fromAdmin = m => ({
+  id: `db-${m.id}`,
+  name_tamil: m.name,
+  name_english: m.name,
+  title_tamil: m.role_tamil || m.role_english || '',
+  photo: m.photo_url || '',
+  localAsset: !/^\/images\//.test(m.photo_url || ''),
+});
+
 const Team = () => {
   const { t } = useLanguage();
+  // The admin's team list once it has members; until then (the table is empty today)
+  // the built-in list above, so the page never shows an empty team
+  const { data: adminMembers = [] } = useQuery({
+    queryKey: ['team'],
+    queryFn: async () => (await axios.get(`${API}/api/team`)).data,
+  });
+  const members = Array.isArray(adminMembers) && adminMembers.length > 0 ? adminMembers.map(fromAdmin) : TEAM_MEMBERS;
 
   return (
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
@@ -144,8 +164,10 @@ const Team = () => {
             viewport={{ once: true, amount: 0.1 }}
             className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 xl:gap-10"
           >
-            {TEAM_MEMBERS.map((member) => {
-              const photoUrl = member.localAsset ? member.photo : `${API}/images/team/${member.photo}`;
+            {members.map((member) => {
+              const photoUrl = member.localAsset ? member.photo
+                : /^\/images\//.test(member.photo) ? `${API}${member.photo}`
+                : `${API}/images/team/${member.photo}`;
 
               return (
                 <motion.div key={member.id} variants={fadeUp} className="group">

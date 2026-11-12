@@ -52,8 +52,10 @@ const EBookDetail = () => {
     };
   }, []);
 
-  const handleDownload = (editionId, bookTitle) => {
-    downloadPdf(`${API}/api/proxy/pdf/${editionId}`, bookTitle);
+  // `version` (the PDF's last change) is part of the link, so a PDF replaced in the admin
+  // panel is never served from a browser's cached copy of the old one
+  const handleDownload = (editionId, bookTitle, version) => {
+    downloadPdf(`${API}/api/proxy/pdf/${editionId}${version ? `?v=${version}` : ''}`, bookTitle);
   };
 
   // Fetch Parent Book Info
@@ -291,7 +293,7 @@ const EBookDetail = () => {
                   {/* Footer / Read & Download Action */}
                   <div className="mt-6 pt-6 border-t border-maroon/5 flex items-center justify-end gap-3">
                     <button
-                      onClick={() => handleDownload(edition.id, edition.title_tamil)}
+                      onClick={() => handleDownload(edition.id, edition.title_tamil, edition.pdf_version)}
                       className="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-maroon hover:bg-maroon hover:text-white tamil-label text-sm font-bold transition-all border border-maroon/30 shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
                     >
                       <span>{t('பதிவிறக்கு', 'DOWNLOAD')}</span>
@@ -302,7 +304,8 @@ const EBookDetail = () => {
                         // All editions read from local storage via backend PDF proxy
                         const back = encodeURIComponent(`/ebooks/${id}`);
                         const title = encodeURIComponent(edition.title_tamil);
-                        navigate(`/ebooks/${id}/read?edition=${edition.id}&title=${title}&back=${back}`);
+                        const version = edition.pdf_version ? `&v=${edition.pdf_version}` : '';
+                        navigate(`/ebooks/${id}/read?edition=${edition.id}&title=${title}&back=${back}${version}`);
                       }}
                       className="inline-flex items-center gap-2 px-3 py-2 bg-maroon text-white hover:bg-gold hover:text-maroon tamil-label text-sm font-bold transition-all shadow-md hover:shadow-lg hover:scale-105 transform duration-300"
                     >

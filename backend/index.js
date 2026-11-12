@@ -27,7 +27,13 @@ const PORT = process.env.PORT || 3001;
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_suvadi_key_123';
+// Without JWT_SECRET a well-known fallback would let anyone forge an admin token.
+// Use a random per-process secret instead: sign-in still works, sessions just end
+// when the application restarts.
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  console.error('❌ JWT_SECRET is not set in backend/.env — using a temporary random secret (admins must sign in again after every restart)');
+  return require('crypto').randomBytes(48).toString('hex');
+})();
 
 // ── PostgreSQL Pool ──────────────────────────────────────────────────────────
 // One shared pool per process, with back-off and monitoring: see db.js
@@ -85,19 +91,113 @@ app.use('/storage', express.static(STORAGE_PATH, { maxAge: '7d' }));
 const multer = require('multer');
 const fs = require('fs');
 
-// ── Multer config for song uploads ───────────────────────────────────────────
+// ── Upload helpers ───────────────────────────────────────────────────────────
+// File name kept from the upload, made safe for disk and URLs: no folders, no
+// characters outside letters (incl. Tamil), digits, dot, dash and underscore. The
+// extension is kept separately, so a name made only of symbols ("@@.jpg") still ends
+// in ".jpg", and long names are shortened without losing it.
+// (Upload names are decoded as UTF-8 — defParamCharset below — so Tamil names arrive intact.)
+const cleanNamePart = (s) => s.normalize('NFC').replace(/\s+/g, '_').replace(/[^\p{L}\p{M}\p{N}._-]/gu, '').replace(/_{2,}/g, '_');
+const safeFileName = (name) => {
+  const base = path.basename(String(name || '').replace(/\\/g, '/'));
+  const ext = cleanNamePart(path.extname(base)).replace(/[^.\p{L}\p{N}]/gu, '').toLowerCase().slice(0, 10);
+  let stem = cleanNamePart(base.slice(0, base.length - path.extname(base).length)).replace(/^[.]+/, '');
+  // Capped in UTF-8 bytes, not characters: Tamil letters take 3 bytes each, and names
+  // over 255 bytes cannot be copied, backed up or deleted by many tools (Git Bash,
+  // Linux file systems, some backup / zip software) even though Windows accepts them
+  while (Buffer.byteLength(stem, 'utf8') > 150) stem = [...stem].slice(0, -1).join('');
+  return (stem || 'file') + (ext.length > 1 ? ext : '');
+};
+// Temporary name while a file arrives; renamed once the record is saved. Each one is
+// remembered on the request so a failed or interrupted upload can be cleaned up
+// (multer itself only removes files it has finished writing — a file still arriving
+// when the client disconnects or cancels was left behind, e.g. 60 MB of a 150 MB PDF).
+const TEMP_UPLOAD = /^upload_\d+_[a-z0-9]+\.tmp$/;
+function tempUploadName(req, file, cb) {
+  const name = `upload_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.tmp`;
+  (req.uploadTempFiles = req.uploadTempFiles || []).push(path.join(file.tmpDir, name));
+  cb(null, name);
+}
+// The partial file may still be open for a moment (Windows refuses to delete open
+// files), so retry a few times
+function removeTempUploads(req) {
+  for (const p of req.uploadTempFiles || []) {
+    let tries = 0;
+    const attempt = () => fs.unlink(p, err => { if (err && err.code !== 'ENOENT' && ++tries < 6) setTimeout(attempt, 1000 * tries * tries).unref(); });
+    attempt();
+  }
+}
+const uploadError = (message) => Object.assign(new Error(message), { status: 400, expose: true });
+// What a file really is, from its first bytes (the browser-sent type and the file name
+// can both be wrong or forged). Returns the MIME type, or null when it is not one of these.
+async function sniffFile(filePath) {
+  const fh = await fs.promises.open(filePath, 'r');
+  const b = Buffer.alloc(16);
+  try { await fh.read(b, 0, 16, 0); } finally { await fh.close(); }
+  if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return 'image/jpeg';
+  if (b.toString('latin1', 0, 4) === 'GIF8') return 'image/gif';
+  if (b.toString('latin1', 0, 2) === 'BM') return 'image/bmp';
+  if (b.toString('latin1', 0, 4) === 'RIFF' && b.toString('latin1', 8, 12) === 'WEBP') return 'image/webp';
+  if (b.toString('latin1', 4, 8) === 'ftyp' && /^avi[fs]$/.test(b.toString('latin1', 8, 12))) return 'image/avif';
+  if (b.toString('latin1', 0, 5) === '%PDF-') return 'application/pdf';
+  if (b[0] === 0x89 && b.toString('latin1', 1, 4) === 'PNG') return 'image/png';
+  return null;
+}
+
+// ── Multer config for manuscript (song) image uploads ────────────────────────
+// No size limit in the application (IIS caps a request at maxAllowedContentLength,
+// web.config). Only image formats the website can display are accepted: PNG files are
+// never shown publicly (isRealScan treats them as legacy placeholders) and browsers
+// cannot display TIFF, so those are refused with a clear message instead of silently
+// becoming a "missing" scan. SVG is refused because it can carry scripts.
+const SCAN_TYPES = /^image\/(jpeg|pjpeg|webp|gif|bmp|avif)$/i;
+const SCAN_EXT = /\.(jpe?g|webp|gif|bmp|avif)$/i;
 const songStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const cid = req.body.cid || 'temp';
-    const dir = path.join(SONGS_PATH, String(cid));
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
+    // cid arrives before the file in the form (AdminPortal appends it first)
+    const cid = parseInt(req.body.cid, 10);
+    if (!Number.isInteger(cid) || cid <= 0) return cb(uploadError('A sub-category must be selected before uploading'));
+    // Refuse before anything is written (no stray folder, no large upload to a bad id)
+    db.query('SELECT 1 FROM sv_sub_category WHERE id = $1', [cid]).then(({ rows }) => {
+      if (!rows.length) return cb(uploadError('The selected sub-category does not exist'));
+      const dir = path.join(SONGS_PATH, String(cid));
+      fs.mkdir(dir, { recursive: true }, err => { file.tmpDir = dir; cb(err, dir); });
+    }, cb);
   },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '_' + file.originalname);
-  }
+  // Temporary name; renamed to "<id>_<name>" once the record id is known
+  filename: tempUploadName,
 });
-const uploadSong = multer({ storage: songStorage });
+const uploadSong = multer({
+  storage: songStorage,
+  defParamCharset: 'utf8',
+  fileFilter: (req, file, cb) => (SCAN_TYPES.test(file.mimetype) && SCAN_EXT.test(file.originalname))
+    ? cb(null, true)
+    : cb(uploadError('Manuscript scans must be JPEG, WebP, GIF, BMP or AVIF images (PNG and TIFF are not displayed on the website)')),
+});
+
+// Edition PDFs: stored in STORAGE_PATH/pdfs, where the PDF proxy reads them.
+const PDF_DIR = path.join(STORAGE_PATH, 'pdfs');
+const uploadPdf = multer({
+  storage: multer.diskStorage({
+    // Refuse before the (possibly very large) file is written when the edition does not exist
+    destination: (req, file, cb) => db.query('SELECT 1 FROM sv_ebook_editions WHERE id = $1', [parseInt(req.params.id, 10) || 0]).then(({ rows }) => {
+      if (!rows.length) return cb(Object.assign(new Error('Edition not found'), { status: 404 }));
+      fs.mkdir(PDF_DIR, { recursive: true }, err => { file.tmpDir = PDF_DIR; cb(err, PDF_DIR); });
+    }, cb),
+    filename: tempUploadName,
+  }),
+  defParamCharset: 'utf8',
+  fileFilter: (req, file, cb) => (/\.pdf$/i.test(file.originalname) || file.mimetype === 'application/pdf')
+    ? cb(null, true) : cb(uploadError('Only PDF files can be uploaded as an edition')),
+});
+
+// Run a multer middleware and turn its errors into the JSON errors the admin shows
+const withUpload = (mw) => (req, res, next) => mw(req, res, err => {
+  if (!err) return next();
+  removeTempUploads(req);
+  res.status(err.status || 400).json({ error: err.message });
+});
+const removeQuietly = (p) => fs.promises.unlink(p).catch(() => {});
 
 // ── Image file cache ─────────────────────────────────────────────────────────
 // IMAGE_CACHE: used only by public-facing song browse/search endpoints.
@@ -121,6 +221,7 @@ function buildImageCache() {
       const dirPath = path.join(SONGS_PATH, dir);
       if (!fs.statSync(dirPath).isDirectory()) continue;
       for (const file of fs.readdirSync(dirPath)) {
+        if (TEMP_UPLOAD.test(file)) { removeStaleTemp(path.join(dirPath, file)); continue; }
         if (!isRealScan(path.join(dirPath, file))) continue;
         IMAGE_CACHE[`${dir}/${file}`] = `/songs/${dir}/${file}`;
       }
@@ -128,6 +229,11 @@ function buildImageCache() {
     console.log(`✅ Image cache: ${Object.keys(IMAGE_CACHE).length} folio images indexed`);
   } catch (e) { console.warn('⚠️  Image cache build warning:', e.message); }
 }
+// Keep the cache current after an admin upload, replacement or deletion — one entry,
+// instead of re-scanning every file on the share (buildImageCache), which blocks the
+// whole server while it reads tens of thousands of scans.
+function cacheSetImage(cid, filename) { IMAGE_CACHE[`${cid}/${filename}`] = `/songs/${cid}/${filename}`; }
+function cacheDeleteImage(cid, filename) { delete IMAGE_CACHE[`${cid}/${filename}`]; }
 function getImageUrl(cid, id, filename) {
   if (cid && filename) {
     const key = `${cid}/${filename}`;
@@ -135,6 +241,12 @@ function getImageUrl(cid, id, filename) {
   }
   return null;
 }
+// Safety net: unfinished uploads older than a day (only this app's own upload_*.tmp
+// names, e.g. left by an application restart mid-upload) are removed at startup
+function removeStaleTemp(p) {
+  fs.stat(p, (err, st) => { if (!err && Date.now() - st.mtimeMs > 24 * 3600 * 1000) fs.unlink(p, () => {}); });
+}
+fs.readdir(PDF_DIR, (err, names) => { if (!err) names.filter(n => TEMP_UPLOAD.test(n)).forEach(n => removeStaleTemp(path.join(PDF_DIR, n))); });
 buildImageCache();
 // If the share was unreachable at startup, keep retrying so scans appear once
 // access is restored — without needing an application restart.
@@ -618,7 +730,16 @@ app.get('/api/ebooks/:id/editions', async (req, res) => {
        ORDER BY e.id ASC`,
       [req.params.id]
     );
-    const mapped = rows.map(r => ({ ...r, edition_cover: EDITION_3D_COVERS[r.id] || null }));
+    // pdf_version (last change of the PDF file) is added to reader / download links, so a
+    // replaced PDF is never served from a browser's 1-day cache of the old one
+    const mapped = await Promise.all(rows.map(async r => {
+      let pdf_version = null;
+      if (r.local_pdf_url) {
+        const st = await fs.promises.stat(path.join(STORAGE_PATH, 'pdfs', path.basename(r.local_pdf_url))).catch(() => null);
+        if (st) pdf_version = Math.floor(st.mtimeMs);
+      }
+      return { ...r, pdf_version, edition_cover: EDITION_3D_COVERS[r.id] || null };
+    }));
     res.json(mapped);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -626,21 +747,10 @@ app.get('/api/ebooks/:id/editions', async (req, res) => {
 // 5. Team members
 app.get('/api/team', async (req, res) => {
   try {
-    const teamPhotos = [
-      '/images/team/director1.jpg',
-      '/images/team/arulmani.jpg',
-      '/images/team/tamilvannan.jpg',
-      '/images/team/thamarai.jpg',
-      '/images/team/venki.jpg',
-      '/images/team/nagarajan.jpg',
-      '/images/team/karumbu.jpg',
-    ];
-    const { rows } = await db.query('SELECT * FROM team_members ORDER BY display_order').catch(() => ({ rows: [] }));
-    const result = rows.map((m, idx) => ({
-      ...m,
-      photo_url: teamPhotos[idx] || null,
-    }));
-    res.json(result);
+    // Active members in the admin's display order, each with the photo set in the admin
+    // (previously photos were assigned from a fixed list by position, so edits never showed)
+    const { rows } = await db.query('SELECT * FROM team_members WHERE status = 1 ORDER BY display_order, id').catch(() => ({ rows: [] }));
+    res.json(rows.map(m => ({ ...m, photo_url: m.photo_url || null })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -863,20 +973,43 @@ async function ensureTables() {
 ensureTables();
 
 // ── ADMIN AUTHENTICATION ─────────────────────────────────────────────────────
+// Constant-time comparison for legacy plain-text passwords (hashing both sides gives
+// equal-length buffers, so timingSafeEqual works for any lengths)
+function plainTextEquals(given, stored) {
+  const crypto = require('crypto');
+  const h = (s) => crypto.createHash('sha256').update(String(s), 'utf8').digest();
+  return stored.length > 0 && crypto.timingSafeEqual(h(given), h(stored));
+}
 app.post('/api/admin/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password } = req.body || {};
+    if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
     const { rows } = await db.query('SELECT * FROM sv_users WHERE username=$1 LIMIT 1', [username]);
-    
+
     if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
     const user = rows[0];
-    
-    // Support legacy plain text or new bcrypt hashes
-    const isMatch = password === user.password || bcrypt.compareSync(password, user.password);
-    
+
+    // bcrypt hash → bcrypt check only. Previously the stored text was also compared as
+    // plain text, so the hash itself worked as a password. Legacy accounts whose
+    // password is still stored as plain text are compared in constant time.
+    const stored = String(user.password || '');
+    const isHash = /^\$2[aby]\$\d\d\$/.test(stored);
+    const isMatch = isHash ? await bcrypt.compare(password, stored) : plainTextEquals(password, stored);
+
     if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
     if (user.status !== 1) return res.status(403).json({ error: 'Account disabled' });
-    
+
+    // Opt-in migration (ADMIN_PASSWORD_REHASH=1 in backend/.env): a successful plain-text
+    // sign-in stores the same password as a bcrypt hash. The password does not change,
+    // so nobody is locked out — but anything else reading sv_users.password as plain
+    // text would stop matching, which is why it is off unless enabled.
+    if (!isHash && process.env.ADMIN_PASSWORD_REHASH === '1') {
+      await db.query('UPDATE sv_users SET password = $1 WHERE id = $2 AND password = $3', [await bcrypt.hash(password, 10), user.id, stored])
+        .catch(e => console.error('Password re-hash failed (sign-in unaffected):', e.message));
+    }
+
     const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '8h' });
     res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -1034,9 +1167,29 @@ app.put('/api/admin/books/:id', async (req, res) => {
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
+// Deleting a parent must never take its contents with it. The live database has
+// ON DELETE CASCADE foreign keys (one book delete would erase all its categories,
+// sub-categories, folios and editions, leaving the scan and PDF files orphaned on
+// the share); databases restored without those keys would instead keep the children
+// hidden from the website. Either way: refuse, and say what is still inside.
+const stillContains = (res, what) => res.status(409).json({ error: `Cannot delete: it still contains ${what}. Delete or move those first.` });
+
 app.delete('/api/admin/books/:id', async (req, res) => {
   try {
-    await db.query('DELETE FROM sv_book WHERE book_id=$1', [req.params.id]);
+    const { rows: [c] } = await db.query(
+      `SELECT (SELECT count(*)::int FROM sv_main_category WHERE book_id = $1) AS categories,
+              (SELECT count(*)::int FROM sv_sub_category WHERE book_id = $1) AS subcategories,
+              (SELECT count(*)::int FROM sv_ebook_editions WHERE book_id = $1) AS editions`, [req.params.id]);
+    if (c.categories || c.subcategories || c.editions) return stillContains(res, [c.categories && `${c.categories} categories`, c.subcategories && `${c.subcategories} sub-categories`, c.editions && `${c.editions} e-book editions`].filter(Boolean).join(' and '));
+    // The live tables cascade deletes (book → categories → sub-categories → folios,
+    // book → editions), so the delete itself re-checks in the same statement: nothing
+    // added since the check above can be swept away with it
+    const del = await db.query(
+      `DELETE FROM sv_book b WHERE b.book_id = $1
+         AND NOT EXISTS (SELECT 1 FROM sv_main_category WHERE book_id = b.book_id)
+         AND NOT EXISTS (SELECT 1 FROM sv_sub_category WHERE book_id = b.book_id)
+         AND NOT EXISTS (SELECT 1 FROM sv_ebook_editions WHERE book_id = b.book_id)`, [req.params.id]);
+    if (!del.rowCount) return res.status(409).json({ error: 'Not deleted: the book changed meanwhile or no longer exists. Refresh and try again.' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1080,7 +1233,10 @@ app.put('/api/admin/categories/:id', async (req, res) => {
 });
 app.delete('/api/admin/categories/:id', async (req, res) => {
   try {
-    await db.query('DELETE FROM sv_main_category WHERE cid=$1', [req.params.id]);
+    const { rows: [c] } = await db.query('SELECT count(*)::int AS n FROM sv_sub_category WHERE main_category_id = $1', [req.params.id]);
+    if (c.n) return stillContains(res, `${c.n} sub-categories`);
+    const del = await db.query('DELETE FROM sv_main_category m WHERE m.cid = $1 AND NOT EXISTS (SELECT 1 FROM sv_sub_category WHERE main_category_id = m.cid)', [req.params.id]);
+    if (!del.rowCount) return res.status(409).json({ error: 'Not deleted: the category changed meanwhile or no longer exists. Refresh and try again.' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1125,7 +1281,10 @@ app.put('/api/admin/subcategories/:id', async (req, res) => {
 });
 app.delete('/api/admin/subcategories/:id', async (req, res) => {
   try {
-    await db.query('DELETE FROM sv_sub_category WHERE id=$1', [req.params.id]);
+    const { rows: [c] } = await db.query('SELECT count(*)::int AS n FROM sv_songs WHERE cid = $1', [req.params.id]);
+    if (c.n) return stillContains(res, `${c.n} manuscript folios (including any in the trash)`);
+    const del = await db.query('DELETE FROM sv_sub_category s WHERE s.id = $1 AND NOT EXISTS (SELECT 1 FROM sv_songs WHERE cid = s.id)', [req.params.id]);
+    if (!del.rowCount) return res.status(409).json({ error: 'Not deleted: the sub-category changed meanwhile or no longer exists. Refresh and try again.' });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1184,19 +1343,47 @@ app.get('/api/admin/songs', async (req, res) => {
     res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
-app.post('/api/admin/songs', uploadSong.single('image'), async (req, res) => {
+// Scans are stored on disk as "<id>_<name>" and the SAME name is stored in
+// sv_songs.filename — the convention of all existing records (e.g. "23259_c45.jpg").
+// Rows saved together with one scan (group_id = first row's id) reference the same file.
+const scanPath = (cid, filename) => path.join(SONGS_PATH, String(cid), filename);
+// Checks an uploaded scan's real content. Returns its MIME type — stored in
+// sv_songs.filetype like every existing record ("image/jpeg") — or null after removing
+// the file. A PNG/HTML/script renamed to .jpg is refused here.
+async function checkScan(tmp) {
+  const type = await sniffFile(tmp).catch(() => null);
+  if (type && type.startsWith('image/') && type !== 'image/png') return type;
+  await removeQuietly(tmp);
+  return null;
+}
+const NOT_A_SCAN = 'The file is not a valid JPEG, WebP, GIF, BMP or AVIF image (its content does not match its name)';
+// Remove a scan file only when no record (in or out of the trash) still refers to it
+async function removeScanIfUnused(cid, filename) {
+  if (!cid || !filename) return;
+  const { rows: [r] } = await db.query('SELECT count(*)::int AS n FROM sv_songs WHERE cid = $1 AND filename = $2', [cid, filename]);
+  if (r.n > 0) return;
+  await removeQuietly(scanPath(cid, filename));
+  cacheDeleteImage(cid, filename);
+}
+
+app.post('/api/admin/songs', withUpload(uploadSong.single('image')), async (req, res) => {
+  const tmp = req.file && req.file.path;
+  const insertedIds = [];
+  let storedName = '';    // "<primaryId>_<name>", shared by every row of this upload
   try {
-    const { cid, status } = req.body;
-    if (!cid) return res.status(400).json({ error: 'cid is required' });
+    const cid = parseInt(req.body.cid, 10);
+    if (!Number.isInteger(cid) || cid <= 0) { if (tmp) await removeQuietly(tmp); return res.status(400).json({ error: 'cid is required' }); }
+    const status = Number.isNaN(parseInt(req.body.status, 10)) ? 1 : parseInt(req.body.status, 10);
 
     // Support multiple fid/fname pairs — each pair → separate DB row (original CICT behavior)
     const rawFids   = [].concat(req.body.fid   || []);
     const rawFnames = [].concat(req.body.fname  || []);
-    if (!rawFids.length) return res.status(400).json({ error: 'At least one fid/fname pair required' });
+    if (!rawFids.length) { if (tmp) await removeQuietly(tmp); return res.status(400).json({ error: 'At least one fid/fname pair required' }); }
 
-    const imageOriginalName = req.file ? req.file.originalname : '';
-    const insertedIds = [];
-    let primaryId = null;  // first row owns the physical file
+    const filetype = req.file ? await checkScan(tmp) : '';
+    if (req.file && !filetype) return res.status(400).json({ error: NOT_A_SCAN });
+    const originalName = req.file ? safeFileName(req.file.originalname) : '';
+    let primaryId = null;   // first row owns the physical file
 
     for (let i = 0; i < rawFids.length; i++) {
       const fid   = parseInt(rawFids[i], 10) || 0;
@@ -1205,54 +1392,93 @@ app.post('/api/admin/songs', uploadSong.single('image'), async (req, res) => {
       const groupId = (i === 0) ? 0 : primaryId;
 
       const { rows } = await db.query(
-        `INSERT INTO sv_songs (cid, fid, fname, filename, description, author, group_id, status, upload_date)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8, TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'))
+        `INSERT INTO sv_songs (cid, fid, fname, filename, filetype, description, author, group_id, status, upload_date)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'))
          RETURNING id`,
-        [parseInt(cid, 10), fid, fname, imageOriginalName, fname, 'System', groupId, parseInt(status ?? 1, 10)]
+        [cid, fid, fname, storedName, filetype || 'image/jpeg', fname, 'System', groupId, status]
       );
       const newId = rows[0].id;
       insertedIds.push(newId);
 
       if (i === 0) {
         primaryId = newId;
-        // Rename the uploaded file to {primaryId}_{originalname}
         if (req.file) {
-          const newPath = path.join(path.dirname(req.file.path), `${primaryId}_${imageOriginalName}`);
-          fs.renameSync(req.file.path, newPath);
+          storedName = `${primaryId}_${originalName}`;
+          await fs.promises.rename(tmp, scanPath(cid, storedName));
+          await db.query('UPDATE sv_songs SET filename = $1 WHERE id = $2', [storedName, primaryId]);
+          cacheSetImage(cid, storedName);
         }
       }
     }
-
-    if (req.file) buildImageCache();
-    res.json({ ids: insertedIds, id: insertedIds[0] });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+    res.json({ ids: insertedIds, id: insertedIds[0], filename: storedName });
+  } catch (e) {
+    // All or nothing: a failure part-way (e.g. the share refused the file) must not
+    // leave records behind that show no scan — remove what this request created
+    if (tmp) await removeQuietly(tmp);
+    if (insertedIds.length) {
+      await db.query('DELETE FROM sv_songs WHERE id = ANY($1::int[])', [insertedIds]).catch(err => console.error('Upload rollback failed:', err.message));
+      if (storedName) { await removeQuietly(scanPath(parseInt(req.body.cid, 10), storedName)); cacheDeleteImage(parseInt(req.body.cid, 10), storedName); }
+    }
+    res.status(500).json({ error: e.message });
+  }
 });
-app.put('/api/admin/songs/:id', uploadSong.single('image'), async (req, res) => {
+
+app.put('/api/admin/songs/:id', withUpload(uploadSong.single('image')), async (req, res) => {
+  const tmp = req.file && req.file.path;
   try {
-    const { cid, fid, fname, status } = req.body;
-    const songId = req.params.id;
+    const songId = parseInt(req.params.id, 10);
+    const { rows: [cur] } = await db.query('SELECT id, cid, filename FROM sv_songs WHERE id = $1', [songId]);
+    if (!cur) { if (tmp) await removeQuietly(tmp); return res.status(404).json({ error: 'Record not found' }); }
+
+    const { fid, fname, status } = req.body;
     const cleanFid = parseInt(fid, 10) || 0;
-    const cleanCid = parseInt(cid, 10);
-    const cleanStatus = parseInt(status, 10) ?? 1;
+    const cleanCid = Number.isInteger(parseInt(req.body.cid, 10)) ? parseInt(req.body.cid, 10) : cur.cid;
+    const cleanStatus = Number.isNaN(parseInt(status, 10)) ? 1 : parseInt(status, 10);
 
     if (req.file) {
-      const imageOriginalName = req.file.originalname;
-      await db.query(
-        'UPDATE sv_songs SET cid=$1, fid=$2, fname=$3, filename=$4, description=$5, status=$6 WHERE id=$7',
-        [cleanCid, cleanFid, fname || '', imageOriginalName, fname || '', cleanStatus, songId]
-      );
-      const newPath = path.join(path.dirname(req.file.path), `${songId}_${imageOriginalName}`);
-      fs.renameSync(req.file.path, newPath);
-      buildImageCache();
+      const filetype = await checkScan(tmp);
+      if (!filetype) return res.status(400).json({ error: NOT_A_SCAN });
+      // Replacement scan: a new file name, so browsers never keep showing the old cached
+      // scan (the /songs files are cached for 7 days)
+      const storedName = `${songId}_${Date.now()}_${safeFileName(req.file.originalname)}`;
+      await fs.promises.rename(tmp, scanPath(cleanCid, storedName));
+      try {
+        await db.query(
+          'UPDATE sv_songs SET cid=$1, fid=$2, fname=$3, filename=$4, filetype=$5, description=$6, status=$7 WHERE id=$8',
+          [cleanCid, cleanFid, fname || '', storedName, filetype, fname || '', cleanStatus, songId]
+        );
+      } catch (e) {
+        await removeQuietly(scanPath(cleanCid, storedName)); // record unchanged: drop the unused new file
+        throw e;
+      }
+      // Rows saved together with this scan follow it to the new file
+      await db.query('UPDATE sv_songs SET filename=$1, cid=$2 WHERE group_id=$3 AND cid=$4 AND filename=$5',
+        [storedName, cleanCid, songId, cur.cid, cur.filename]);
+      cacheSetImage(cleanCid, storedName);
+      await removeScanIfUnused(cur.cid, cur.filename);
     } else {
-      // No new file — keep existing filename, only update text fields
+      // No new file — keep existing filename, only update text fields. If the record moves
+      // to another sub-category, its scan is copied into that folder so it stays visible.
+      if (cleanCid !== Number(cur.cid)) {
+        const { rows: target } = await db.query('SELECT 1 FROM sv_sub_category WHERE id = $1', [cleanCid]);
+        if (!target.length) return res.status(400).json({ error: 'The selected sub-category does not exist' });
+      }
+      if (cleanCid !== Number(cur.cid) && cur.filename) {
+        await fs.promises.mkdir(path.join(SONGS_PATH, String(cleanCid)), { recursive: true });
+        await fs.promises.copyFile(scanPath(cur.cid, cur.filename), scanPath(cleanCid, cur.filename)).catch(() => {});
+        cacheSetImage(cleanCid, cur.filename);
+      }
       await db.query(
         'UPDATE sv_songs SET cid=$1, fid=$2, fname=$3, description=$4, status=$5 WHERE id=$6',
         [cleanCid, cleanFid, fname || '', fname || '', cleanStatus, songId]
       );
+      if (cleanCid !== Number(cur.cid)) await removeScanIfUnused(cur.cid, cur.filename);
     }
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    if (tmp) await removeQuietly(tmp);
+    res.status(500).json({ error: e.message });
+  }
 });
 app.delete('/api/admin/songs/:id', async (req, res) => {
   try {
@@ -1268,20 +1494,11 @@ app.put('/api/admin/songs/:id/restore', async (req, res) => {
 });
 app.delete('/api/admin/songs/:id/purge', async (req, res) => {
   try {
-    // Fetch before deleting so we can clean up the physical image file
-    const { rows: songRows } = await db.query(
-      'SELECT id, cid, filename, group_id FROM sv_songs WHERE id=$1', [req.params.id]
-    );
-    if (songRows[0]) {
-      const song = songRows[0];
-      // Only delete the physical file if this record owns it (group_id = 0 or null)
-      const ownsFile = !song.group_id || parseInt(song.group_id) === 0;
-      if (ownsFile && song.filename) {
-        const imgPath = path.join(SONGS_PATH, String(song.cid), `${song.id}_${song.filename}`);
-        try { if (fs.existsSync(imgPath)) { fs.unlinkSync(imgPath); buildImageCache(); } } catch {}
-      }
-    }
+    const { rows: [song] } = await db.query('SELECT id, cid, filename FROM sv_songs WHERE id=$1', [req.params.id]);
     await db.query('DELETE FROM sv_songs WHERE id=$1', [req.params.id]);
+    // The scan file goes only when no other record still shows it (rows of the same
+    // upload share one file). filename is the on-disk name ("<id>_<name>").
+    if (song) await removeScanIfUnused(song.cid, song.filename);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1305,17 +1522,28 @@ app.get('/api/admin/users', async (req, res) => {
 app.post('/api/admin/users', async (req, res) => {
   try {
     const { username, password, email, role } = req.body;
+    if (!username || !String(username).trim() || !password) return res.status(400).json({ error: 'Username and password are required' });
     const hashedPassword = bcrypt.hashSync(password, 10);
     const { rows } = await db.query(
       'INSERT INTO sv_users (username, password, email, role) VALUES ($1,$2,$3,$4) RETURNING id',
       [username, hashedPassword, email, role || 'admin']
     );
     res.json({ id: rows[0].id });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    if (e.code === '23505') return res.status(409).json({ error: 'That username is already taken' });
+    res.status(500).json({ error: e.message });
+  }
 });
 app.put('/api/admin/users/:id', async (req, res) => {
   try {
     const { username, password, email, role, status } = req.body;
+    if (!username || !String(username).trim()) return res.status(400).json({ error: 'Username is required' });
+    // Never lock everyone out by disabling: not your own account, not the last active one
+    if (Number(status) !== 1) {
+      if (req.user && String(req.user.id) === String(req.params.id)) return res.status(400).json({ error: 'You cannot disable the account you are signed in with' });
+      const { rows: [a] } = await db.query('SELECT count(*)::int AS n FROM sv_users WHERE status = 1 AND id <> $1', [req.params.id]);
+      if (!a.n) return res.status(400).json({ error: 'The last active admin account cannot be disabled' });
+    }
     if (password) {
       const hashedPassword = bcrypt.hashSync(password, 10);
       await db.query(
@@ -1329,10 +1557,17 @@ app.put('/api/admin/users/:id', async (req, res) => {
       );
     }
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    if (e.code === '23505') return res.status(409).json({ error: 'That username is already taken' });
+    res.status(500).json({ error: e.message });
+  }
 });
 app.delete('/api/admin/users/:id', async (req, res) => {
   try {
+    // Never lock everyone out: not your own account, not the last account
+    if (req.user && String(req.user.id) === String(req.params.id)) return res.status(400).json({ error: 'You cannot delete the account you are signed in with' });
+    const { rows: [c] } = await db.query('SELECT count(*)::int AS n FROM sv_users WHERE status = 1 AND id <> $1', [req.params.id]);
+    if (!c.n) return res.status(400).json({ error: 'The last active admin account cannot be deleted' });
     await db.query('DELETE FROM sv_users WHERE id=$1', [req.params.id]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -1434,6 +1669,7 @@ app.get('/api/admin/ebook-editions', async (req, res) => {
 app.post('/api/admin/ebook-editions', async (req, res) => {
   try {
     const { book_id, title_tamil, pdf_url, local_pdf_url, status } = req.body;
+    if (!book_id || !String(title_tamil || '').trim()) return res.status(400).json({ error: 'Choose a book and enter the edition title' });
     const { rows } = await db.query(
       'INSERT INTO sv_ebook_editions (book_id, title_tamil, pdf_url, local_pdf_url, status) VALUES ($1,$2,$3,$4,$5) RETURNING id',
       [book_id, title_tamil, pdf_url || '', local_pdf_url || '', status ?? 1]
@@ -1444,6 +1680,7 @@ app.post('/api/admin/ebook-editions', async (req, res) => {
 app.put('/api/admin/ebook-editions/:id', async (req, res) => {
   try {
     const { book_id, title_tamil, pdf_url, local_pdf_url, status } = req.body;
+    if (!book_id || !String(title_tamil || '').trim()) return res.status(400).json({ error: 'Choose a book and enter the edition title' });
     await db.query(
       'UPDATE sv_ebook_editions SET book_id=$1, title_tamil=$2, pdf_url=$3, local_pdf_url=$4, status=$5 WHERE id=$6',
       [book_id, title_tamil, pdf_url || '', local_pdf_url || '', status, req.params.id]
@@ -1451,6 +1688,43 @@ app.put('/api/admin/ebook-editions/:id', async (req, res) => {
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
+// Upload or replace an edition's PDF (multipart field "pdf"). Saved as
+// storage/pdfs/edition_<id>.pdf — the convention of the existing editions — unless that
+// name belongs to another edition. No size limit in the application; IIS limits a
+// request to maxAllowedContentLength (web.config).
+app.post('/api/admin/ebook-editions/:id/pdf', withUpload(uploadPdf.single('pdf')), async (req, res) => {
+  const tmp = req.file && req.file.path;
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Choose a PDF file to upload' });
+    const id = parseInt(req.params.id, 10);
+    const { rows: [ed] } = await db.query('SELECT id FROM sv_ebook_editions WHERE id = $1', [id]);
+    if (!ed) { await removeQuietly(tmp); return res.status(404).json({ error: 'Edition not found' }); }
+
+    // A real PDF starts with "%PDF-"; the reader also needs at least 1 KB
+    if ((await sniffFile(tmp).catch(() => null)) !== 'application/pdf' || req.file.size < 1024) {
+      await removeQuietly(tmp);
+      return res.status(400).json({ error: 'The file is not a valid PDF' });
+    }
+
+    let name = `edition_${id}.pdf`;
+    const { rows: others } = await db.query("SELECT local_pdf_url FROM sv_ebook_editions WHERE id <> $1 AND COALESCE(local_pdf_url, '') <> ''", [id]);
+    if (others.some(r => path.basename(r.local_pdf_url) === name)) name = `edition_${id}_${Date.now()}.pdf`;
+    try {
+      await fs.promises.rename(tmp, path.join(PDF_DIR, name)); // replaces this edition's previous file of that name
+    } catch (e) {
+      await removeQuietly(tmp);
+      const busy = e.code === 'EBUSY' || e.code === 'EPERM';
+      return res.status(busy ? 409 : 500).json({ error: busy ? 'The current PDF is open by a reader right now; please try again in a minute' : e.message });
+    }
+    const rel = `storage/pdfs/${name}`;
+    await db.query('UPDATE sv_ebook_editions SET local_pdf_url = $1 WHERE id = $2', [rel, id]);
+    res.json({ success: true, local_pdf_url: rel, size: req.file.size });
+  } catch (e) {
+    if (tmp) await removeQuietly(tmp);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.delete('/api/admin/ebook-editions/:id', async (req, res) => {
   try {
     await db.query('DELETE FROM sv_ebook_editions WHERE id=$1', [req.params.id]);
@@ -1581,6 +1855,12 @@ function startServer(port) {
     console.log('═══════════════════════════════════════════════════');
     console.log('');
   });
+
+  // Node ends any request still being received after 5 minutes (requestTimeout), which
+  // cut off large uploads on slower connections (692 MB needs > 2.3 MB/s to finish in
+  // time). Disabled: IIS in front already drops stalled clients (connectionTimeout,
+  // minBytesPerSecond), and headersTimeout (60 s) still guards against slow headers.
+  server.requestTimeout = 0;
 
   server.on('error', (err) => {
     const numericPort = Number(port);
