@@ -101,7 +101,7 @@ const EBooks = () => {
         )}
         badge={undefined}
         glyphs={['முதல்', 'அச்சு', 'நூல்', 'பத்து', 'திரு', 'கலி']}
-        backgroundImage="/images/bg/ebooks-panoramic.jpg"
+        backgroundImage="/images/bg/ebooks-panoramic-clean.jpg"
         heroClass="ebooks-hero-bg"
         headingStyle={
           language === 'ta'

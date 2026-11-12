@@ -206,12 +206,16 @@ function registerAnalyticsRoutes(app, db, { geolocateImpl = geolocate, log = con
       const today = istDate(now());
       const { start, next } = istMonthRange(today);
       const stats = await statsCache.get(async () => {
-        const [total, todayCount, month] = await Promise.all([
-          db.query('SELECT count(*)::int AS n FROM site_visits'),
-          db.query('SELECT count(*)::int AS n FROM site_daily_visits WHERE date = $1::date', [today]),
-          db.query('SELECT count(DISTINCT session_id)::int AS n FROM site_daily_visits WHERE date >= $1::date AND date < $2::date', [start, next]),
-        ]);
-        return { total: total.rows[0].n, today: todayCount.rows[0].n, month: month.rows[0].n };
+        // One statement, so it needs a single database connection: the database server
+        // is shared, and when it is nearly full, extra parallel connections are refused
+        const { rows: [r] } = await db.query(
+          `SELECT (SELECT count(*)::int FROM site_visits) AS total,
+                  (SELECT count(*)::int FROM site_daily_visits WHERE date = $1::date) AS today,
+                  (SELECT count(DISTINCT session_id)::int FROM site_daily_visits
+                    WHERE date >= $2::date AND date < $3::date) AS month`,
+          [today, start, next]
+        );
+        return { total: r.total, today: r.today, month: r.month };
       });
       res.set('Cache-Control', 'no-store').json(stats);
     } catch (e) {
@@ -226,23 +230,26 @@ function registerAnalyticsRoutes(app, db, { geolocateImpl = geolocate, log = con
       await ready;
       const today = istDate(now());
       const data = await locationCache.get(async () => {
-        const [countries, cities, todayRows, todayTotal] = await Promise.all([
-          db.query(
+        // Run one after another (one connection at a time) rather than in parallel: on the
+        // shared database server, extra simultaneous connections may be refused
+        const run = async (queries) => { const out = []; for (const [sql, params] of queries) out.push(await db.query(sql, params)); return out; };
+        const [countries, cities, todayRows, todayTotal] = await run([
+          [
             `SELECT country, country_code, count(*)::int AS count FROM site_visits
               WHERE country IS NOT NULL AND lower(btrim(country)) <> ALL($1::text[])
-              GROUP BY country, country_code ORDER BY count DESC, country LIMIT 15`, [INVALID_PLACE]),
-          db.query(
+              GROUP BY country, country_code ORDER BY count DESC, country LIMIT 15`, [INVALID_PLACE]],
+          [
             `SELECT city, region, country, count(*)::int AS count FROM site_visits
               WHERE city IS NOT NULL AND country IS NOT NULL
                 AND lower(btrim(city)) <> ALL($1::text[]) AND lower(btrim(country)) <> ALL($1::text[])
-              GROUP BY city, region, country ORDER BY count DESC, city LIMIT 15`, [INVALID_PLACE]),
-          db.query(
+              GROUP BY city, region, country ORDER BY count DESC, city LIMIT 15`, [INVALID_PLACE]],
+          [
             `SELECT v.city, v.region, v.country, v.country_code, count(*)::int AS count
                FROM site_daily_visits d JOIN site_visits v ON v.session_id = d.session_id
               WHERE d.date = $1::date AND v.city IS NOT NULL AND v.country IS NOT NULL
                 AND lower(btrim(v.city)) <> ALL($2::text[]) AND lower(btrim(v.country)) <> ALL($2::text[])
-              GROUP BY v.city, v.region, v.country, v.country_code`, [today, INVALID_PLACE]),
-          db.query('SELECT count(*)::int AS n FROM site_daily_visits WHERE date = $1::date', [today]),
+              GROUP BY v.city, v.region, v.country, v.country_code`, [today, INVALID_PLACE]],
+          ['SELECT count(*)::int AS n FROM site_daily_visits WHERE date = $1::date', [today]],
         ]);
         // Merge today's rows that differ only in country code (e.g. one missing it)
         const merged = new Map();
