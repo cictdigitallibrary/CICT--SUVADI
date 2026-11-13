@@ -1013,6 +1013,9 @@ async function ensureTables() {
   for (const q of editionColumns) {
     await db.query(q).catch(e => console.error('Edition column migration:', e.message));
   }
+  // Last successful sign-in of each admin, shown on the admin Users tab
+  await db.query('ALTER TABLE sv_users ADD COLUMN IF NOT EXISTS last_login TIMESTAMPTZ')
+    .catch(e => console.error('Users column migration:', e.message));
 
   console.log('✅ Support tables verified');
 }
@@ -1046,6 +1049,8 @@ app.post('/api/admin/login', async (req, res) => {
 
     if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
     if (user.status !== 1) return res.status(403).json({ error: 'Account disabled' });
+    await db.query('UPDATE sv_users SET last_login = NOW() WHERE id = $1', [user.id])
+      .catch(e => console.error('Last-login update failed (sign-in unaffected):', e.message));
 
     // Opt-in migration (ADMIN_PASSWORD_REHASH=1 in backend/.env): a successful plain-text
     // sign-in stores the same password as a bcrypt hash. The password does not change,
@@ -1559,7 +1564,7 @@ app.get('/api/admin/users', async (req, res) => {
     if (search) { params.push(`%${search}%`); conditions.push(`(username ILIKE $${params.length} OR email ILIKE $${params.length})`); }
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const [rows, count] = await Promise.all([
-      db.query(`SELECT id, username, email, role, status, created_at FROM sv_users ${where} ORDER BY id DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
+      db.query(`SELECT id, username, email, role, status, last_login FROM sv_users ${where} ORDER BY id DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`, [...params, parseInt(limit), offset]),
       db.query(`SELECT COUNT(*) as c FROM sv_users ${where}`, params),
     ]);
     res.json({ rows: rows.rows, total: parseInt(count.rows[0].c) });

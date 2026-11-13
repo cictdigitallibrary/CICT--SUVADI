@@ -613,7 +613,8 @@ const AdminPortal = () => {
                 )}
               </button>
             )}
-            {activeTab !== 'dashboard' && !showTrash && (
+            {/* Admin accounts are not created from the panel */}
+            {activeTab !== 'dashboard' && activeTab !== 'users' && !showTrash && (
               <button onClick={openCreate}
                 className="flex items-center gap-2 bg-maroon text-white px-5 py-2.5 rounded-xl hover:bg-maroon-dark transition-all shadow-md shadow-maroon/15 hover:scale-105 active:scale-95">
                 <Plus className="w-4 h-4" />
@@ -916,7 +917,7 @@ const AdminPortal = () => {
                         <Th>Username</Th>
                         <Th>Email</Th>
                         <Th>Role</Th>
-                        <Th>Joined</Th>
+                        <Th>Last Login</Th>
                       </>}
                       <Th>Status</Th>
                       {(activeTab === 'songs' || activeTab === 'subcategories' || activeTab === 'categories') && <Th>Created At</Th>}
@@ -1011,7 +1012,13 @@ const AdminPortal = () => {
                                 <Td>
                                   <span className="px-2.5 py-1 bg-maroon/5 text-maroon text-[9px] font-black uppercase rounded-full">{item.role}</span>
                                 </Td>
-                                <Td><span className="text-[10px] text-stone/35">{new Date(item.created_at).toLocaleDateString()}</span></Td>
+                                <Td>
+                                  <span className="text-[10px] text-stone-500 tabular-nums">
+                                    {item.last_login
+                                      ? new Date(item.last_login).toLocaleString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
+                                      : 'Never'}
+                                  </span>
+                                </Td>
                               </>}
 
                               <Td><StatusPill value={item.status} /></Td>

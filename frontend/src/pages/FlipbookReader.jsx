@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 import { downloadPdf } from '../utils/downloadPdf';
+import { openRangedPdf } from '../utils/pdfRangeSource';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -380,6 +381,31 @@ export default function FlipbookReader() {
     setPdfDoc(null);
     setRetryKey(Date.now());
   }, [firstSpreadShown, editionId]);
+
+  // PDF source for range loading: byte ranges go through one queue (2 at a time) and
+  // refused requests are retried — the server refuses visitors with more than ~6
+  // requests in flight (HTTP 403), which used to fail the book and fall back to
+  // streaming the whole PDF. Fallback mode still streams the plain URL.
+  // Keyed by the load it belongs to, so a reload never reuses the previous (aborted) source
+  const sourceKey = `${proxyUrl}|${retryKey}`;
+  const [rangeSource, setRangeSource] = useState({ key: null, file: null });
+  const onPageFailedRef = useRef(onPageFailed);
+  useEffect(() => { onPageFailedRef.current = onPageFailed; }, [onPageFailed]);
+  useEffect(() => {
+    if (!proxyUrl || fallbackMode) return undefined;
+    const ctrl = new AbortController();
+    const key = `${proxyUrl}|${retryKey}`;
+    openRangedPdf(proxyUrl, { chunkSize: 512 * 1024, signal: ctrl.signal, onFatal: () => onPageFailedRef.current() })
+      .then(file => { if (!ctrl.signal.aborted) setRangeSource({ key, file }); })
+      .catch(err => {
+        if (ctrl.signal.aborted) return;
+        console.warn('[FlipbookReader] Range loading unavailable, streaming the whole file:', err.message);
+        setFallbackMode(true);
+        setRetryKey(Date.now());
+      });
+    return () => ctrl.abort();
+  }, [proxyUrl, fallbackMode, retryKey]);
+  const documentFile = fallbackMode ? proxyUrl : (rangeSource.key === sourceKey ? rangeSource.file : null);
   const isActive = n => visiblePages.includes(n) || (spreadDrawn && Math.abs(n - page) <= RENDER_WIN);
 
   /* No source guard */
@@ -480,7 +506,8 @@ export default function FlipbookReader() {
           }}>
             <Document
               key={retryKey}
-              file={proxyUrl}
+              file={documentFile}
+              noData={null}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
               onLoadProgress={onDocumentLoadProgress}

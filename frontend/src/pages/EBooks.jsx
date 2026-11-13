@@ -10,6 +10,13 @@ import FallbackImg from '../components/FallbackImg';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+// திட்ட உருவாக்கக் குழு — shown at the end of the editions list (as on the old site)
+const PROJECT_TEAM = [
+  { photo: 'director.jpg', role: 'திட்டத் தலைமையும் ஒருங்கிணைப்பும்', name: 'பேராசிரியர் இரா. சந்திரசேகரன்', designation: 'இயக்குநர்' },
+  { photo: 'venki.jpg', role: 'திட்ட ஆக்கம்', name: 'முனைவர் இரா. வெங்கடேசன்', designation: 'இளநிலை ஆராய்ச்சி அலுவலர்' },
+  { photo: 'ams.jpg', role: 'தொழில்நுட்ப வடிவமைப்பு', name: 'திரு. அ. முருக சுவாமிநாதன்', designation: 'நிரலாளர்' },
+];
+
 
 
 const stagger = {
@@ -426,6 +433,36 @@ const EBooks = () => {
                   <p className="text-justify">
                     {'41. முத்தொள்ளாயிரச் செய்யுட்கள், ஸேதுஸம்தான வித்துவானும் செந்தமிழ்ப் பத்திராசிரியருமான ரா. இராகவையங்காரால் பரிசோதிக்கப்பெற்றன, மதுரை, தமிழ்ச்சங்க முத்திராசாலைப் பதிப்பு,1905'}
                   </p>
+
+                  {/* Project team (from the old site's உருவாக்கம் page) */}
+                  <div className="mt-14 pt-10 border-t border-maroon/10">
+                    <div className="text-center font-bold text-maroon text-xl mb-8">{'திட்ட உருவாக்கக் குழு'}</div>
+                    <div className="grid grid-cols-1 sm:max-w-md sm:mx-auto lg:max-w-none lg:grid-cols-3 gap-6">
+                      {PROJECT_TEAM.map(m => (
+                        <div
+                          key={m.photo}
+                          className="relative bg-ivory/60 border border-maroon/10 rounded-lg p-5 flex flex-col items-center gap-4 text-center shadow-sm"
+                        >
+                          <div className="absolute top-0 left-0 w-full h-[3px] rounded-t-lg bg-gradient-to-r from-maroon via-gold to-maroon" />
+                          <img
+                            src={`${API}/images/team/${m.photo}`}
+                            alt={m.name}
+                            width={112}
+                            height={132}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-[112px] h-[132px] shrink-0 object-cover rounded-md border-2 border-gold/40 shadow"
+                          />
+                          <div className="min-w-0" style={{ fontFamily: '"Noto Sans Tamil", sans-serif' }}>
+                            <p className="text-maroon font-bold text-sm leading-snug">{m.role}</p>
+                            <p className="text-ink font-bold mt-1.5 leading-snug">{m.name}</p>
+                            <p className="text-stone/70 text-sm mt-1 leading-snug">{m.designation}</p>
+                            <p className="text-stone/70 text-sm leading-snug">{'செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்'}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
                   {/* Back to introduction button */}
                   <div className="flex justify-center pt-8 pb-2">

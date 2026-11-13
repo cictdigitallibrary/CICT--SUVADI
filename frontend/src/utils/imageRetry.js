@@ -17,7 +17,7 @@
  */
 import { useEffect, useState } from 'react';
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5; // 0.4 + 0.8 + 1.6 + 3.2 + 6.4 s
 const RETRY_PARAM = '_r';
 
 function parse(src) {
@@ -50,7 +50,7 @@ function lastStatus(href) {
 }
 
 const retryable = status => status !== 404 && status !== 410;
-const delayFor = attempt => 400 * 2 ** attempt; // 400 ms, 800 ms, 1.6 s
+const delayFor = attempt => 400 * 2 ** attempt;
 
 export function installImageRetry() {
   if (typeof document === 'undefined' || window.__suvadiImageRetry) return;
@@ -58,6 +58,22 @@ export function installImageRetry() {
 
   document.addEventListener('error', (event) => {
     const img = event.target;
+    // Stylesheets too: a refused page stylesheet (e.g. the PDF reader's) is never
+    // requested again by the bundler's loader, leaving the reader unstyled and blank.
+    // A fresh <link> is added with a retry marker; the failed one is removed once it loads.
+    if (img instanceof HTMLLinkElement && img.rel === 'stylesheet') {
+      const href = img.getAttribute('href');
+      const info = href && parse(href);
+      if (!info || info.attempt >= MAX_RETRIES || !retryable(lastStatus(img.href))) return;
+      setTimeout(() => {
+        if (!img.isConnected) return;
+        const fresh = img.cloneNode();
+        fresh.href = withAttempt(info.base, info.attempt + 1);
+        fresh.addEventListener('load', () => img.remove(), { once: true });
+        img.after(fresh);
+      }, delayFor(info.attempt));
+      return;
+    }
     if (!(img instanceof HTMLImageElement)) return;
     const src = img.getAttribute('src');
     if (!src || /^(data|blob):/.test(src)) return;

@@ -17,8 +17,13 @@ import Publication from './pages/Publication';
 
 // Loaded on demand: the PDF reader (react-pdf / PDF.js / page-flip) and the admin
 // portal are large and not needed to render the public pages.
-const FlipbookReader = lazy(() => import('./pages/FlipbookReader'));
-const AdminPortal = lazy(() => import('./pages/AdminPortal'));
+// The server refuses requests over its per-visitor limit (403, see utils/imageRetry.js);
+// a refused script or stylesheet would leave the reader stuck on its loading screen,
+// so the import is tried again a few times before giving up.
+const retryImport = (load, delays = [500, 1500, 3000, 6000]) => load().catch(err =>
+  delays.length ? new Promise(r => setTimeout(r, delays[0])).then(() => retryImport(load, delays.slice(1))) : Promise.reject(err));
+const FlipbookReader = lazy(() => retryImport(() => import('./pages/FlipbookReader')));
+const AdminPortal = lazy(() => retryImport(() => import('./pages/AdminPortal')));
 
 // Library data changes rarely: reuse fetched lists across page visits instead of
 // re-requesting them on every navigation and window focus.
