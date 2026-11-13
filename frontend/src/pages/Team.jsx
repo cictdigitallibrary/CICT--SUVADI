@@ -134,7 +134,7 @@ const Team = () => {
 
       <div className="container mx-auto px-6 max-w-6xl py-20">
 
-        {/* ── Section heading (matches official site: சுவடியியல் புலக் குழு) ── */}
+        {/* ── Section heading (matches official site: சுவடியியல் புலக்குழு) ── */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -146,7 +146,7 @@ const Team = () => {
             {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
           </p>
           <h2 className="tamil-heading text-3xl text-maroon mb-5">
-            {t('சுவடியியல் புலக் குழு', 'Manuscriptology Field Group')}
+            {t('சுவடியியல் புலக்குழு', 'Manuscriptology Field Group')}
           </h2>
           <div className="flex items-center justify-center gap-3">
             <div className="h-px w-20 bg-gradient-to-r from-transparent to-gold/40" />

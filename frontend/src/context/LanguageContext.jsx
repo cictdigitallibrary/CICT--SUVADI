@@ -2,11 +2,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const LanguageContext = createContext();
 
-// The site opens in English. A visitor's own choice (made with the language toggle)
-// is remembered under this key. The older 'suvadi_lang' key is not used: it was
-// written on every page load, so it held 'ta' even for visitors who never chose Tamil.
+// The site opens in Tamil by default. A visitor's own choice (made with the language toggle)
+// is remembered under this key.
 const CHOICE_KEY = 'suvadi_lang_choice';
-const DEFAULT_LANGUAGE = 'en';
+const DEFAULT_LANGUAGE = 'ta';
 
 const savedChoice = () => {
   try {
