@@ -72,6 +72,19 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 
+// The live IIS server refuses PUT and DELETE itself (405, "Allow: GET, HEAD, OPTIONS,
+// TRACE" — its WebDAV handler), so those requests never reached the app and every admin
+// edit / delete / restore failed. The admin panel sends them as POST with the real
+// method in X-HTTP-Method-Override; restore it here, before any route is matched.
+// Only for /api and only PUT / DELETE, so no other behaviour changes.
+app.use((req, res, next) => {
+  const override = req.method === 'POST' && req.get('X-HTTP-Method-Override');
+  if (override && /^(PUT|DELETE)$/i.test(override) && req.path.startsWith('/api/')) {
+    req.method = override.toUpperCase();
+  }
+  next();
+});
+
 // Initialize Chatbot Deterministic Engine
 initRetrieval();
 console.log('[CHATBOT VERSION] conversational-context-v3 | retrieval:', require('path').resolve('./chatbot/retrieval.js'));

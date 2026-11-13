@@ -20,6 +20,19 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 
 const API = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/admin`;
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+// The live web server (IIS) answers PUT and DELETE itself with 405 before they reach
+// the site, so every edit / delete failed. Admin API calls send them as POST with the
+// real method in X-HTTP-Method-Override, which the backend restores (backend/index.js).
+axios.interceptors.request.use(cfg => {
+  const method = String(cfg.method || 'get').toLowerCase();
+  if ((method === 'put' || method === 'delete') && String(cfg.url || '').startsWith(API)) {
+    cfg.headers = cfg.headers || {};
+    cfg.headers['X-HTTP-Method-Override'] = method.toUpperCase();
+    cfg.method = 'post';
+  }
+  return cfg;
+});
 const limit = 10;
 
 axios.interceptors.request.use(config => {
@@ -848,7 +861,7 @@ const AdminPortal = () => {
                                 </button>
                               )}
                               <button onClick={() => handleDelete(item.id, 'Delete this message?')}
-                                className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all">
+                                className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all" title="Delete">
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
