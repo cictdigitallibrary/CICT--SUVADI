@@ -7,7 +7,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Search, Eye, ChevronDown, BookOpen, ZoomIn, ZoomOut,
   RotateCw, RefreshCw, X, Maximize, Minimize, FileText, ChevronLeft, ChevronRight,
-  Scroll, Layers, SlidersHorizontal, Info, Languages
+  Scroll, Layers, Info, Languages
 } from 'lucide-react';
 import PageHero from '../components/PageHero';
 
@@ -665,14 +665,7 @@ const ManuscriptSearch = () => {
           ══════════════════════════════════════════════════ */}
                 <div className="bg-[#FAF8F5] border border-gold/30 shadow-md rounded-md mb-6 overflow-hidden text-left">
                   {/* Panel header */}
-                  <div className="flex items-center justify-between px-5 py-3.5 bg-maroon/[0.04] border-b border-gold/20">
-                    <div className="flex items-center gap-2.5">
-                      <SlidersHorizontal className="w-3.5 h-3.5 text-maroon/50" />
-                      <span className="tamil-label text-[10px] uppercase tracking-[0.35em] font-black text-maroon/60">
-                        {t('தேடல் வடிகட்டி', 'Search Filters')}
-                      </span>
-                    </div>
-
+                  <div className="flex items-center justify-end px-5 py-3.5 bg-maroon/[0.04] border-b border-gold/20">
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
