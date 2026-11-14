@@ -163,7 +163,7 @@ const ClassicalTexts = () => {
 
       {/* ── Introduction & Scholarly Content Section ── */}
       <section className="relative py-12 md:py-16 bg-[#FAF8F5]">
-        <div className="container mx-auto px-4 sm:px-6 max-w-5xl relative z-10">
+        <div className="container mx-auto px-3 sm:px-6 max-w-5xl relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -174,35 +174,35 @@ const ClassicalTexts = () => {
             {/* Top decorative gradient bar */}
             <div className="h-[4px] w-full bg-gradient-to-r from-maroon via-gold to-maroon" />
 
-            <div className="p-6 sm:p-10 md:p-14 space-y-12">
+            <div className="p-3 sm:p-10 md:p-14 space-y-6 sm:space-y-12">
 
               {/* ══════════════════════════════════════════
                   1. செம்பதிப்பின் தேவை (Need for Critical Edition)
               ══════════════════════════════════════════ */}
-              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-6 md:p-8 relative shadow-sm">
+              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-4 sm:p-6 md:p-8 relative shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-2.5 h-2.5 rounded-full bg-gold" />
                   <h2 className="font-cinzel text-xl md:text-2xl text-maroon font-bold tracking-wide">
-                    {'செவ்வியல் நூல்கள்'}
+                    {'செம்பதிப்பின் தேவை'}
                   </h2>
                 </div>
                 <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
 
-                <div className="space-y-4 tamil-body text-stone/85 text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-justify">
+                <div className="space-y-4 tamil-body text-stone/85 text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-left sm:text-justify">
                   <p>
-                    {'தரமாய்ந்த மிகப்பகழ் பதிப்புகளில் கூடப் பொருந்தாப்பாடம், எழுத்துப் பிழை, புணர்ச்சிப் பிழை, சீர்ப்பிரிவு, அடிப்பிரிவு போன்றவை அருகியும் பரவலாகவும் காணப்படுகின்றன. செவ்வியல் நூல்களை உயர்தரமுடையனவாகவும் பிழை பிறழ்வுகளினின்றும் நீங்கினவாகவும் பாடம் உறுதி செய்து பதிப்பித்தல் இன்றியமையாதது. ஆகவே ஆய்வு நோக்கில் செம்பதிப்பு பெரிதும் பயன்பாடு உடையது.'}
+                    {'தரம்வாய்ந்த மிகப்பழம் பதிப்புக்களில் கூடப் பொருந்தாப்பாடம், எழுத்துப்பிழை, புணர்ச்சிப்பிழை, சீர்ப்பிறழ்வு, அடிப்பிறழ்வு போன்றவை அருகியும் பரவலாகவும் காணப்படுகின்றன. செவ்வியல் நூல்களை உயர்தரமுடையனவாகவும் பிழை பிறழ்வுகளினின்றும் நீங்கினவாகவும் பாடம் உறுதி செய்து பதிப்பித்தல் இன்றியமையாதது. ஆகவே ஆய்வு நோக்கில் செம்பதிப்புப் பெரிதும் பயன்பாடு உடையது.'}
                   </p>
                   <p>
-                    {'மரபுவழிப் புணர்ச்சிகளை மேற்கொண்டால், சீர்ப்பிரித்து யாப்பமைதி கெடாதவாறு வடிவமைத்தல் ஆகியவற்றின் அடிப்படையில் செம்பதிப்புகள் அமையுமாதலின் அவற்றுளு வெளிப்படுவதன் மூலம் பழந்தமிழ் மரபுகள் பாதுகாக்கப்படும்.'}
+                    {'மரபுவழிப் புணர்ச்சிகளை மேற்கொள்ளல், சீர்பிரித்து யாப்பமைதி கெடாதவாறு வடிவமைத்தல் ஆகியவற்றின் அடிப்படையில் செம்பதிப்புக்கள் அமையுமாதலின் அவற்றை வெளியிடுவதன் மூலம் பழந்தமிழ் மரபுகள் பாதுகாக்கப்படும்.'}
                   </p>
                   <p>
-                    {'செம்பதிப்பு நூல்கள், உலக அளவிலும் தமிழக அளவிலும் ஆராய்ச்சி செய்வதற்கு ஏற்ற அடிப்படை ஆய்வுக்களங்களாக அமையும்.'}
+                    {'செம்பதிப்பு நூற்கள், உலக அளவிலும் தமிழக அளவிலும் ஆராய்ச்சி செய்வதற்கு ஏற்ற அடிப்படை ஆய்வுக்களங்களாக அமையும்.'}
                   </p>
                   <p>
-                    {'தரப்படுத்தப்பட்ட பதிப்புகளை வெளியிடுவதால, பள்ளி, கல்லூரி, பல்கலைக்கழகப் பாடத்திட்டங்களில், பிழையும பிறழ்வுமற்ற பழந்தமிழ் நூற்பகுதிகளைப் பயிற்றுவிக்க வாய்ப்பு ஏற்படும்.'}
+                    {'தரப்படுத்தப்பட்ட பதிப்புக்கள் வெளிவருங்கால், பள்ளி, கல்லூரி, பல்கலைக்கழகப் பாடத்திட்டங்களில், பிழையும் பிறழ்வுமற்ற பழந்தமிழ் நூற்பகுதிகளைப் பயில வாய்ப்பு ஏற்படும்.'}
                   </p>
                   <p>
-                    {'எல்லாப் பழந்தமிழ் நூல்களும் எழுத்தாட்சி, கட்டுக்கோப்பு, நூற்கட்டமைப்பு போன்றவற்றில் ஒரே சீரினவாகச் சீரமைக்கப்பட்டால், ஒருவகை அழகுணர்ச்சியைத் தோற்றுவிப்பதோடு பயில்வோர்க்கு ஈடுபாடு ஏற்படவும் உதவும்.'}
+                    {'எல்லாப் பழந்தமிழ் நூல்களும் எழுத்தமைதி, கட்டுக்கோப்பு, நூற்கட்டமைப்பு போன்றவற்றில் ஒரே சீரினவாகச் சீரமைக்கப்படல், ஒருவகை அழகுணர்ச்சியைத் தோற்றுவிப்பதொடு பயில்வோர்க்கு ஈடுபாடு ஏற்படவும் உதவும்.'}
                   </p>
                 </div>
               </div>
@@ -211,7 +211,7 @@ const ClassicalTexts = () => {
               {/* ══════════════════════════════════════════
                   2. செம்பதிப்புப் பணி - மூன்று கட்டங்கள்
               ══════════════════════════════════════════ */}
-              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-6 md:p-8 relative shadow-sm">
+              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-4 sm:p-6 md:p-8 relative shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-2.5 h-2.5 rounded-full bg-gold" />
                   <h2 className="font-cinzel text-xl md:text-2xl text-maroon font-bold tracking-wide">
@@ -223,29 +223,29 @@ const ClassicalTexts = () => {
                 {/* Numbered Steps */}
                 <div className="space-y-6">
                   {/* Step I */}
-                  <div className="bg-white border border-gold/20 rounded-md p-5 shadow-xs transition-all hover:border-gold/40">
-                    <div className="flex items-start gap-4">
-                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
+                  <div className="bg-white border border-gold/20 rounded-md p-3 sm:p-5 shadow-xs transition-all hover:border-gold/40">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2 sm:px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
                         Ⅰ
                       </span>
-                      <div className="space-y-3">
+                      <div className="space-y-3 min-w-0">
                         <h3 className="font-tamil-bold text-lg text-maroon font-bold">
-                          {'சுவடிகளையும் பதிப்புகளையும் கண்டறிந்து தொகுத்தல்'}
+                          {'சுவடிகளையும் பதிப்புக்களையும் கண்டறிந்து தொகுத்தல்'}
                         </h3>
-                        <p className="tamil-body text-stone/80 text-base leading-relaxed text-justify">
-                          {'அட்டவணைகளின் அடிப்படையில் தேடிக் கண்டறிந்த சுவடிகளை மின்படி (Scan) எடுத்தல்; மற்றொன்று ஏடுகளை வரிசையாக அடுக்கிப் படம் எடுத்தல், அவற்றைத் தனித்தனி பக்கங்களாகப் பிரித்து அமைத்தல், தனிப்பக்கங்களைத் தூய்மை செய்து (Color correction) படி எடுத்தல் என்று இது அமையும். சுவடிகளின் பின்படங்களை விரைந்து படிப்பதற்கு ஏதுவாகத் தேவையான பக்கங்கள் மற்றும் பாடல்களை உடனே திரைக்குக் கொண்டுவரும் வகையில் உரிய மென்பொருள் உருவாக்கப்பட்டுள்ளது.'}
+                        <p className="tamil-body text-stone/80 text-base leading-relaxed text-left sm:text-justify">
+                          {'அட்டவணைகளின் அடிப்படையில் தேடிக் கண்டறிந்த சுவடிகளை மின்படி (Scan) எடுத்தல். மூன்று, நான்கு ஏடுகளை வரிசையாக அடுக்கிப் படம் எடுத்தல், அவற்றைத் தனித்தனிப் பக்கங்களாகப் பிரித்தமைத்தல், தனிப்பக்கங்களைத் தூய்மை செய்து (Colour correction) படி எடுத்தல் என்று இது அமையும். சுவடிகளின் மின்படிகளை விரைந்து படிப்பதற்கு ஏதுவாகத் தேவையான பக்கங்கள் மற்றும் பாடல்களை உடனே திரைக்குக் கொண்டுவரும் வகையில் உரிய மென்பொருள் உருவாக்கப்பட்டுள்ளது.'}
                         </p>
                       </div>
                     </div>
                   </div>
 
                   {/* Step II */}
-                  <div className="bg-white border border-gold/20 rounded-md p-5 shadow-xs transition-all hover:border-gold/40">
-                    <div className="flex items-start gap-4">
-                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
+                  <div className="bg-white border border-gold/20 rounded-md p-3 sm:p-5 shadow-xs transition-all hover:border-gold/40">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2 sm:px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
                         Ⅱ
                       </span>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="font-tamil-bold text-lg text-maroon font-bold">
                           {'பாடவேறுபாட்டுத் தரவுகளைத் தொகுத்தலும் பட்டியலிடுதலும்.'}
                         </h3>
@@ -254,12 +254,12 @@ const ClassicalTexts = () => {
                   </div>
 
                   {/* Step III */}
-                  <div className="bg-white border border-gold/20 rounded-md p-5 shadow-xs transition-all hover:border-gold/40">
-                    <div className="flex items-start gap-4">
-                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
+                  <div className="bg-white border border-gold/20 rounded-md p-3 sm:p-5 shadow-xs transition-all hover:border-gold/40">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2 sm:px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
                         Ⅲ
                       </span>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="font-tamil-bold text-lg text-maroon font-bold">
                           {'சரியான பாடங்களையும் யாப்பு மற்றும் புணர்ச்சி அமைவுகளையும் உறுதி செய்து வரையறுத்தலும் மீட்டுருவாக்கம் செய்தலும்.'}
                         </h3>
@@ -273,7 +273,7 @@ const ClassicalTexts = () => {
               {/* ══════════════════════════════════════════
                   3. செம்பதிப்பின் தனித்தன்மைகள்
               ══════════════════════════════════════════ */}
-              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-6 md:p-8 relative shadow-sm">
+              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-4 sm:p-6 md:p-8 relative shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-2.5 h-2.5 rounded-full bg-gold" />
                   <h2 className="font-cinzel text-xl md:text-2xl text-maroon font-bold tracking-wide">
@@ -282,9 +282,9 @@ const ClassicalTexts = () => {
                 </div>
                 <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
 
-                <div className="space-y-4 tamil-body text-stone/85 text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-justify">
+                <div className="space-y-4 tamil-body text-stone/85 text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-left sm:text-justify">
                   <p>
-                    {'எல்லா மூலச்சுவடிகளிலும அனைத்துப் பதிப்புகளிலும் உரைமேற்கோள்களிலும் இடம்பெறும் அனைத்துப் பாடவேறுபாடுகளையும் ஒருங்கிணைத்தளிக்குந்தன்மையால் செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் வெளியிடும் செம்பதிப்பு வேறு எந்தப்பதிப்பையும் விடத் தனித்தன்மை வாய்ந்ததாகிறது. பிற பதிப்புகளில் பாடம் உறுதி செய்து, அதற்கான காரணங்கள் விரிவாக விளக்கப்படவில்லை. செம்பதிப்பு பாடத் தேர்வு விளக்கங்களை பெற்றிருத்தலால் தனிச்சிறப்புப் பெறுகிறது. வரையறுக்கப்பட்ட யாப்பு வடிவங்களை மேற்கொள்வதாலும் மரபுவழிப்பட்ட சரியான புணர்ச்சிகளை எதிர்நிற்கும் யாப்பும் புணர்ச்சியும் இறுதி செய்யப்பட்டமைக்கான விளக்கங்களைப் பெற்றிருத்தலும் செம்பதிப்பை ஒப்புயர்வற்றதாக உயர்த்துகின்றன. பதிப்புகளையும், சுவடிகளையும் காலவரிசைப்படுத்தித் தருவது, பொதுவாகத் தமிழ்ப் பதிப்புகளில் காணப்படாத பெருமை சான்றது.'}
+                    {'எல்லா மூலச்சுவடிகளிலும் அனைத்துப் பதிப்புக்களிலும் உரைமேற்கோள்களிலும் இடம்பெறும் அனைத்துப் பாடவேறுபாடுகளையும் ஒருங்குதிரட்டித்தருதலால் செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் வெளியிடும் செம்பதிப்பு வேறு எப்பதிப்பையும் விடத் தனித்தன்மை வாய்ந்ததாகிறது. பிற பதிப்புகளில் பாடம் உறுதி செய்து, அதற்கான காரணங்கள் விரிவாக விளக்கப்படவில்லை. செம்பதிப்பு பாடத் தேர்வு விளக்கங்கள் பெற்றிருத்தலால் தனிச்சிறப்புப் பெறுகிறது. வரையறுக்கப்பட்ட யாப்பு வடிவங்களை மேற்கொள்ளுதலும் மரபுவழிப்பட்ட சரியான புணர்ச்சிகளை எய்திநிற்றலும் யாப்பும் புணர்ச்சியும் இறுதி செய்யப்பட்டமைக்கான விளக்கங்களைப் பெற்றிருத்தலும் செம்பதிப்பை ஒப்புயர்வற்றதாக உயர்த்துகின்றன. பதிப்புக்களையும், சுவடிகளையும் குலவரிசைப்படுத்தித் தருவது, பொதுவாகத் தமிழ்ப் பதிப்புலகில் காணப்படாத பெருமை சான்றது.'}
                   </p>
                 </div>
               </div>
