@@ -49,7 +49,8 @@ const PandyaCorner = ({ className, style }) => (
   <img
     src="/images/pandya_corner.png"
     alt="pandya corner decoration"
-    className={`absolute pointer-events-none select-none w-[320px] h-[320px] opacity-100 drop-shadow-md ${className}`}
+    // Sized with the screen so the book cards never reach the ornament (see the Book Cards section)
+    className={`absolute pointer-events-none select-none w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] md:w-[200px] md:h-[200px] lg:w-[240px] lg:h-[240px] xl:w-[280px] xl:h-[280px] 2xl:w-[320px] 2xl:h-[320px] opacity-100 drop-shadow-md ${className}`}
     style={style}
   />
 );
@@ -483,7 +484,9 @@ const EBooks = () => {
         </div>
 
         {/* ── Book Cards ── */}
-        <div className="relative mt-20 mb-20 py-16 overflow-hidden">
+        {/* Bottom padding keeps the last row of cards above the bottom ornaments' horizontal arm
+            (the arm reaches far inward close to the bottom edge); it grows with the ornament size. */}
+        <div className="relative mt-20 mb-20 pt-16 pb-16 sm:pb-24 lg:pb-32 overflow-hidden">
           {/* Pandya Corner Ornaments strictly around Archived Collections section */}
           <PandyaCorner className="top-0 left-0" />
           <PandyaCorner className="top-0 right-0" style={{ transform: 'scaleX(-1)' }} />
