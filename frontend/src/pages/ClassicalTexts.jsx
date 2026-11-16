@@ -174,7 +174,7 @@ const ClassicalTexts = () => {
             {/* Top decorative gradient bar */}
             <div className="h-[4px] w-full bg-gradient-to-r from-maroon via-gold to-maroon" />
 
-            <div className="p-3 sm:p-10 md:p-14 space-y-6 sm:space-y-12">
+            <div lang="ta" className="p-3 sm:p-10 md:p-14 space-y-6 sm:space-y-12">
 
               {/* ══════════════════════════════════════════
                   1. செம்பதிப்பின் தேவை (Need for Critical Edition)
@@ -188,7 +188,7 @@ const ClassicalTexts = () => {
                 </div>
                 <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
 
-                <div className="space-y-4 tamil-body text-stone/85 text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-left sm:text-justify">
+                <div className="space-y-4 tamil-body text-stone/85 text-[15px] sm:text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-justify">
                   <p>
                     {'தரம்வாய்ந்த மிகப்பழம் பதிப்புக்களில் கூடப் பொருந்தாப்பாடம், எழுத்துப்பிழை, புணர்ச்சிப்பிழை, சீர்ப்பிறழ்வு, அடிப்பிறழ்வு போன்றவை அருகியும் பரவலாகவும் காணப்படுகின்றன. செவ்வியல் நூல்களை உயர்தரமுடையனவாகவும் பிழை பிறழ்வுகளினின்றும் நீங்கினவாகவும் பாடம் உறுதி செய்து பதிப்பித்தல் இன்றியமையாதது. ஆகவே ஆய்வு நோக்கில் செம்பதிப்புப் பெரிதும் பயன்பாடு உடையது.'}
                   </p>
@@ -232,7 +232,7 @@ const ClassicalTexts = () => {
                         <h3 className="font-tamil-bold text-lg text-maroon font-bold">
                           {'சுவடிகளையும் பதிப்புக்களையும் கண்டறிந்து தொகுத்தல்'}
                         </h3>
-                        <p className="tamil-body text-stone/80 text-base leading-relaxed text-left sm:text-justify">
+                        <p className="tamil-body text-stone/80 text-[15px] sm:text-base leading-relaxed text-justify">
                           {'அட்டவணைகளின் அடிப்படையில் தேடிக் கண்டறிந்த சுவடிகளை மின்படி (Scan) எடுத்தல். மூன்று, நான்கு ஏடுகளை வரிசையாக அடுக்கிப் படம் எடுத்தல், அவற்றைத் தனித்தனிப் பக்கங்களாகப் பிரித்தமைத்தல், தனிப்பக்கங்களைத் தூய்மை செய்து (Colour correction) படி எடுத்தல் என்று இது அமையும். சுவடிகளின் மின்படிகளை விரைந்து படிப்பதற்கு ஏதுவாகத் தேவையான பக்கங்கள் மற்றும் பாடல்களை உடனே திரைக்குக் கொண்டுவரும் வகையில் உரிய மென்பொருள் உருவாக்கப்பட்டுள்ளது.'}
                         </p>
                       </div>
@@ -282,7 +282,7 @@ const ClassicalTexts = () => {
                 </div>
                 <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
 
-                <div className="space-y-4 tamil-body text-stone/85 text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-left sm:text-justify">
+                <div className="space-y-4 tamil-body text-stone/85 text-[15px] sm:text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-justify">
                   <p>
                     {'எல்லா மூலச்சுவடிகளிலும் அனைத்துப் பதிப்புக்களிலும் உரைமேற்கோள்களிலும் இடம்பெறும் அனைத்துப் பாடவேறுபாடுகளையும் ஒருங்குதிரட்டித்தருதலால் செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் வெளியிடும் செம்பதிப்பு வேறு எப்பதிப்பையும் விடத் தனித்தன்மை வாய்ந்ததாகிறது. பிற பதிப்புகளில் பாடம் உறுதி செய்து, அதற்கான காரணங்கள் விரிவாக விளக்கப்படவில்லை. செம்பதிப்பு பாடத் தேர்வு விளக்கங்கள் பெற்றிருத்தலால் தனிச்சிறப்புப் பெறுகிறது. வரையறுக்கப்பட்ட யாப்பு வடிவங்களை மேற்கொள்ளுதலும் மரபுவழிப்பட்ட சரியான புணர்ச்சிகளை எய்திநிற்றலும் யாப்பும் புணர்ச்சியும் இறுதி செய்யப்பட்டமைக்கான விளக்கங்களைப் பெற்றிருத்தலும் செம்பதிப்பை ஒப்புயர்வற்றதாக உயர்த்துகின்றன. பதிப்புக்களையும், சுவடிகளையும் குலவரிசைப்படுத்தித் தருவது, பொதுவாகத் தமிழ்ப் பதிப்புலகில் காணப்படாத பெருமை சான்றது.'}
                   </p>

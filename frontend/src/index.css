@@ -1377,6 +1377,24 @@ footer.bg-stone>div {
   border-radius: 0 0 6px 0;
 }
 
+/* Justified reading text. Tamil words are long, so on a phone a justified line often holds
+   only two or three words and the leftover width opens wide gaps between them.
+   - Long Tamil words get break points (utils/tamilHyphenation.js); a word broken at the end
+     of a line shows a hyphen there. English words are hyphenated by the browser.
+   - The little space still left over is spread between the letters as well as between the
+     words, so no line shows a wide gap (Chrome, Edge, Firefox; others ignore it).
+   The last line of a paragraph stays left-aligned. */
+.text-justify,
+.faculty-article-p,
+.search-intro-p {
+  text-align: justify;
+  text-align-last: left;
+  text-justify: inter-character;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
 .faculty-article-p {
   text-align: justify;
   text-align-last: left;
@@ -1454,7 +1472,7 @@ footer.bg-stone>div {
 
 @media (max-width: 640px) {
   .faculty-article-card {
-    padding: 32px 24px;
+    padding: 28px 18px;
   }
 
   .faculty-article-corner {
@@ -1653,7 +1671,7 @@ footer.bg-stone>div {
 
 @media (max-width: 640px) {
   .search-intro-card {
-    padding: 28px 20px;
+    padding: 24px 16px;
   }
 
   .search-intro-table-wrap {

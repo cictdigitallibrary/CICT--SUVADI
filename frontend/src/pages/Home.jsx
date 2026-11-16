@@ -382,7 +382,7 @@ const Home = () => {
           {'அகர முதல எழுத்தெல்லாம் ஆதி பகவன் முதற்றே உலகு கற்க கசடறக் கற்பவை கற்றபின் நிற்க அதற்குத் தக யாதும் ஊரே யாவரும் கேளிர்'}
         </div>
 
-        <div className="container mx-auto px-6 max-w-7xl relative" style={{ zIndex: 3 }}>
+        <div className="container mx-auto px-3 sm:px-6 max-w-7xl relative" style={{ zIndex: 3 }}>
           {/* Section header */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
             className="text-center mb-10">
@@ -394,7 +394,7 @@ const Home = () => {
 
           {/* Heritage article — official content, Faculty of Manuscriptology (suvadi.cict.in) */}
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.9 }}
-            className="faculty-article-card group relative">
+            lang="ta" className="faculty-article-card group relative">
             {/* Subtle corner accents */}
             <span className="faculty-article-corner faculty-article-corner-tl" />
             <span className="faculty-article-corner faculty-article-corner-br" />

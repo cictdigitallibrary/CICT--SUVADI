@@ -537,13 +537,13 @@ const ManuscriptSearch = () => {
           OFFICIAL SEARCH INTRODUCTION — verbatim content from
           suvadi.cict.in/asp/suvadisearch.aspx
       ══════════════════════════════════════════════════ */}
-      <div className="w-full px-4 sm:px-6 py-14">
+      <div className="w-full px-3 sm:px-6 py-14">
         <motion.div
           initial={{ opacity: 0, y: 28 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="search-intro-card w-[92%] sm:w-[90%] max-w-[1400px] mx-auto min-h-[500px]"
+          className="search-intro-card w-full sm:w-[90%] max-w-[1400px] mx-auto min-h-[500px]"
         >
           <AnimatePresence mode="wait">
             {!isSearchVisible ? (

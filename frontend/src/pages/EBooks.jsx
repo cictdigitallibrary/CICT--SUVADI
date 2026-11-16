@@ -130,7 +130,7 @@ const EBooks = () => {
             {/* Gold top accent */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-maroon via-gold to-maroon" />
 
-            <div className="p-8 md:p-12 lg:p-16 max-h-[70vh] overflow-y-auto scrollbar-custom">
+            <div lang="ta" className="p-4 sm:p-8 md:p-12 lg:p-16 max-h-[70vh] overflow-y-auto scrollbar-custom">
             <style>{`
               .scrollbar-custom::-webkit-scrollbar { width: 6px; }
               .scrollbar-custom::-webkit-scrollbar-track { background: rgba(201,151,59,0.05); }
@@ -159,7 +159,7 @@ const EBooks = () => {
 
                 <div className="space-y-6 text-stone/80 tamil-body leading-loose text-[15px] text-justify">
                   {/* Section: அறிமுகம் */}
-                  <div className="bg-[#FAF8F2] border border-gold/20 rounded-lg p-6 md:p-8">
+                  <div className="bg-[#FAF8F2] border border-gold/20 rounded-lg p-4 sm:p-6 md:p-8">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="w-2 h-2 rounded-full bg-gold" />
                       <h3 className="font-bold text-lg text-maroon" style={{ fontFamily: '"Noto Sans Tamil", sans-serif' }}>
@@ -180,7 +180,7 @@ const EBooks = () => {
                   </div>
 
                   {/* Section: பதிப்புக் குறிப்புகள் */}
-                  <div className="bg-[#FAF8F2] border border-gold/20 rounded-lg p-6 md:p-8">
+                  <div className="bg-[#FAF8F2] border border-gold/20 rounded-lg p-4 sm:p-6 md:p-8">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="w-2 h-2 rounded-full bg-gold" />
                       <h3 className="font-bold text-lg text-maroon" style={{ fontFamily: '"Noto Sans Tamil", sans-serif' }}>
