@@ -144,7 +144,7 @@ const ClassicalTextsList = () => {
 
       {/* ── Texts Section ── */}
       <section className="relative py-12 md:py-16 bg-[#FAF8F5]">
-        <div className="container mx-auto px-4 sm:px-6 max-w-6xl relative z-10">
+        <div className="container mx-auto px-3 sm:px-6 max-w-6xl relative z-10">
 
           {/* Outer card */}
           <motion.div
@@ -157,7 +157,7 @@ const ClassicalTextsList = () => {
             {/* Top bar */}
             <div className="h-[4px] w-full bg-gradient-to-r from-maroon via-gold to-maroon" />
 
-            <div className="p-6 sm:p-10 md:p-12">
+            <div className="p-4 sm:p-10 md:p-12">
               {/* Reference Intro Text */}
               <div className="text-stone/80 text-sm md:text-[0.95rem] leading-relaxed mb-6 space-y-1" style={{ fontFamily: '"Noto Sans Tamil", sans-serif' }}>
                 <p>செவ்வியல் நூல்கள் என வரையறுக்கப்பட்டவை அனைத்தும் கி.பி. 6 ஆம் நூற்றாண்டிற்கு முந்தியவை.</p>
@@ -202,11 +202,14 @@ const ClassicalTextsList = () => {
                       <span className="w-8 text-black font-cinzel text-xs font-semibold shrink-0 select-none">
                         {line.num}
                       </span>
-                      <span className="text-[#2C1A0E] font-medium grow leading-relaxed">
-                        {line.ta}
-                      </span>
-                      <span className="text-black font-semibold text-xs md:text-sm pl-4 leading-relaxed font-serif whitespace-nowrap">
-                        {line.en}
+                      {/* Phones: English name under the Tamil name; wider screens: side by side */}
+                      <span className="min-w-0 flex-1 flex flex-col sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                        <span className="text-[#2C1A0E] font-medium leading-relaxed break-words">
+                          {line.ta}
+                        </span>
+                        <span className="text-black font-semibold text-xs md:text-sm leading-relaxed font-serif break-words sm:text-right sm:whitespace-nowrap">
+                          {line.en}
+                        </span>
                       </span>
                     </div>
                   );
