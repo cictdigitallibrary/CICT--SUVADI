@@ -50,9 +50,12 @@ const Navbar = () => {
       <div className="container mx-auto px-6 flex justify-between items-center">
 
         {/* ── Logo ── */}
-        <Link to="/" className="flex items-center gap-5 group flex-shrink-0">
+        {/* mr: the menu never touches the logo on mid-size screens (1024–1535px) */}
+        <Link to="/" className="flex items-center gap-5 group flex-shrink-0 mr-6 xl:mr-8">
           <div className="w-[72px] h-[72px] flex items-center justify-center transition-transform duration-500 flex-shrink-0 group-hover:scale-105">
-            <FallbackImg src="/images/cict_emblem.png" alt="CICT Emblem"
+            {/* ?v=2: the transparent version (browsers cache /images for a day; a new address
+                makes every browser load it at once instead of showing the old white square) */}
+            <FallbackImg src="/images/cict_emblem.png?v=2" alt="CICT Emblem"
               className="w-full h-full object-contain drop-shadow-md"
               fallback={<span className="text-white text-xs font-bold">CICT</span>}
             />
@@ -62,14 +65,14 @@ const Navbar = () => {
         {/* ── Right side container ── */}
         <div className="flex items-center gap-4 lg:gap-6 ml-auto">
           {/* ── Desktop Nav links ── */}
-          <div className="hidden lg:flex items-center gap-5 xl:gap-10">
+          <div className="hidden lg:flex items-center gap-3 xl:gap-5 2xl:gap-10">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
             return (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`relative text-[11px] font-black uppercase tracking-[0.18em] transition-all duration-300 ${isActive ? activeColor : linkColor} group py-2`}
+                className={`relative text-[11px] font-black uppercase tracking-[0.08em] xl:tracking-[0.12em] 2xl:tracking-[0.18em] transition-all duration-300 ${isActive ? activeColor : linkColor} group py-2`}
                 style={{ fontFamily: language === 'ta' ? '"Noto Sans Tamil", sans-serif' : '"Cinzel", sans-serif' }}
               >
                 {t(link.nameTa, link.nameEn)}
@@ -89,7 +92,7 @@ const Navbar = () => {
           <button
             onClick={toggleLanguage}
             id="lang-toggle-btn"
-            className="flex items-center gap-2 px-4 xl:px-6 py-2.5 text-[12px] font-black uppercase tracking-[0.2em] border-2 transition-all duration-300 shadow-lg border-gold/30 text-gold hover:bg-gold hover:text-maroon"
+            className="flex items-center gap-2 px-3 xl:px-4 2xl:px-6 py-2.5 text-[12px] font-black uppercase tracking-[0.12em] 2xl:tracking-[0.2em] border-2 transition-all duration-300 shadow-lg border-gold/30 text-gold hover:bg-gold hover:text-maroon"
             style={{ fontFamily: '"Cinzel", serif' }}
           >
             <span className="text-sm">🌐</span>
