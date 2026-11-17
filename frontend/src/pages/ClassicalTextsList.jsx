@@ -1,65 +1,21 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import { usePageContent } from '../content/SiteContentProvider';
+import RichText, { toBlocks } from '../content/RichText';
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
-const CONTENT_LINES = [
-  { type: 'heading1', text: '  இலக்கணம்' },
-  { type: 'item', num: '1.', ta: 'தொல்காப்பியம்', en: 'Tolkāppiyam' },
-  { type: 'item', num: '2.', ta: 'இறையனார் களவியல்', en: 'Iṟaiyaṉār kaḷaviyal' },
-  { type: 'space' },
-  { type: 'heading1', text: '  இலக்கியம்' },
-  { type: 'heading2', text: ' எட்டுத்தொகை' },
-  { type: 'item', num: '3.', ta: 'நற்றிணை', en: 'Naṟṟiṇai' },
-  { type: 'item', num: '4.', ta: 'குறுந்தொகை', en: 'Kuṟuntokai' },
-  { type: 'item', num: '5.', ta: 'ஐங்குறுநூறு', en: 'Aiṅkuṟunūṟu' },
-  { type: 'item', num: '6.', ta: 'பதிற்றுப்பத்து', en: 'Patiṟṟuppattu' },
-  { type: 'item', num: '7.', ta: 'பரிபாடல்', en: 'Paripāṭal' },
-  { type: 'item', num: '8.', ta: 'கலித்தொகை', en: 'Kalittokai' },
-  { type: 'item', num: '9.', ta: 'அகநானூறு', en: 'Akanāṉūṟu' },
-  { type: 'item', num: '10.', ta: 'புறனானூறு', en: 'Puṟanāṉūṟu' },
-  { type: 'heading2', text: ' பத்துப்பாட்டு' },
-  { type: 'item', num: '11.', ta: 'திருமுருகாற்றுப்படை', en: 'Tirumurukāṟṟuppaṭai' },
-  { type: 'item', num: '12.', ta: 'பொருநராற்றுப்படை', en: 'Porunarāṟṟuppaṭai' },
-  { type: 'item', num: '13.', ta: 'சிறுபாணாற்றுப்படை', en: 'Ciṟupāṇāṟṟuppaṭai' },
-  { type: 'item', num: '14.', ta: 'பெரும்பாணாற்றுப்படை', en: 'Perumpāṇāṟṟuppaṭai' },
-  { type: 'item', num: '15.', ta: 'முல்லைப்பாட்டு', en: 'Mullaippāṭṭu' },
-  { type: 'item', num: '16.', ta: 'மதுரைக்காஞ்சி', en: 'Maturaikkāñci' },
-  { type: 'item', num: '17.', ta: 'நெடுநல்வாடை', en: 'Neṭunalvāṭai' },
-  { type: 'item', num: '18.', ta: 'குறிஞ்சிப்பாட்டு', en: 'Kuṟiñcippāṭṭu' },
-  { type: 'item', num: '19.', ta: 'பட்டினப்பாலை', en: 'Paṭṭiṉappālai' },
-  { type: 'item', num: '20.', ta: 'மலைபடுகடாம்', en: 'Malaipaṭukaṭām' },
-  { type: 'space' },
-  { type: 'heading1', text: ' பதினெண் கீழ்க்கணக்கு' },
-  { type: 'item', num: '21.', ta: 'நாலடியார்', en: 'Nālaṭiyār' },
-  { type: 'item', num: '22.', ta: 'நான்மணிக்கடிகை', en: 'Nāṉmaṇikkaṭikai' },
-  { type: 'item', num: '23.', ta: 'இன்னா நாற்பது', en: 'Iṉṉā nāṟpatu' },
-  { type: 'item', num: '24.', ta: 'இனியவை நாற்பது', en: 'Iṉiyavai nāṟpatu' },
-  { type: 'item', num: '25.', ta: 'கார் நாற்பது', en: 'Kār nāṟpatu' },
-  { type: 'item', num: '26.', ta: 'களவழி நாற்பது', en: 'Kaḷavaḻi nāṟpatu' },
-  { type: 'item', num: '27.', ta: 'ஐந்திணை ஐம்பது', en: 'Aintiṇai aimpatu' },
-  { type: 'item', num: '28.', ta: 'ஐந்திணை யெழுபது', en: 'Aintiṇai yeḻupatu' },
-  { type: 'item', num: '29.', ta: 'திணைமொழி ஐம்பது', en: 'Tiṇaimoḻi aimpatu' },
-  { type: 'item', num: '30.', ta: 'திணைமாலை நூற்றைம்பது', en: 'Tiṇaimālai nūṟṟaimpatu' },
-  { type: 'item', num: '31.', ta: 'திருக்குறள்', en: 'Tirukkuṟaḷ' },
-  { type: 'item', num: '32.', ta: 'திரிகடுகம்', en: 'Tirikaṭukam' },
-  { type: 'item', num: '33.', ta: 'ஆசாரக்கோவை', en: 'Ācārakkōvai' },
-  { type: 'item', num: '34.', ta: 'பழமொழி நானூறு', en: 'Paḻamoḻi nāṉūṟu' },
-  { type: 'item', num: '35.', ta: 'சிறுபஞ்சமூலம்', en: 'Ciṟupañcamūlam' },
-  { type: 'item', num: '36.', ta: 'முதுமொழிக் காஞ்சி', en: 'Mutumoḻik kāñci' },
-  { type: 'item', num: '37.', ta: 'ஏலாதி', en: 'Ēlāti' },
-  { type: 'item', num: '38.', ta: 'கைந்நிலை', en: 'Kainnilai' },
-  { type: 'space' },
-  { type: 'heading1', text: '  காப்பியம்' },
-  { type: 'item', num: '39.', ta: 'சிலப்பதிகாரம்', en: 'Cilappatikāram' },
-  { type: 'item', num: '40.', ta: 'மணிமேகலை', en: 'Maṇimēkalai' },
-  { type: 'space' },
-  { type: 'item', num: '41.', ta: 'முத்தொள்ளாயிரம்', en: 'Muttoḷḷāyiram' }
-];
+// The list of the 41 texts is editable in the admin (Page Content → செவ்வியல் நூல்கள்);
+// its built-in rows are in content/defaults/extracted.json (textsList).
+
+// Rows of the list with their numbers (items are numbered in order: 1., 2., …)
+const numberedRows = (rows) => { let n = 0; return rows.map(r => (r.type === 'item' ? { ...r, num: `${++n}.` } : r)); };
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 const ClassicalTextsList = () => {
   const { t } = useLanguage();
+  const c = usePageContent('classical-texts-list');
+  const intro = c.section('intro');
+  const texts = c.list('texts');
 
   return (
     <div className="min-h-screen selection:bg-maroon selection:text-white" style={{ background: '#FAF8F2' }}>
@@ -117,7 +73,7 @@ const ClassicalTextsList = () => {
             <div className="flex items-center justify-center gap-5">
               <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold/60" />
               <p className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-gold/80 font-bold">
-                {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
+                {c.text('hero', 'label')}
               </p>
               <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold/60" />
             </div>
@@ -131,7 +87,7 @@ const ClassicalTextsList = () => {
                 textShadow: '0 0 60px rgba(201,151,59,0.15)',
               }}
             >
-              {t('செவ்வியல் நூல்கள்', 'Classical Tamil Texts')}
+              {c.text('hero', 'title')}
             </h1>
 
             {/* Gold divider image */}
@@ -158,10 +114,13 @@ const ClassicalTextsList = () => {
             <div className="h-[4px] w-full bg-gradient-to-r from-maroon via-gold to-maroon" />
 
             <div className="p-4 sm:p-10 md:p-12">
-              {/* Reference Intro Text */}
+              {/* Introductory lines — admin Page Content → செவ்வியல் நூல்கள் */}
               <div className="text-stone/80 text-sm md:text-[0.95rem] leading-relaxed mb-6 space-y-1" style={{ fontFamily: '"Noto Sans Tamil", sans-serif' }}>
-                <p>செவ்வியல் நூல்கள் என வரையறுக்கப்பட்டவை அனைத்தும் கி.பி. 6 ஆம் நூற்றாண்டிற்கு முந்தியவை.</p>
-                <p>41 செவ்வியல் நூல்கள் கீழே குறிப்பிடப்பட்டுள்ளன.</p>
+                {toBlocks(intro.body).map((b, i) => b.tag === 'ol' || b.tag === 'ul' ? (
+                  <RichText key={i} as={b.tag} className={b.tag === 'ol' ? 'list-decimal pl-6 space-y-1' : 'list-disc pl-6 space-y-1'} html={b.items.map(it => `<li>${it.html}</li>`).join('')} />
+                ) : (
+                  <RichText key={i} as={b.tag === 'p' ? 'p' : 'h3'} className={b.tag === 'p' ? undefined : 'font-bold text-maroon'} html={b.html} />
+                ))}
               </div>
 
               <div className="h-px w-full bg-gradient-to-r from-transparent via-gold/30 to-transparent my-6" />
@@ -169,18 +128,18 @@ const ClassicalTextsList = () => {
               {/* List Header */}
               <div className="mb-6">
                 <h2 className="text-maroon font-bold text-base md:text-lg" style={{ fontFamily: '"Noto Sans Tamil", sans-serif' }}>
-                  செவ்வியல் நூல்கள் - Classical Tamil texts
+                  {texts.title}
                 </h2>
               </div>
 
-              {/* Exact structured list content */}
+              {/* The list — admin Page Content → செவ்வியல் நூல்கள் (texts are numbered in order) */}
               <div className="text-stone/90 text-[14px] md:text-[15px] w-full flex flex-col" style={{ fontFamily: '"Noto Sans Tamil", "Noto Sans", sans-serif' }}>
-                {CONTENT_LINES.map((line, idx) => {
-                  if (line.type === 'space') {
+                {numberedRows(texts.rows).map((line, idx) => {
+                  if (line.type === 'gap') {
                     return <div key={idx} className="h-10 md:h-14 break-inside-avoid" />;
                   }
 
-                  if (line.type === 'heading1') {
+                  if (line.type === 'heading') {
                     return (
                       <div key={idx} className="font-bold text-[#7A1515] pt-4 pb-1 mb-2 text-[15px] md:text-[16px] tracking-wide whitespace-pre break-inside-avoid">
                         {line.text}
@@ -188,7 +147,7 @@ const ClassicalTextsList = () => {
                     );
                   }
 
-                  if (line.type === 'heading2') {
+                  if (line.type === 'subheading') {
                     return (
                       <div key={idx} className="font-bold text-[#7A1515] pl-2 pt-2 pb-1 mb-1 text-[14px] md:text-[15px] whitespace-pre break-inside-avoid">
                         {line.text}

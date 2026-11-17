@@ -1695,3 +1695,31 @@ footer.bg-stone>div {
   display: block;
   object-fit: contain;
 }
+/* ════════════════════════════════════════════════════════
+   Editable page content (admin Page Content)
+   Paragraphs of an edited section keep the page's own spacing.
+════════════════════════════════════════════════════════ */
+.cms-flow > * { margin: 0; }
+.cms-flow > * + * { margin-top: 1rem; }
+.faculty-article-h3 {
+  font-family: "Noto Sans Tamil", sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #5C0A0A;
+  margin: 0.5rem 0 1rem;
+}
+
+/* Admin rich-text editor (Page Content): show lists, sub-headings and links as written */
+.cms-editor p { margin: 0 0 0.6em; }
+.cms-editor ol { list-style: decimal; padding-left: 1.6em; margin: 0 0 0.6em; }
+.cms-editor ul { list-style: disc; padding-left: 1.6em; margin: 0 0 0.6em; }
+.cms-editor li { margin: 0.15em 0; }
+.cms-editor h3, .cms-editor h4 { font-weight: 800; color: #5C0A0A; margin: 0.5em 0 0.4em; }
+.cms-editor strong, .cms-editor b { font-weight: 700; }
+.cms-editor a { color: #7B2D00; text-decoration: underline; }
+.cms-editor small { font-size: 0.85em; color: #7a4a3a; }
+.cms-editor:empty::before { content: attr(data-placeholder); color: #a8a29e; }
+.cms-editor h3 { font-size: 1.1em; }
+.cms-editor table { border-collapse: collapse; width: 100%; margin: 0.5em 0 0.8em; font-size: 0.9em; }
+.cms-editor th, .cms-editor td { border: 1px solid #e7e0d4; padding: 4px 8px; text-align: left; vertical-align: top; }
+.cms-editor th { background: #f6efe3; font-weight: 700; }

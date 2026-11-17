@@ -7,6 +7,7 @@ import { ArrowLeft, BookOpen, Download, Eye } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
 import CategoryBanner from '../components/CategoryBanner';
+import { useBanner } from '../content/SiteContentProvider';
 import { getBookCover } from '../utils/bookCovers';
 import { downloadPdf } from '../utils/downloadPdf';
 
@@ -28,6 +29,7 @@ const formatCount = n => new Intl.NumberFormat('en-IN').format(Number(n) || 0);
 const EBookDetail = () => {
   const { id } = useParams();
   const { t } = useLanguage();
+  const categoryBanner = useBanner(`ebook.${id}`);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -108,76 +110,14 @@ const EBookDetail = () => {
         }
       `}</style>
 
-      {id === '9' ? (
+      {/* Category banner (admin Banners → E-Book page); books without one get the page hero */}
+      {categoryBanner ? (
         <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
           <img
-            src="/images/bg/hero_ebook_9_panoramic_fit1920.png"
-            alt="Category Banner"
+            src={categoryBanner.image}
+            alt={categoryBanner.text('alt')}
             fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-        </section>
-      ) : id === '13' ? (
-        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
-          <img
-            src="/images/bg/hero_ebook_13_panoramic_fit1920.png"
-            alt="Category Banner"
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-        </section>
-      ) : id === '11' ? (
-        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
-          <img
-            src="/images/bg/hero_ebook_11_panoramic_fit1920.png"
-            alt="Category Banner"
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-        </section>
-      ) : id === '15' ? (
-        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
-          <img
-            src="/images/bg/hero_ebook_15_panoramic_fit1920.png"
-            alt="Category Banner"
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-        </section>
-      ) : id === '16' ? (
-        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
-          <img
-            src="/images/bg/hero_ebook_16_panoramic_fit1920.png"
-            alt="Category Banner"
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-        </section>
-      ) : id === '17' ? (
-        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
-          <img
-            src="/images/bg/hero_ebook_17_panoramic_fit1920.png"
-            alt="Category Banner"
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-        </section>
-      ) : id === '12' ? (
-        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
-          <img
-            src="/images/bg/hero_panoramic_12_fit1920.png"
-            alt="Category Banner"
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-        </section>
-      ) : id === '10' ? (
-        <section className="ebook-detail-banner relative w-full overflow-hidden bg-[#1A0303]">
-          <img
-            src="/hero_ebook_10.jpg"
-            alt="Ettuthogai Banner"
-            fetchPriority="high"
-            className="w-full h-full object-contain p-2 sm:p-8 md:p-12 drop-shadow-2xl"
+            className={id === '10' ? 'w-full h-full object-contain p-2 sm:p-8 md:p-12 drop-shadow-2xl' : 'w-full h-full object-cover'}
           />
         </section>
       ) : (

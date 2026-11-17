@@ -64,7 +64,9 @@ const TEAM_MEMBERS = [
     name_english: 'Mr. A. Muruga Swaminathan',
     title_tamil: 'நிரலாளர்',
     title_english: 'Programmer',
-    photo: 'ams.jpg',
+    // Web-sized copy of public/images/Murugaswaminathan.png (served by the frontend)
+    photo: '/images/Murugaswaminathan.jpg',
+    localAsset: true,
   },
   {
     id: 8,

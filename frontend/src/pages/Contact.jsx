@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useLanguage } from '../context/LanguageContext';
+import { useBanner } from '../content/SiteContentProvider';
 import PageHero from '../components/PageHero';
 import { useImageRetry } from '../utils/imageRetry';
 
@@ -10,6 +11,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const Contact = () => {
   const { t, language } = useLanguage();
+  const heroBanner = useBanner('contact.hero');   // admin Banners → Contact
   const mapBg = useImageRetry('/images/bg/contact-map.jpg');
   const feedbackFormRef = useRef(null);
 
@@ -57,14 +59,15 @@ const Contact = () => {
       `}</style>
 
       <PageHero
-        label={t('தொடர்பு', 'GET IN TOUCH')}
-        title={t('எங்களைத் தொடர்புகொள்ளுங்கள்', 'Contact Us')}
+        label={heroBanner.text('label')}
+        title={heroBanner.text('title')}
         subtitle={t(
           'செம்மொழித் தமிழ் சுவடிகள், மின்னணு நூலகம், வெளியீடுகள், நூலக அணுகல் மற்றும் தொழில்நுட்ப உதவிக்கான உங்கள் கேள்விகளுக்கு எங்களைத் தொடர்புகொள்ளலாம்.',
           'We are here to assist you with enquiries about classical Tamil manuscripts, digital collections, publications, library access, and technical support.'
         )}
         glyphs={['தொ', 'ட', 'ர்', 'பு', 'அணு', 'கல்']}
-        backgroundImage="/images/bg/Contact.png"
+        backgroundImage={heroBanner.image}
+        mobileBackgroundImage={heroBanner.imageMobile}
         heroClass="contact-hero-bg"
         headingStyle={language === 'ta'
           ? { fontSize: 'clamp(1.3rem, 6vw, 4rem)', lineHeight: 1.15, whiteSpace: 'normal', wordBreak: 'break-word' }

@@ -13,8 +13,14 @@ import {
   ChevronRight, LayoutDashboard, Search, Mail, UserCheck,
   BookOpen, MessageSquare, Eye, TrendingUp, Database,
   Scroll, Shield, ChevronDown, ChevronUp, RotateCcw,
-  ExternalLink, FileIcon, Info,
+  ExternalLink, FileIcon, Info, PenSquare, Image as ImageIcon,
 } from 'lucide-react';
+import PageContentManager from '../admin/PageContentManager';
+import BannerManager from '../admin/BannerManager';
+
+// Website content tabs: their own screens and API (site-content / site-banners); the
+// book / manuscript / e-book table code below is not used for them
+const SITE_TABS = new Set(['page-content', 'banners']);
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
@@ -275,6 +281,8 @@ const AdminPortal = () => {
     { id: 'team',          name: 'Team Members',   icon: UserCheck,       label: 'குழுவினர்' },
     { id: 'contacts',      name: 'Contacts',       icon: MessageSquare,   label: 'தொடர்பு' },
     { id: 'users',         name: 'Users',          icon: Shield,          label: 'உள்நுழைவு விவரங்கள்' },
+    { id: 'page-content',  name: 'Page Content',   icon: PenSquare,       label: 'பக்க உள்ளடக்கம்' },
+    { id: 'banners',       name: 'Banners',        icon: ImageIcon,       label: 'பதாகைகள்' },
   ];
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -348,6 +356,7 @@ const AdminPortal = () => {
   }, [activeTab, fetchChartData]);
 
   const fetchData = async () => {
+    if (SITE_TABS.has(activeTab)) return;
     setLoading(true);
     try {
       const ep = activeTab === 'ebook-editions' ? 'ebook-editions'
@@ -611,8 +620,13 @@ const AdminPortal = () => {
           <h2 className="text-xl font-cinzel font-black text-maroon flex items-center gap-3">
             <activeMeta.icon className="w-5 h-5 text-gold" />
             {activeMeta.name}
-            <span className="text-stone/25 font-light mx-1">/</span>
-            <span className="text-stone/35 text-sm uppercase tracking-widest font-sans">{activeMeta.label}</span>
+            {/* Dashboard: English title only */}
+            {activeTab !== 'dashboard' && (
+              <>
+                <span className="text-stone/25 font-light mx-1">/</span>
+                <span className="text-stone/35 text-sm uppercase tracking-widest font-sans">{activeMeta.label}</span>
+              </>
+            )}
           </h2>
           <div className="flex items-center gap-3">
             {activeTab === 'songs' && (
@@ -627,7 +641,7 @@ const AdminPortal = () => {
               </button>
             )}
             {/* Admin accounts are not created from the panel */}
-            {activeTab !== 'dashboard' && activeTab !== 'users' && !showTrash && (
+            {activeTab !== 'dashboard' && activeTab !== 'users' && !SITE_TABS.has(activeTab) && !showTrash && (
               <button onClick={openCreate}
                 className="flex items-center gap-2 bg-maroon text-white px-5 py-2.5 rounded-xl hover:bg-maroon-dark transition-all shadow-md shadow-maroon/15 hover:scale-105 active:scale-95">
                 <Plus className="w-4 h-4" />
@@ -876,7 +890,11 @@ const AdminPortal = () => {
           )}
 
           {/* ══ ALL OTHER TABS ══ */}
-          {activeTab !== 'dashboard' && activeTab !== 'contacts' && (
+          {/* ══ WEBSITE CONTENT ══ */}
+          {activeTab === 'page-content' && <PageContentManager />}
+          {activeTab === 'banners' && <BannerManager />}
+
+          {activeTab !== 'dashboard' && activeTab !== 'contacts' && !SITE_TABS.has(activeTab) && (
             <div className="bg-white rounded-2xl shadow-sm border border-stone/5 overflow-hidden">
               <SearchBar value={search} onChange={v => { setSearch(v); setPage(1); }}
                 placeholder={activeTab === 'songs'

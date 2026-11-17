@@ -10,6 +10,8 @@ import {
   Scroll, Layers, Info, Languages
 } from 'lucide-react';
 import PageHero from '../components/PageHero';
+import { usePageContent, useBanner } from '../content/SiteContentProvider';
+import RichText, { toBlocks } from '../content/RichText';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -30,6 +32,79 @@ const StepBadge = ({ n, active }) => (
     {n}
   </span>
 );
+
+
+/* ─── Search introduction (editable in admin Page Content → Manuscript Search) ───
+   Same markup as the original: paragraphs, numbered steps with badges, notes (a paragraph
+   in small text is the English line under the Tamil one) and the uploaded-manuscripts
+   table (a built-in block). */
+function splitSmall(html) {
+  const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
+  const small = doc.body.querySelector(':scope > small');
+  if (!small) return { main: html, sub: '' };
+  const sub = small.innerHTML;
+  small.remove();
+  return { main: doc.body.innerHTML.replace(/(<br\s*\/?>\s*)+$/i, '').trim(), sub };
+}
+const onlySmall = (html) => /^\s*<small>[\s\S]*<\/small>\s*$/i.test(html);
+
+const TABLE_CLASSES = { table: 'search-intro-table' };
+
+function SearchIntro({ html }) {
+  const blocks = toBlocks(html);
+  const isNote = (i) => blocks[i] && blocks[i].tag === 'p' && !onlySmall(blocks[i].html) && blocks[i + 1] && blocks[i + 1].tag === 'p' && onlySmall(blocks[i + 1].html);
+  const out = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i];
+    if (isNote(i)) {
+      // Notes: a paragraph with its English line(s) in small text, as one group
+      const groups = [];
+      while (isNote(i)) {
+        const g = [blocks[i++]];
+        while (blocks[i] && blocks[i].tag === 'p' && onlySmall(blocks[i].html)) g.push(blocks[i++]);
+        groups.push(g);
+      }
+      i--;
+      out.push(
+        <div key={`n${i}`} className="space-y-6 mb-8">
+          {groups.map((g, gi) => (
+            <div key={gi} className="flex flex-col gap-2">
+              {g.map((x, xi) => xi === 0
+                ? <RichText key={xi} as="p" className="search-intro-p !mb-0" html={x.html} />
+                : <RichText key={xi} as="p" className="search-intro-p !mb-0 text-maroon/70 ml-5 text-[0.95em]" html={x.html.replace(/^\s*<small>|<\/small>\s*$/gi, '')} />)}
+            </div>
+          ))}
+        </div>,
+      );
+    } else if (b.tag === 'ol' || b.tag === 'ul') {
+      out.push(
+        <ul key={i} className="search-intro-steps">
+          {b.items.map((item, n) => {
+            const { main, sub } = splitSmall(item.html);
+            return (
+              <li key={n}>
+                <StepBadge n={n + 1} active />
+                <div className="flex flex-col gap-1">
+                  <RichText as="span" html={main} />
+                  {sub && <RichText as="span" className="text-[0.9em] text-maroon/70" html={sub} />}
+                </div>
+              </li>
+            );
+          })}
+        </ul>,
+      );
+    } else if (b.tag === 'h3' || b.tag === 'h4') {
+      out.push(<RichText key={i} as="h3" className="search-intro-subheading" html={b.html} />);
+    } else if (b.tag === 'table') {
+      out.push(<RichText key={i} as="div" className="search-intro-table-wrap" classes={TABLE_CLASSES} html={b.html} />);
+    } else {
+      const afterTable = i > 0 && blocks[i - 1].tag === 'table';
+      const last = i === blocks.length - 1;
+      out.push(<RichText key={i} as="p" className={`search-intro-p${afterTable ? ' mt-8' : ''}${last ? ' mb-0' : ''}`} html={b.html} />);
+    }
+  }
+  return out;
+}
 
 /* ─── Styled Select ───────────────────────────────────── */
 const StyledSelect = ({ value, onChange, disabled, children }) => (
@@ -91,59 +166,18 @@ const applyTransSuggestion = (text, tamil) => text.replace(/[a-zA-Z]+$/, tamil);
 
 /* ─── Official content — Search intro & manuscript register, verbatim from
    suvadi.cict.in/asp/suvadisearch.aspx ─────────────────────────────────── */
-const SEARCH_INTRO_STEPS = [
-  { ta: 'செவ்வியியல் நூலை முதலில் தேர்வு செய்யவும்;', en: 'First select the classical text;' },
-  { ta: 'பின்பு சுவடியைத் தேர்வு செய்யவும்;', en: 'Then select the manuscript;' },
-  { ta: 'அதன்பின் எண் வழித் தேடல்/பாடலின் ஒரு சொல் வழித் தேடல் மேற்கொள்க.', en: 'After that, proceed with search by number or by a word in the poem.' },
-];
 
-const SEARCH_INTRO_NOTES = [
-  {
-    ta_title: 'எண் வழித் தேடல்:',
-    en_title: 'Search by Number:',
-    ta: 'தேடலுக்குரிய பாடல்/ நூற்பா எண்ணைக் கொடுப்பதன் மூலம் உரிய சுவடி ஏட்டின் பக்கம் கிடைக்கப்பெறும்.',
-    en: 'By giving the poem/verse number to be searched, the corresponding manuscript folio page will be retrieved.',
-  },
-  {
-    ta_title: 'பாடலின் குறிப்பிட்ட ஏதெனும் ஒரு சொல் வழித் தேடல்:',
-    en_title: 'Search by a Specific Word in the Poem:',
-    ta: 'தேடலுக்குரிய பாடலின் சொல்லைக் கொடுப்பதன் மூலம் உரிய சுவடி ஏட்டின் பக்கம் கிடைக்கப்பெறும்.',
-    en: 'By giving a word from the poem to be searched, the corresponding manuscript folio page will be retrieved.',
-  },
-];
 
-const SEARCH_TABLE_ROWS = [
-  { title_ta: 'பதினெண் கீழ்க்கணக்கு', title_en: 'Pathinen Kizhkanakku', text_ta: 'நாலடியார்', text_en: 'Naladiyar', cd_ta: 'எண்: 313', cd_en: 'No: 313', count: 400 },
-  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'பதிகம்', text_en: 'Pathigam', cd_ta: 'எண்: 313', cd_en: 'No: 313', count: 20 },
-  { title_ta: 'பத்துப்பாட்டு', title_en: 'Pattuppattu', text_ta: 'திருமுருகாற்றுப்படை', text_en: 'Thirumurugatrupadai', cd_ta: 'எண்: 314', cd_en: 'No: 314', count: 317 },
-  { title_ta: 'பத்துப்பாட்டு', title_en: 'Pattuppattu', text_ta: 'திருமுருகாற்றுப்படை', text_en: 'Thirumurugatrupadai', cd_ta: 'எண்: 314', cd_en: 'No: 314', count: 317 },
-  { title_ta: 'எட்டுத்தொகை', title_en: 'Ettuthogai', text_ta: 'ஐங்குறுநூறு', text_en: 'Ainkurunuru', cd_ta: 'எண்: 8A', cd_en: 'No: 8A', count: 500 },
-  { title_ta: 'தொல்காப்பியம்', title_en: 'Tholkappiyam', text_ta: 'பொருள் - அகம் - சி.வை.தா பதிப்பு', text_en: 'Porul - Agam - C.W. Thamotharampillai Edition', cd_ta: 'எண்: 313 (1-30)', cd_en: 'No: 313 (1-30)', count: 30 },
-  { title_ta: 'தொல்காப்பியம்', title_en: 'Tholkappiyam', text_ta: 'பொருள் - புறம் - சி.வை.தா பதிப்பு', text_en: 'Porul - Puram - C.W. Thamotharampillai Edition', cd_ta: 'எண்: 313 (1-36)', cd_en: 'No: 313 (1-36)', count: 36 },
-  { title_ta: 'பதினெண் கீழ்க்கணக்கு', title_en: 'Pathinen Kizhkanakku', text_ta: 'திருக்குறள்', text_en: 'Thirukkural', cd_ta: 'எண்: 314', cd_en: 'No: 314', count: 1330 },
-  { title_ta: 'எட்டுத்தொகை', title_en: 'Ettuthogai', text_ta: 'அகநானூறு', text_en: 'Agananuru', cd_ta: 'எண்: 112(301-400)', cd_en: 'No: 112 (301-400)', count: 100 },
-  { title_ta: 'தொல்காப்பியம்', title_en: 'Tholkappiyam', text_ta: 'சொல்.சேனா', text_en: 'Sol. Sena', cd_ta: 'எண்:112(485-947)', cd_en: 'No: 112 (485-947)', count: 462 },
-  { title_ta: 'தொல்காப்பியம்', title_en: 'Tholkappiyam', text_ta: 'மூலம் (எழுத்து)', text_en: 'Moolam (Eluthu)', cd_ta: 'எண்:247 (1-484)', cd_en: 'No: 247 (1-484)', count: 484 },
-  { title_ta: 'தொல்காப்பியம்', title_en: 'Tholkappiyam', text_ta: 'மூலம் (பொருள்)', text_en: 'Moolam (Porul)', cd_ta: 'எண்:100 (948-1614)', cd_en: 'No: 100 (948-1614)', count: 666 },
-  { title_ta: 'பதினெண் கீழ்க்கணக்கு', title_en: 'Pathinen Kizhkanakku', text_ta: 'ஏலாதி', text_en: 'Elathi', cd_ta: 'எண்:143', cd_en: 'No: 143', count: 80 },
-  { title_ta: 'பதினெண் கீழ்க்கணக்கு', title_en: 'Pathinen Kizhkanakku', text_ta: 'திரிகடுகம்', text_en: 'Thirikadukam', cd_ta: 'எண்:179', cd_en: 'No: 179', count: 100 },
-  { title_ta: 'முத்தொள்ளாயிரம்', title_en: 'Muthollayiram', text_ta: 'முத்தொள்ளாயிரம்', text_en: 'Muthollayiram', cd_ta: 'எண்:19', cd_en: 'No: 19', count: 109 },
-  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'பதிகம்', text_en: 'Pathigam', cd_ta: 'எண்: 18 (1-90)', cd_en: 'No: 18 (1-90)', count: 90 },
-  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - மங்கல வாழ்த்துப் பாடல்', text_en: 'Pugarkkandam - Mangala Vazhthu Padal', cd_ta: 'எண்: 18 (1-20)', cd_en: 'No: 18 (1-20)', count: 20 },
-  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - மனையறம்படுத்த காதை', text_en: 'Pugarkkandam - Manaiarampadutha Kathai', cd_ta: 'எண்: 18 (1-90)', cd_en: 'No: 18 (1-90)', count: 90 },
-  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - அரங்கேற்று காதை', text_en: 'Pugarkkandam - Arangetru Kathai', cd_ta: 'எண்: 18 (1-175)', cd_en: 'No: 18 (1-175)', count: 175 },
-  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - அந்திமாலைச் சிறப்புசெய் காதை', text_en: 'Pugarkkandam - Anthimalai Sirappusey Kathai', cd_ta: 'எண்: 18 (1-84)', cd_en: 'No: 18 (1-84)', count: 84 },
-  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - இந்திர விழவு ஊர் எடுத்த காதை', text_en: 'Pugarkkandam - Indira Vizhavu Ur Edutha Kathai', cd_ta: 'எண்: 18 (1-240)', cd_en: 'No: 18 (1-240)', count: 240 },
-  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - கடலாடு காதை', text_en: 'Pugarkkandam - Kadaladu Kathai', cd_ta: 'எண்: 18 (1-174)', cd_en: 'No: 18 (1-174)', count: 174 },
-  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - கானல் வரி', text_en: 'Pugarkkandam - Kanal Vari', cd_ta: 'எண்: 18 (1-52)', cd_en: 'No: 18 (1-52)', count: 52 },
-  { title_ta: 'சிலப்பதிகாரம்', title_en: 'Silappathikaram', text_ta: 'புகார்க் காண்டம் - வேனிற் காதை', text_en: 'Pugarkkandam - Venir Kathai', cd_ta: 'எண்: 18 (1-80)', cd_en: 'No: 18 (1-80)', count: 80 },
-];
 
 /* ═══════════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════════ */
 const ManuscriptSearch = () => {
   const { language, t } = useLanguage();
+  const c = usePageContent('search');   // admin Page Content → Manuscript Search
+  const intro = c.section('intro');
+  const sb = (name) => c.text('searchbox', name);
+  const heroBanner = useBanner('search.hero');
   const [searchParams] = useSearchParams();
 
   /* Hierarchical dropdown states — mirrors main site exactly */
@@ -518,9 +552,10 @@ const ManuscriptSearch = () => {
 
       {/* ── Page Hero ─────────────────────────────────────── */}
       <PageHero
-        title={t('இணையவழிச் செவ்வியல் சுவடித் தேடல்', 'Manuscript Search — Online Classical Archives')}
+        title={heroBanner.text('title')}
         glyphs={['சுவடி', 'ஏடு', 'பாடல்', 'மூலம்', 'தேடல்', 'ஆய்வு']}
-        backgroundImage="/images/bg/search-hero-panoramic.png"
+        backgroundImage={heroBanner.image}
+        mobileBackgroundImage={heroBanner.imageMobile}
         heroClass="search-hero-bg"
         headingStyle={{
           fontSize: 'clamp(1rem, 3.5vw, 2.5rem)',
@@ -555,78 +590,10 @@ const ManuscriptSearch = () => {
                 transition={{ duration: 0.4 }}
               >
                 <h2 className="tamil-heading text-2xl md:text-3xl text-maroon font-black mb-5">
-                  செவ்வியல் சுவடித் தேடல் (Online Classical Tamil Manuscripts Search Engine)
+                  {intro.title}
                 </h2>
 
-                <p className="search-intro-p">
-                  ஆய்வாளர்கள் எளிதாகச் செவ்வியல் சுவடிகளைப் படிப்பதற்கும், பாடவேறுபாடு கண்டறிவதற்கும் ஏற்றவாறு இணைய வழிச் சுவடித் தேடலில் பாடலின் எண்ணிட்டுத் தேடும் வசதியும் பாடலின் குறிப்பிட்ட ஏதெனும் ஒரு சொல்லைக் கொண்டு தேடும் முறையும் உருவாக்கப்பட்டுள்ளது.
-                </p>
-                
-                <p className="search-intro-p">
-                  To enable researchers to easily read classical manuscripts and identify textual variations, an online manuscript search has been developed with the facility to search by entering the song number and a method to search using any specific word from the song.
-                </p>
-
-                <ul className="search-intro-steps">
-                  {SEARCH_INTRO_STEPS.map((s, i) => (
-                    <li key={i}>
-                      <StepBadge n={i + 1} active />
-                      <div className="flex flex-col gap-1">
-                        <span>{s.ta}</span>
-                        <span className="text-[0.9em] text-maroon/70">{s.en}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-
-                <h3 className="search-intro-subheading">
-                  தேடல் குறிப்புகள் / Search Notes:
-                </h3>
-
-                <div className="space-y-6 mb-8">
-                  {SEARCH_INTRO_NOTES.map((note, i) => (
-                    <div key={i} className="flex flex-col gap-2">
-                      <p className="search-intro-p !mb-0">
-                        <strong className="text-maroon">{i + 1}. {note.ta_title}</strong>
-                        {' '}{note.ta}
-                      </p>
-                      <p className="search-intro-p !mb-0 text-maroon/70 ml-5 text-[0.95em]">
-                        <strong>{note.en_title}</strong>
-                        {' '}{note.en}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                <h3 className="search-intro-subheading">
-                  {language === 'ta' ? 'இந்த சுவடித் தேடலில் பதிவேற்றம் செய்யப்பட்டடுள்ள ஓலைச்சுவடிகள் விபரம்:' : 'Details of palm-leaf manuscripts uploaded in this search:'}
-                </h3>
-
-                <div className="search-intro-table-wrap">
-                  <table className="search-intro-table">
-                    <thead>
-                      <tr>
-                        <th>{language === 'ta' ? 'நூல் தலைப்பு' : 'Book Title'}</th>
-                        <th>{language === 'ta' ? 'செவ்வியல் நூல்' : 'Classical Text'}</th>
-                        <th>{language === 'ta' ? 'செம்மொழி நிறுவனக் குறுந்தகடு எண்' : 'CICT CD Number'}</th>
-                        <th>{language === 'ta' ? 'எண்ணிக்கை' : 'Count'}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {SEARCH_TABLE_ROWS.map((row, i) => (
-                        <tr key={i}>
-                          <td>{language === 'ta' ? row.title_ta : row.title_en}</td>
-                          <td>{language === 'ta' ? row.text_ta : row.text_en}</td>
-                          <td>{language === 'ta' ? row.cd_ta : row.cd_en}</td>
-                          <td>{row.count}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <p className="search-intro-p mt-8 mb-0">
-                  {language === 'ta' ? 'மேலும் பல மின்படியாக்கப்பட்ட சுவடிகள், இத்தேடலில் பதிவேற்றம் செய்யப்படும்.' : 'More digitized manuscripts will be uploaded in this search.'}
-                </p>
+                <SearchIntro html={intro.body} />
 
                 <div className="mt-12 text-center pb-4">
                   <button
@@ -634,7 +601,7 @@ const ManuscriptSearch = () => {
                     className="inline-flex items-center gap-3 bg-maroon text-white px-10 py-4 rounded-sm border border-gold/30 hover:border-gold hover:bg-maroon-dark transition-all duration-300 shadow-lg shadow-maroon/15 hover:shadow-maroon/30 hover:-translate-y-0.5 font-black uppercase tracking-widest text-sm tamil-label"
                   >
                     <Search className="w-4 h-4 text-gold-light" />
-                    {t('சுவடித் தேடல்', 'Search Manuscripts')}
+                    {c.text('searchbox', 'open')}
                   </button>
                 </div>
               </motion.div>
@@ -649,14 +616,14 @@ const ManuscriptSearch = () => {
               >
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="tamil-heading text-xl md:text-2xl text-maroon font-black">
-                    {t('சுவடித் தேடல்', 'Manuscript Search')}
+                    {sb('heading')}
                   </h2>
                   <button
                     onClick={() => setIsSearchVisible(false)}
                     className="flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-maroon hover:text-gold transition-colors px-4 py-2 border border-maroon/10 hover:border-gold/30 rounded-sm bg-white"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    {t('விளக்கத்திற்குத் திரும்ப', 'Back to Description')}
+                    {sb('back')}
                   </button>
                 </div>
 
@@ -676,7 +643,7 @@ const ManuscriptSearch = () => {
                             : 'bg-stone/5 text-stone/50 border-transparent hover:bg-stone/10'}`}
                       >
                         <Info className="w-3 h-3" />
-                        {t('தேடல் குறிப்புகள்', 'Search Hints')}
+                        {sb('hints')}
                       </button>
 
                       {selectedSub && (
@@ -700,7 +667,7 @@ const ManuscriptSearch = () => {
                       >
                         <div className="px-6 py-5 border-b border-maroon/10 bg-ivory/30">
                           <h4 className={`text-[16px] md:text-[18px] font-bold text-maroon mb-3 ${language === 'ta' ? 'tamil-heading' : 'font-cinzel tracking-wider'}`}>
-                            {language === 'ta' ? 'தேடல் குறிப்புகள்' : 'Search Hints'}
+                            {sb('hints-title')}
                           </h4>
 
                           <div className="flex flex-col md:flex-row gap-5 md:gap-8">
@@ -709,12 +676,10 @@ const ManuscriptSearch = () => {
                               <span className="shrink-0 w-6 h-6 bg-gold/15 rounded-full flex items-center justify-center text-xs font-black text-maroon mt-[3px]">1</span>
                               <div className="flex flex-col">
                                 <span className={`text-[15px] text-maroon font-bold mb-0.5 ${language === 'ta' ? 'tamil-text' : ''}`}>
-                                  {language === 'ta' ? 'எண் வழித் தேடல்:' : 'Search by Number:'}
+                                  {sb('hint1-title')}
                                 </span>
                                 <span className={`text-[14px] text-[#4a3b32] leading-[1.6] ${language === 'ta' ? 'tamil-text' : ''}`}>
-                                  {language === 'ta'
-                                    ? 'தேடலுக்குரிய செவ்வியல் நூலின் பாடல்/ நூற்பா எண்ணைக் கொடுப்பதன் மூலம் உரிய சுவடியின் பக்கம் கிடைக்கப்பெறும்.'
-                                    : 'By entering song/nūṟpā number you can get the particular page of the manuscript.'}
+                                  {sb('hint1-text')}
                                 </span>
                               </div>
                             </div>
@@ -724,12 +689,10 @@ const ManuscriptSearch = () => {
                               <span className="shrink-0 w-6 h-6 bg-gold/15 rounded-full flex items-center justify-center text-xs font-black text-maroon mt-[3px]">2</span>
                               <div className="flex flex-col">
                                 <span className={`text-[15px] text-maroon font-bold mb-0.5 ${language === 'ta' ? 'tamil-text' : ''}`}>
-                                  {language === 'ta' ? 'பாடலின் குறிப்பிட்ட சொல் வழித் தேடல்:' : 'Search by Word:'}
+                                  {sb('hint2-title')}
                                 </span>
                                 <span className={`text-[14px] text-[#4a3b32] leading-[1.6] ${language === 'ta' ? 'tamil-text' : ''}`}>
-                                  {language === 'ta'
-                                    ? 'தேடலுக்குரிய செவ்வியல் நூல் பாடலின் குறிப்பிட்ட சொல்லைக் கொடுப்பதன் மூலம் உரிய சுவடியின் பக்கம் கிடைக்கப் பெறும்.'
-                                    : 'By entering any word of the verse you can get the particular page of the manuscript.'}
+                                  {sb('hint2-text')}
                                 </span>
                               </div>
                             </div>
@@ -750,7 +713,7 @@ const ManuscriptSearch = () => {
                         <label className="flex items-center gap-2 tamil-label text-xs uppercase tracking-widest font-black text-maroon/80">
                           <StepBadge n="1" active={!!selectedBook} />
                           <BookOpen className="w-3.5 h-3.5" />
-                          {t('நூல் தலைப்பு', 'Book Title')}
+                          {sb('book')}
                         </label>
                         <StyledSelect value={selectedBook} onChange={e => setSelectedBook(e.target.value)}>
                           <option value="">{t('-- நூல் தலைப்பு --', '-- Book Title --')}</option>
@@ -763,7 +726,7 @@ const ManuscriptSearch = () => {
                         <label className="flex items-center gap-2 tamil-label text-xs uppercase tracking-widest font-black text-maroon/80">
                           <StepBadge n="2" active={!!selectedMS} />
                           <Layers className="w-3.5 h-3.5" />
-                          {t('செவ்வியல் நூல்', 'Classical Text')}
+                          {sb('text')}
                         </label>
                         <StyledSelect
                           value={selectedMS}
@@ -780,7 +743,7 @@ const ManuscriptSearch = () => {
                         <label className="flex items-center gap-2 tamil-label text-xs uppercase tracking-widest font-black text-maroon/80">
                           <StepBadge n="3" active={!!selectedSub} />
                           <Scroll className="w-3.5 h-3.5" />
-                          {t('சுவடித் தேர்வு', 'Manuscript Selection')}
+                          {sb('manuscript')}
                         </label>
                         <StyledSelect
                           value={selectedSub}
@@ -801,7 +764,7 @@ const ManuscriptSearch = () => {
                     <div className="mb-2">
                       <label className="flex items-center gap-2 tamil-label text-xs uppercase tracking-widest font-black text-maroon/80 mb-2">
                         <Search className="w-3.5 h-3.5" />
-                        {t('எண் / பாடலின் குறிப்பிட்ட சொல்', 'Number / Specific Word from Verse')}
+                        {sb('query')}
                       </label>
 
                       <div className="relative">
@@ -879,7 +842,7 @@ const ManuscriptSearch = () => {
                       hover:bg-maroon-light transition-colors disabled:opacity-35 shrink-0"
                           >
                             <Search className="w-4 h-4" />
-                            {t('தேடுக', 'Search')}
+                            {sb('submit')}
                           </button>
                         </div>
 

@@ -4,6 +4,8 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { usePageContent } from '../content/SiteContentProvider';
+import RichText, { toBlocks } from '../content/RichText';
 import { getBookCover } from '../utils/bookCovers';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -76,7 +78,86 @@ const TitleFlourishRight = () => (
   />
 );
 
+
+const ROMAN = ['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', 'Ⅴ', 'Ⅵ', 'Ⅶ', 'Ⅷ', 'Ⅸ', 'Ⅹ', 'Ⅺ', 'Ⅻ'];
+const BODY_TEXT = 'space-y-4 tamil-body text-stone/85 text-[15px] sm:text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-justify';
+
+// A step's bold first line is its heading; the rest are its paragraphs
+function splitStep(html) {
+  const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
+  const first = doc.body.firstElementChild;
+  let heading = '';
+  if (first && (first.tagName === 'STRONG' || first.tagName === 'B') && doc.body.firstChild === first) {
+    heading = first.innerHTML; first.remove();
+  }
+  const rest = toBlocks(doc.body.innerHTML);
+  if (!heading && rest.length && rest[0].tag === 'p') heading = rest.shift().html;
+  return { heading, rest };
+}
+
+/* One content box of the page (title, divider, paragraphs / numbered step boxes) */
+function ContentBox({ section }) {
+  const groups = [];
+  for (const b of toBlocks(section.body)) {
+    const last = groups[groups.length - 1];
+    if (b.tag === 'p' && last && last.tag === 'p') last.items.push(b);
+    else groups.push(b.tag === 'p' ? { tag: 'p', items: [b] } : b);
+  }
+  return (
+    <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-4 sm:p-6 md:p-8 relative shadow-sm">
+      {section.title && (
+        <>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-2.5 h-2.5 rounded-full bg-gold" />
+            <h2 className="font-cinzel text-xl md:text-2xl text-maroon font-bold tracking-wide">
+              {section.title}
+            </h2>
+          </div>
+          <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
+        </>
+      )}
+      <div className="space-y-6">
+        {groups.map((g, gi) => (
+          g.tag === 'p' ? (
+            <div key={gi} className={BODY_TEXT}>
+              {g.items.map((b, i) => <RichText key={i} as="p" html={b.html} />)}
+            </div>
+          ) : g.tag === 'ol' ? (
+            <div key={gi} className="space-y-6">
+              {g.items.map((item, i) => {
+                const { heading, rest } = splitStep(item.html);
+                return (
+                  <div key={i} className="bg-white border border-gold/20 rounded-md p-3 sm:p-5 shadow-xs transition-all hover:border-gold/40">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2 sm:px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
+                        {ROMAN[i] || i + 1}
+                      </span>
+                      <div className={rest.length ? 'space-y-3 min-w-0' : 'min-w-0'}>
+                        {heading && <RichText as="h3" className="font-tamil-bold text-lg text-maroon font-bold" html={heading} />}
+                        {rest.map((b, j) => (
+                          <RichText key={j} as={b.tag === 'p' ? 'p' : 'div'} className="tamil-body text-stone/80 text-[15px] sm:text-base leading-relaxed text-justify" html={b.html || ''} />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : g.tag === 'ul' ? (
+            <ul key={gi} className={`${BODY_TEXT} list-disc pl-6`}>
+              {g.items.map((item, i) => <RichText key={i} as="li" html={item.html} />)}
+            </ul>
+          ) : (
+            <RichText key={gi} as="h3" className="font-tamil-bold text-lg text-maroon font-bold" html={g.html} />
+          )
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const ClassicalTexts = () => {
+  const c = usePageContent('classical-texts');
   const { t } = useLanguage();
 
   const { data: texts = [], isLoading } = useQuery({
@@ -140,13 +221,13 @@ const ClassicalTexts = () => {
             <div className="flex items-center justify-center gap-5">
               <div className="h-px w-16 bg-gradient-to-r from-transparent to-gold/60" />
               <p className="font-cinzel text-[10px] uppercase tracking-[0.5em] text-gold/80 font-bold">
-                {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
+                {c.text('hero', 'label')}
               </p>
               <div className="h-px w-16 bg-gradient-to-l from-transparent to-gold/60" />
             </div>
 
             <h1 className="font-cinzel text-white font-bold tracking-wide" style={{ textShadow: '0 0 60px rgba(201,151,59,0.15)', fontSize: 'clamp(1.5rem, 6vw, 4.5rem)', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.2' }}>
-              {t('செம்பதிப்பின் தேவை', 'Classical Tamil Texts')}
+              {c.text('hero', 'title')}
             </h1>
 
             {/* Gold divider ornament image */}
@@ -176,118 +257,8 @@ const ClassicalTexts = () => {
 
             <div lang="ta" className="p-3 sm:p-10 md:p-14 space-y-6 sm:space-y-12">
 
-              {/* ══════════════════════════════════════════
-                  1. செம்பதிப்பின் தேவை (Need for Critical Edition)
-              ══════════════════════════════════════════ */}
-              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-4 sm:p-6 md:p-8 relative shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gold" />
-                  <h2 className="font-cinzel text-xl md:text-2xl text-maroon font-bold tracking-wide">
-                    {'செம்பதிப்பின் தேவை'}
-                  </h2>
-                </div>
-                <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
-
-                <div className="space-y-4 tamil-body text-stone/85 text-[15px] sm:text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-justify">
-                  <p>
-                    {'தரம்வாய்ந்த மிகப்பழம் பதிப்புக்களில் கூடப் பொருந்தாப்பாடம், எழுத்துப்பிழை, புணர்ச்சிப்பிழை, சீர்ப்பிறழ்வு, அடிப்பிறழ்வு போன்றவை அருகியும் பரவலாகவும் காணப்படுகின்றன. செவ்வியல் நூல்களை உயர்தரமுடையனவாகவும் பிழை பிறழ்வுகளினின்றும் நீங்கினவாகவும் பாடம் உறுதி செய்து பதிப்பித்தல் இன்றியமையாதது. ஆகவே ஆய்வு நோக்கில் செம்பதிப்புப் பெரிதும் பயன்பாடு உடையது.'}
-                  </p>
-                  <p>
-                    {'மரபுவழிப் புணர்ச்சிகளை மேற்கொள்ளல், சீர்பிரித்து யாப்பமைதி கெடாதவாறு வடிவமைத்தல் ஆகியவற்றின் அடிப்படையில் செம்பதிப்புக்கள் அமையுமாதலின் அவற்றை வெளியிடுவதன் மூலம் பழந்தமிழ் மரபுகள் பாதுகாக்கப்படும்.'}
-                  </p>
-                  <p>
-                    {'செம்பதிப்பு நூற்கள், உலக அளவிலும் தமிழக அளவிலும் ஆராய்ச்சி செய்வதற்கு ஏற்ற அடிப்படை ஆய்வுக்களங்களாக அமையும்.'}
-                  </p>
-                  <p>
-                    {'தரப்படுத்தப்பட்ட பதிப்புக்கள் வெளிவருங்கால், பள்ளி, கல்லூரி, பல்கலைக்கழகப் பாடத்திட்டங்களில், பிழையும் பிறழ்வுமற்ற பழந்தமிழ் நூற்பகுதிகளைப் பயில வாய்ப்பு ஏற்படும்.'}
-                  </p>
-                  <p>
-                    {'எல்லாப் பழந்தமிழ் நூல்களும் எழுத்தமைதி, கட்டுக்கோப்பு, நூற்கட்டமைப்பு போன்றவற்றில் ஒரே சீரினவாகச் சீரமைக்கப்படல், ஒருவகை அழகுணர்ச்சியைத் தோற்றுவிப்பதொடு பயில்வோர்க்கு ஈடுபாடு ஏற்படவும் உதவும்.'}
-                  </p>
-                </div>
-              </div>
-
-
-              {/* ══════════════════════════════════════════
-                  2. செம்பதிப்புப் பணி - மூன்று கட்டங்கள்
-              ══════════════════════════════════════════ */}
-              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-4 sm:p-6 md:p-8 relative shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gold" />
-                  <h2 className="font-cinzel text-xl md:text-2xl text-maroon font-bold tracking-wide">
-                    {'செம்பதிப்புப் பணி - மூன்று கட்டங்கள்'}
-                  </h2>
-                </div>
-                <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
-
-                {/* Numbered Steps */}
-                <div className="space-y-6">
-                  {/* Step I */}
-                  <div className="bg-white border border-gold/20 rounded-md p-3 sm:p-5 shadow-xs transition-all hover:border-gold/40">
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2 sm:px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
-                        Ⅰ
-                      </span>
-                      <div className="space-y-3 min-w-0">
-                        <h3 className="font-tamil-bold text-lg text-maroon font-bold">
-                          {'சுவடிகளையும் பதிப்புக்களையும் கண்டறிந்து தொகுத்தல்'}
-                        </h3>
-                        <p className="tamil-body text-stone/80 text-[15px] sm:text-base leading-relaxed text-justify">
-                          {'அட்டவணைகளின் அடிப்படையில் தேடிக் கண்டறிந்த சுவடிகளை மின்படி (Scan) எடுத்தல். மூன்று, நான்கு ஏடுகளை வரிசையாக அடுக்கிப் படம் எடுத்தல், அவற்றைத் தனித்தனிப் பக்கங்களாகப் பிரித்தமைத்தல், தனிப்பக்கங்களைத் தூய்மை செய்து (Colour correction) படி எடுத்தல் என்று இது அமையும். சுவடிகளின் மின்படிகளை விரைந்து படிப்பதற்கு ஏதுவாகத் தேவையான பக்கங்கள் மற்றும் பாடல்களை உடனே திரைக்குக் கொண்டுவரும் வகையில் உரிய மென்பொருள் உருவாக்கப்பட்டுள்ளது.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step II */}
-                  <div className="bg-white border border-gold/20 rounded-md p-3 sm:p-5 shadow-xs transition-all hover:border-gold/40">
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2 sm:px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
-                        Ⅱ
-                      </span>
-                      <div className="min-w-0">
-                        <h3 className="font-tamil-bold text-lg text-maroon font-bold">
-                          {'பாடவேறுபாட்டுத் தரவுகளைத் தொகுத்தலும் பட்டியலிடுதலும்.'}
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step III */}
-                  <div className="bg-white border border-gold/20 rounded-md p-3 sm:p-5 shadow-xs transition-all hover:border-gold/40">
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <span className="font-cinzel text-lg md:text-xl font-bold text-gold border border-gold/30 rounded px-2 sm:px-2.5 py-1 bg-[#FAF8F2] flex-shrink-0">
-                        Ⅲ
-                      </span>
-                      <div className="min-w-0">
-                        <h3 className="font-tamil-bold text-lg text-maroon font-bold">
-                          {'சரியான பாடங்களையும் யாப்பு மற்றும் புணர்ச்சி அமைவுகளையும் உறுதி செய்து வரையறுத்தலும் மீட்டுருவாக்கம் செய்தலும்.'}
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-
-              {/* ══════════════════════════════════════════
-                  3. செம்பதிப்பின் தனித்தன்மைகள்
-              ══════════════════════════════════════════ */}
-              <div className="bg-[#FAF8F2] border border-gold/25 rounded-lg p-4 sm:p-6 md:p-8 relative shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gold" />
-                  <h2 className="font-cinzel text-xl md:text-2xl text-maroon font-bold tracking-wide">
-                    {'செம்பதிப்பின் தனித்தன்மைகள்'}
-                  </h2>
-                </div>
-                <div className="h-px w-full bg-gradient-to-r from-gold/40 via-gold/15 to-transparent mb-6" />
-
-                <div className="space-y-4 tamil-body text-stone/85 text-[15px] sm:text-base md:text-[1.05rem] leading-relaxed md:leading-[2] font-medium text-justify">
-                  <p>
-                    {'எல்லா மூலச்சுவடிகளிலும் அனைத்துப் பதிப்புக்களிலும் உரைமேற்கோள்களிலும் இடம்பெறும் அனைத்துப் பாடவேறுபாடுகளையும் ஒருங்குதிரட்டித்தருதலால் செம்மொழித் தமிழாய்வு மத்திய நிறுவனம் வெளியிடும் செம்பதிப்பு வேறு எப்பதிப்பையும் விடத் தனித்தன்மை வாய்ந்ததாகிறது. பிற பதிப்புகளில் பாடம் உறுதி செய்து, அதற்கான காரணங்கள் விரிவாக விளக்கப்படவில்லை. செம்பதிப்பு பாடத் தேர்வு விளக்கங்கள் பெற்றிருத்தலால் தனிச்சிறப்புப் பெறுகிறது. வரையறுக்கப்பட்ட யாப்பு வடிவங்களை மேற்கொள்ளுதலும் மரபுவழிப்பட்ட சரியான புணர்ச்சிகளை எய்திநிற்றலும் யாப்பும் புணர்ச்சியும் இறுதி செய்யப்பட்டமைக்கான விளக்கங்களைப் பெற்றிருத்தலும் செம்பதிப்பை ஒப்புயர்வற்றதாக உயர்த்துகின்றன. பதிப்புக்களையும், சுவடிகளையும் குலவரிசைப்படுத்தித் தருவது, பொதுவாகத் தமிழ்ப் பதிப்புலகில் காணப்படாத பெருமை சான்றது.'}
-                  </p>
-                </div>
-              </div>
+              {/* Content boxes — editable in admin Page Content → செம்பதிப்பின் தேவை */}
+              {['need', 'phases', 'unique'].map(key => <ContentBox key={key} section={c.section(key)} />)}
 
 
               {/* Decorative bottom ornament divider */}

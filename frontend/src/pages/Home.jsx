@@ -7,6 +7,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { getBookCover } from '../utils/bookCovers';
 import { useImageRetry } from '../utils/imageRetry';
 import FallbackImg from '../components/FallbackImg';
+import { usePageContent, useBanner } from '../content/SiteContentProvider';
+import RichText, { toBlocks, ContentLink } from '../content/RichText';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -145,12 +147,17 @@ function StatItem({ val, label }) {
 }
 
 /* ── Compact Home Stat item with animated counter ── */
-function HomeStatItem({ val, labelTa, labelEn }) {
+function HomeStatItem({ val: raw, labelTa, labelEn }) {
+  // The number is editable in the admin: "96,215" or "96215" both count up; text that is
+  // not a number is shown as written
+  const digits = String(raw ?? '').replace(/[,\s]/g, '');
+  const numeric = /^\d+(\.\d+)?$/.test(digits);
+  const val = numeric ? digits : null;
   const { count, ref } = useAnimatedCount(val);
   return (
     <div ref={ref} className="flex flex-col items-center">
       <span className="text-3xl md:text-4xl font-extrabold text-maroon tabular-nums">
-        {count ? Number(count).toLocaleString('en-IN') : Number(val || 0).toLocaleString('en-IN')}
+        {!numeric ? raw : count ? Number(count).toLocaleString('en-IN') : Number(val || 0).toLocaleString('en-IN')}
       </span>
       <span className="text-xs md:text-sm font-black text-stone/80 mt-1 tamil-body">
         {labelTa}
@@ -191,15 +198,50 @@ function TiltCard({ children, className }) {
   );
 }
 
+/* Content window text (admin Page Content → Home): paragraphs, and numbered lists drawn
+   as the list of critical editions. Same markup as the original article. */
+function FacultyArticle({ html }) {
+  return toBlocks(html).map((b, i) => (
+    b.tag === 'ol' || b.tag === 'ul' ? (
+      <ol key={i} className="faculty-article-list">
+        {b.items.map((item, idx) => (
+          <li key={idx}>
+            {item.link ? (
+              <ContentLink link={item.link} className="faculty-article-link">
+                <span className="faculty-article-list-num">{b.tag === 'ol' ? `${idx + 1}.` : '•'}</span>
+                <RichText as="span" html={item.link.html} />
+              </ContentLink>
+            ) : (
+              <span>
+                <span className="faculty-article-list-num">{b.tag === 'ol' ? `${idx + 1}.` : '•'}</span>
+                <RichText as="span" html={item.html} />
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    ) : b.tag === 'h3' || b.tag === 'h4' ? (
+      <RichText key={i} as="h3" className="faculty-article-h3" html={b.html} />
+    ) : b.tag === 'table' ? (
+      <RichText key={i} as="div" className="faculty-article-table" html={b.html} />
+    ) : (
+      <RichText key={i} as="p" className="faculty-article-p" html={b.html} />
+    )
+  ));
+}
+
 /* ═══════════════════════════════════════════════════════════════
    HOME PAGE
 ══════════════════════════════════════════════════════════════════ */
 const Home = () => {
   const { language, t } = useLanguage();
+  const c = usePageContent('home');           // admin Page Content → Home
+  const heroBanner = useBanner('home.hero');  // admin Banners → Home
+  const article = c.section('article');
   const scrollRef = useRef(null);
 
   // Banner and section backgrounds, recovered if the server refuses the first request
-  const heroBg = useImageRetry('/images/bg/home_hero_final.png');
+  const heroBg = useImageRetry(heroBanner.image);
   const facultyBg = useImageRetry('/images/bg/faculty-bg.png');
   const researchBg = useImageRetry('/images/bg/research-bg.png');
   const floralLeft = useImageRetry('/images/bg/editions-floral-left.png');
@@ -319,7 +361,7 @@ const Home = () => {
                   }}
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 1 }}
                 >
-                  {t('சுவடியியல் புலம்', 'Faculty of Manuscriptology')}
+                  {heroBanner.text('title')}
                 </motion.h1>
 
                 {/* Institutional label (Primary Heading) */}
@@ -337,7 +379,7 @@ const Home = () => {
                   }}
                   initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 1 }}
                 >
-                  {t('செம்மொழித் தமிழாய்வு மத்திய நிறுவனம்', 'Central Institute of Classical Tamil')}
+                  {heroBanner.text('subtitle')}
                 </motion.h2>
               </div>
 
@@ -387,7 +429,7 @@ const Home = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
             className="text-center mb-10">
             <h2 className="tamil-heading text-5xl md:text-6xl text-maroon font-black italic">
-              {'சுவடியியல் புலம்'}
+              {article.title}
             </h2>
             <div className="w-24 h-1.5 bg-gradient-to-r from-maroon to-gold/60 mx-auto mt-6" />
           </motion.div>
@@ -399,31 +441,7 @@ const Home = () => {
             <span className="faculty-article-corner faculty-article-corner-tl" />
             <span className="faculty-article-corner faculty-article-corner-br" />
 
-            {FACULTY_CONTENT.map((block, i) => (
-              block.type === 'list' ? (
-                <ol key={i} className="faculty-article-list">
-                  {block.items.map((item, idx) => (
-                    <li key={idx}>
-                      {item.id ? (
-                        <Link to={`/publication/${item.id}`} className="faculty-article-link">
-                          <span className="faculty-article-list-num">{idx + 1}.</span>
-                          <span>{item.ta}</span>
-                        </Link>
-                      ) : (
-                        <span>
-                          <span className="faculty-article-list-num">{idx + 1}.</span>
-                          {item.ta}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p key={i} className="faculty-article-p">
-                  {block.ta}
-                </p>
-              )
-            ))}
+            <FacultyArticle html={article.body} />
           </motion.div>
         </div>
       </section>
@@ -439,7 +457,7 @@ const Home = () => {
               viewport={{ once: true }}
               className="bg-white border border-maroon/10 p-6 rounded-md shadow-sm hover:shadow-md hover:border-gold/50 transition-all duration-300 flex justify-center items-center group"
             >
-              <HomeStatItem val="96215" labelTa="ஓலைச்சுவடிகள்" labelEn="Digitized Palm Leaf Manuscripts" />
+              <HomeStatItem val={c.text('stats', 'palm')} labelTa="ஓலைச்சுவடிகள்" labelEn="Digitized Palm Leaf Manuscripts" />
             </motion.div>
 
             {/* Paper Manuscripts Card */}
@@ -450,7 +468,7 @@ const Home = () => {
               transition={{ delay: 0.1 }}
               className="bg-white border border-maroon/10 p-6 rounded-md shadow-sm hover:shadow-md hover:border-gold/50 transition-all duration-300 flex justify-center items-center group"
             >
-              <HomeStatItem val="39061" labelTa="காகித சுவடிகள்" labelEn="Digitized Paper Manuscripts" />
+              <HomeStatItem val={c.text('stats', 'paper')} labelTa="காகித சுவடிகள்" labelEn="Digitized Paper Manuscripts" />
             </motion.div>
 
             {/* Total Digitized Manuscripts Card */}
@@ -461,7 +479,7 @@ const Home = () => {
               transition={{ delay: 0.2 }}
               className="bg-white border border-maroon/10 p-6 rounded-md shadow-sm hover:shadow-md hover:border-gold/50 transition-all duration-300 flex justify-center items-center group"
             >
-              <HomeStatItem val="135276" labelTa="மொத்த சுவடிகள்" labelEn="Total Digitized Manuscripts" />
+              <HomeStatItem val={c.text('stats', 'total')} labelTa="மொத்த சுவடிகள்" labelEn="Total Digitized Manuscripts" />
             </motion.div>
 
           </div>

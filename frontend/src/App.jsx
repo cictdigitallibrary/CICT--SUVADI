@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LanguageProvider } from './context/LanguageContext';
 import Layout from './components/Layout';
+import { SiteContentProvider } from './content/SiteContentProvider';
 import Home from './pages/Home';
 import ClassicalTexts from './pages/ClassicalTexts';
 import ClassicalTextsList from './pages/ClassicalTextsList';
@@ -36,6 +37,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <Router>
+          {/* Editable page text and banners (admin: Page Content / Banners) */}
+          <SiteContentProvider>
           <Layout>
             <Suspense fallback={null}>
             <Routes>
@@ -55,6 +58,7 @@ function App() {
             </Routes>
             </Suspense>
           </Layout>
+          </SiteContentProvider>
         </Router>
       </LanguageProvider>
     </QueryClientProvider>

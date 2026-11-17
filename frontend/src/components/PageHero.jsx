@@ -12,12 +12,15 @@ import { useImageRetry } from '../utils/imageRetry';
  *  badge      {string}  — optional floating badge text (e.g. "6 Volumes")
  *  glyphs     {string[]}— optional array of decorative Tamil glyphs
  *  light      {bool}    — if true, use lighter ivory bg instead of maroon
+ *  mobileBackgroundImage {string} — optional banner image for screens below 640px
  */
 const DEFAULT_GLYPHS = ['அ', 'ம்', 'ழ்', 'ல்', 'ர்', 'ஓம்'];
 
-const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, light = false, backgroundImage = null, heroClass = '', headingStyle = {}, align = 'center' }) => {
+const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, light = false, backgroundImage = null, mobileBackgroundImage = null, heroClass = '', headingStyle = {}, align = 'center' }) => {
   // Banner image, recovered if the server refuses the first request
   const bannerSrc = useImageRetry(backgroundImage);
+  // Optional separate image for phones (admin Banners); without it phones crop the main image
+  const mobileSrc = useImageRetry(mobileBackgroundImage);
   if (light) {
     return (
       <header className="relative pt-36 pb-16 overflow-hidden bg-ivory selection:bg-maroon selection:text-white">
@@ -68,9 +71,16 @@ const PageHero = ({ label, title, subtitle, badge, glyphs = DEFAULT_GLYPHS, ligh
           }
         }
       `}</style>
+      {mobileBackgroundImage && (
+        <style>{`
+          @media (max-width: 639px) {
+            .page-hero-mobile-image { background-image: url('${mobileSrc}') !important; }
+          }
+        `}</style>
+      )}
 
       <header
-        className={`relative selection:bg-white selection:text-maroon flex flex-col items-center justify-center page-hero-bg-banner${heroClass ? ` ${heroClass}` : ''}`}
+        className={`relative selection:bg-white selection:text-maroon flex flex-col items-center justify-center page-hero-bg-banner${heroClass ? ` ${heroClass}` : ''}${mobileBackgroundImage ? ' page-hero-mobile-image' : ''}`}
         style={backgroundImage ? {
           backgroundImage: `url('${bannerSrc}')`,
           backgroundRepeat: 'no-repeat',

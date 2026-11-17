@@ -1097,6 +1097,10 @@ const adminAuth = (req, res, next) => {
 // Apply auth middleware to all admin routes below this point
 app.use('/api/admin', adminAuth);
 
+// Page Content and Banner management (separate module: its own tables, folder and routes;
+// the book / manuscript / e-book modules below are not involved)
+require('./lib/siteContent')(app, { db, STORAGE_PATH, sniffFile, jwt, JWT_SECRET, multer });
+
 // ── DASHBOARD STATS ──────────────────────────────────────────────────────────
 app.get('/api/admin/dashboard-stats', async (req, res) => {
   try {
