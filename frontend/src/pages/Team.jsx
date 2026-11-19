@@ -4,79 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useLanguage } from '../context/LanguageContext';
 import PageHero from '../components/PageHero';
-
+import { usePageContent, useSiteContentState } from '../content/SiteContentProvider';
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-// Source: suvadi.cict.in/asp/team.aspx — all 7 members in official order
-const TEAM_MEMBERS = [
-  {
-    id: 1,
-    name_tamil: 'பேராசிரியர் இரா. சந்திரசேகரன்',
-    name_english: 'Prof. Ra. Chandrasekaran',
-    title_tamil: 'இயக்குநர்',
-    title_english: 'Director',
-    photo: 'director.jpg',
-  },
-  {
-    id: 2,
-    name_tamil: 'முனைவர் ரெ. புவனேஸ்வரி',
-    name_english: 'Dr. Re. Bhuvaneswari',
-    title_tamil: 'பதிவாளர்',
-    title_english: 'Registrar',
-    photo: '/images/registrar.png',
-    localAsset: true,
-  },
-  {
-    id: 3,
-    name_tamil: 'முனைவர் இரா. அருள்மணி',
-    name_english: 'Dr. Ra. Arulmani',
-    title_tamil: 'ஒருங்கிணைப்பாளர் & ஆராய்ச்சி அலுவலர்',
-    title_english: 'Coordinator & Research Officer',
-    photo: 'arulmani.jpg',
-  },
-  {
-    id: 4,
-    name_tamil: 'முனைவர் ம. தமிழ்வாணன்',
-    name_english: 'Dr. M. Tamilvannan',
-    title_tamil: 'இளநிலை ஆராய்ச்சி அலுவலர்',
-    title_english: 'Junior Research Officer',
-    photo: 'tamilvannan.jpg',
-  },
-  {
-    id: 5,
-    name_tamil: 'முனைவர் சே. கரும்பாயிரம்',
-    name_english: 'Dr. Se. Karumpaayiram',
-    title_tamil: 'இளநிலை ஆராய்ச்சி அலுவலர்',
-    title_english: 'Junior Research Officer',
-    photo: 'karumbu.jpg',
-  },
-  {
-    id: 6,
-    name_tamil: 'முனைவர் ம. நாகராஜன்',
-    name_english: 'Dr. M. Nagarajan',
-    title_tamil: 'இளநிலை ஆராய்ச்சி அலுவலர்',
-    title_english: 'Junior Research Officer',
-    photo: 'nagarajan.jpg',
-  },
-  {
-    id: 7,
-    name_tamil: 'திரு. அ. முருக சுவாமிநாதன்',
-    name_english: 'Mr. A. Muruga Swaminathan',
-    title_tamil: 'நிரலாளர்',
-    title_english: 'Programmer',
-    // Web-sized copy of public/images/Murugaswaminathan.png (served by the frontend)
-    photo: '/images/Murugaswaminathan.jpg',
-    localAsset: true,
-  },
-  {
-    id: 8,
-    name_tamil: 'திரு. தி.ஞா. அருள்ஒளி',
-    name_english: 'Mr. Ti. Gna. Arulolli',
-    title_tamil: 'தரவு உள்ளீட்டாளர்',
-    title_english: 'Data Entry Operator',
-    photo: 'aruloli.jpg',
-  },
-];
+// The members (photo, post, name) are edited in the admin: Page Content → Team.
+// Built-in list (the official order): content/siteDefaults.js.
 
 const EDITIONS = [
   { ta: 'இறையனார் களவியல்', en: 'Irayanar Kalv.', yr: '2013' },
@@ -100,11 +32,10 @@ const fadeUp = {
 // Photo paths like "/images/team/x.jpg" are served by the backend.
 const fromAdmin = m => ({
   id: `db-${m.id}`,
-  name_tamil: m.name,
-  name_english: m.name,
-  title_tamil: m.role_tamil || m.role_english || '',
-  photo: m.photo_url || '',
-  localAsset: !/^\/images\//.test(m.photo_url || ''),
+  name: m.name,
+  name_en: m.name,
+  title: m.role_tamil || m.role_english || '',
+  photo: !m.photo_url ? '' : /^\/images\//.test(m.photo_url) ? `${API}${m.photo_url}` : m.photo_url,
 });
 
 const Team = () => {
@@ -115,7 +46,13 @@ const Team = () => {
     queryKey: ['team'],
     queryFn: async () => (await axios.get(`${API}/api/team`)).data,
   });
-  const members = Array.isArray(adminMembers) && adminMembers.length > 0 ? adminMembers.map(fromAdmin) : TEAM_MEMBERS;
+  // Page Content → Team once published there; else the Team Members tab's list if it has
+  // members (it is empty today); else the built-in list
+  const content = usePageContent('team');
+  const { content: published } = useSiteContentState();
+  const members = published.team?.members
+    ? content.members('members')
+    : Array.isArray(adminMembers) && adminMembers.length > 0 ? adminMembers.map(fromAdmin) : content.members('members');
 
   return (
     <div className="bg-ivory min-h-screen selection:bg-maroon selection:text-white">
@@ -166,21 +103,18 @@ const Team = () => {
             viewport={{ once: true, amount: 0.05 }}
             className="flex flex-col items-center gap-14 sm:gap-16"
           >
-            {members.map((member) => {
-              const photoUrl = member.localAsset ? member.photo
-                : /^\/images\//.test(member.photo) ? `${API}${member.photo}`
-                : `${API}/images/team/${member.photo}`;
-
+            {members.map((member, i) => {
               return (
-                <motion.div key={member.id} variants={fadeUp} className="group w-full max-w-md">
+                <motion.div key={member.id || i} variants={fadeUp} className="group w-full max-w-md">
                   {/* Photo Frame */}
                   <div className="relative mb-6 mx-auto w-full max-w-[240px] sm:max-w-[260px] overflow-hidden aspect-[1/1.2] bg-white border border-maroon/10 p-2 shadow-md group-hover:shadow-xl group-hover:border-gold/30 transition-all duration-500">
                     <div className="absolute top-0 left-0 w-0 group-hover:w-full h-[3px] bg-gradient-to-r from-maroon to-gold transition-all duration-700 z-10" />
 
                     <div className="w-full h-full overflow-hidden bg-stone/5 relative">
                       <img
-                        src={photoUrl}
-                        alt={member.name_english}
+                        src={member.photo || undefined}
+                        alt={member.name_en}
+                        style={member.photo ? undefined : { display: 'none' }}
                         className="w-full h-full object-cover opacity-95 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
                         onError={e => {
                           e.target.style.display = 'none';
@@ -190,9 +124,9 @@ const Team = () => {
                       {/* Fallback monogram */}
                       <div
                         className="absolute inset-0 items-center justify-center bg-maroon/5 text-6xl font-cinzel text-maroon/20"
-                        style={{ display: 'none' }}
+                        style={{ display: member.photo ? 'none' : 'flex' }}
                       >
-                        {member.name_english.charAt(0)}
+                        {(member.name_en || '').charAt(0)}
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-maroon/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
@@ -202,11 +136,11 @@ const Team = () => {
                   <div className="text-center">
                     <div className="inline-block px-3 py-1 bg-maroon/[0.04] border border-maroon/10 mb-3 group-hover:bg-gold/10 group-hover:border-gold/20 transition-all duration-300">
                       <span className="tamil-label text-[12px] sm:text-[13px] text-bronze uppercase tracking-[0.1em] sm:tracking-[0.2em] font-bold">
-                        {member.title_tamil}
+                        {member.title}
                       </span>
                     </div>
                     <h3 className="tamil-label text-[15px] sm:text-[18px] text-maroon font-black mb-1 group-hover:text-gold transition-colors duration-300 leading-snug">
-                      {member.name_tamil}
+                      {member.name}
                     </h3>
                   </div>
                 </motion.div>

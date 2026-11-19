@@ -12,6 +12,9 @@
  *     fields  → { values: { name: { ta, en } } }            short texts and numbers
  *     list    → { title_ta, title_en, rows: [ { type, ta, en } ] }
  *               rows of a list page (type: heading, subheading, item, gap)
+ *     members → { rows: [ { photo, name_ta, name_en, title_ta, title_en } ] }
+ *               people of the Team page, in display order; photo is a built-in image
+ *               (/images/…) or one uploaded here (/api/site-banners/file/photo_…)
  * - site_banners: one row per banner placement (slot_key).
  *     { image, image_mobile, image_width, image_height, …text fields… }
  *
@@ -100,6 +103,11 @@ const MAX_ROWS = 500;
 const MAX_FIELDS = 60;
 const MAX_BANNER_BYTES = 15 * 1024 * 1024;
 const BANNER_FILE = /^banner_[a-z0-9._-]+_\d+_[a-f0-9]{8}\.(jpg|png|webp)$/;
+const PHOTO_FILE = /^photo_\d+_[a-f0-9]{8}\.(jpg|png|webp)$/;
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+const MAX_MEMBERS = 100;
+const PHOTO_SPEC = { width: 600, height: 720, minWidth: 200 };   // shown in a 1 : 1.2 frame (cover)
+const PHOTO_PATH = /^(\/images\/(?!.*\.\.)[A-Za-z0-9_./-]{1,200}\.(jpe?g|png|webp|gif)|\/api\/site-banners\/file\/photo_\d+_[a-f0-9]{8}\.(jpg|png|webp))$/i;
 
 // ── Text sanitising ──────────────────────────────────────────────────────────
 const plain = (v, max) => String(v ?? '').replace(/<[^>]*>/g, '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').slice(0, max);
@@ -133,7 +141,7 @@ function sanitizeHtml(html) {
 }
 
 // ── Values ───────────────────────────────────────────────────────────────────
-const KINDS = new Set(['section', 'fields', 'list']);
+const KINDS = new Set(['section', 'fields', 'list', 'members']);
 function cleanSection(v) {
   if (!v || typeof v !== 'object') throw bad('Invalid section');
   const bt = String(v.body_ta ?? ''), be = String(v.body_en ?? '');
@@ -163,7 +171,18 @@ function cleanList(v) {
     }),
   };
 }
-const CLEAN = { section: cleanSection, fields: cleanFields, list: cleanList };
+function cleanMembers(v) {
+  if (!v || typeof v !== 'object' || !Array.isArray(v.rows)) throw bad('Invalid team list');
+  if (v.rows.length > MAX_MEMBERS) throw bad(`At most ${MAX_MEMBERS} members`);
+  return {
+    rows: v.rows.map((r) => {
+      const photo = String(r?.photo ?? '').trim();
+      if (photo && !PHOTO_PATH.test(photo)) throw bad('Invalid photo');
+      return { photo, name_ta: plain(r?.name_ta, MAX_TITLE), name_en: plain(r?.name_en, MAX_TITLE), title_ta: plain(r?.title_ta, MAX_TITLE), title_en: plain(r?.title_en, MAX_TITLE) };
+    }),
+  };
+}
+const CLEAN = { section: cleanSection, fields: cleanFields, list: cleanList, members: cleanMembers };
 function cleanBannerText(slot, v) {
   const out = {};
   for (const t of BANNER_SLOTS[slot].text) {
@@ -300,7 +319,7 @@ module.exports = function registerSiteContent(app, { db, STORAGE_PATH, sniffFile
   // cached for a long time without ever showing an old banner.
   app.get('/api/site-banners/file/:name', route(async (req, res) => {
     const name = String(req.params.name || '');
-    if (!BANNER_FILE.test(name)) return res.status(404).end();
+    if (!BANNER_FILE.test(name) && !PHOTO_FILE.test(name)) return res.status(404).end();
     const file = path.join(BANNER_DIR, name);
     if (!fs.existsSync(file)) return res.status(404).end();
     res.set('Cache-Control', 'public, max-age=31536000, immutable');
@@ -352,6 +371,7 @@ module.exports = function registerSiteContent(app, { db, STORAGE_PATH, sniffFile
         published_at = NOW(), draft = NULL, updated_by = $2
       WHERE page_key = $1 AND draft IS NOT NULL`, [req.params.page, who(req)]);
     await db.query('DELETE FROM site_content WHERE page_key = $1 AND draft IS NULL AND published IS NULL', [req.params.page]);
+    cleanupPhotoFiles();
     res.json({ published: r.rowCount });
   }));
 
@@ -363,12 +383,71 @@ module.exports = function registerSiteContent(app, { db, STORAGE_PATH, sniffFile
     const r = await db.query(`UPDATE site_content SET draft = NULL, draft_updated_at = NOW()
       WHERE page_key = $1 AND draft IS NOT NULL ${item ? 'AND item_key = $2' : ''}`, item ? [req.params.page, item] : [req.params.page]);
     await db.query('DELETE FROM site_content WHERE page_key = $1 AND draft IS NULL AND published IS NULL', [req.params.page]);
+    cleanupPhotoFiles();
     res.json({ discarded: r.rowCount });
   }));
 
   app.post('/api/admin/site-content-preview-token', route(async (req, res) => {
     res.json({ token: jwt.sign({ scope: 'site-preview' }, JWT_SECRET, { expiresIn: '1h' }) });
   }));
+
+  // Upload a photo (Team page). The file is only stored here; it is used once the admin
+  // saves the section with it, and shown on the website once the page is published.
+  const photoUpload = multer({
+    storage: multer.diskStorage({
+      destination: (req, file, cb) => fs.mkdir(BANNER_DIR, { recursive: true }, (err) => cb(err, BANNER_DIR)),
+      filename: (req, file, cb) => cb(null, `incoming_${Date.now()}_${crypto.randomBytes(4).toString('hex')}.tmp`),
+    }),
+    limits: { fileSize: MAX_PHOTO_BYTES, files: 1 },
+    fileFilter: (req, file, cb) => (/\.(jpe?g|png|webp)$/i.test(file.originalname)
+      ? cb(null, true) : cb(bad('Photos must be JPEG, PNG or WebP images'))),
+  }).single('image');
+
+  app.post('/api/admin/site-content-photo', (req, res, next) => photoUpload(req, res, (err) => {
+    if (!err) return next();
+    const message = err.code === 'LIMIT_FILE_SIZE' ? `Photos can be at most ${MAX_PHOTO_BYTES / 1024 / 1024} MB` : err.message;
+    res.status(400).json({ error: message });
+  }), route(async (req, res) => {
+    const tmp = req.file && req.file.path;
+    try {
+      if (!tmp) throw bad('Choose an image file');
+      const type = await sniffFile(tmp);
+      const ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[type];
+      if (!ext) throw bad('The file is not a JPEG, PNG or WebP image');
+      const head = Buffer.alloc(256 * 1024);
+      const fh = await fs.promises.open(tmp, 'r');
+      let n; try { ({ bytesRead: n } = await fh.read(head, 0, head.length, 0)); } finally { await fh.close(); }
+      const size = imageSize(head.subarray(0, n));
+      if (!size || !size.width || !size.height) throw bad('Could not read the image size');
+      if (size.width < PHOTO_SPEC.minWidth) throw bad(`The photo is only ${size.width} pixels wide; at least ${PHOTO_SPEC.minWidth} are needed (recommended ${PHOTO_SPEC.width} × ${PHOTO_SPEC.height}).`);
+      const ratio = size.height / size.width;
+      let warning = null;
+      if (ratio < 1.0 || ratio > 1.45) warning = `The photo is ${size.width} × ${size.height}. It is shown in an upright frame (${PHOTO_SPEC.width} × ${PHOTO_SPEC.height} shape), so its sides or top and bottom will be cropped.`;
+      else if (size.width < 400) warning = `The photo is ${size.width} × ${size.height}; ${PHOTO_SPEC.width} × ${PHOTO_SPEC.height} is recommended, so it may look soft.`;
+      const name = `photo_${Date.now()}_${crypto.randomBytes(4).toString('hex')}.${ext}`;
+      await fs.promises.rename(tmp, path.join(BANNER_DIR, name));
+      res.json({ url: bannerUrl(name), width: size.width, height: size.height, warning });
+    } catch (e) {
+      if (tmp) fs.promises.unlink(tmp).catch(() => {});
+      throw e;
+    }
+  }));
+
+  // Delete uploaded photos no draft or published section uses any more. A photo is kept
+  // for a day after upload, so one chosen but not yet saved is never removed.
+  async function cleanupPhotoFiles() {
+    try {
+      const { rows } = await db.query('SELECT draft::text AS d, published::text AS p FROM site_content');
+      const text = rows.map((r) => `${r.d || ''} ${r.p || ''}`).join(' ');
+      const files = await fs.promises.readdir(BANNER_DIR).catch(() => []);
+      const dayAgo = Date.now() - 24 * 3600 * 1000;
+      for (const f of files) {
+        if (!PHOTO_FILE.test(f) || text.includes(f)) continue;
+        const st = await fs.promises.stat(path.join(BANNER_DIR, f)).catch(() => null);
+        if (st && st.mtimeMs < dayAgo) await fs.promises.unlink(path.join(BANNER_DIR, f)).catch(() => {});
+      }
+    } catch (e) { console.error('Photo cleanup:', e.message); }
+  }
 
   // ── Admin: banners ─────────────────────────────────────────────────────────
   app.get('/api/admin/site-banners', route(async (req, res) => {

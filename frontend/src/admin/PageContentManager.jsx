@@ -9,8 +9,8 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
-import { Eye, Send, Undo2, RotateCcw, Save, Loader2, ExternalLink, Plus, Trash2 } from 'lucide-react';
-import { PAGES, builtInValue } from '../content/siteDefaults';
+import { Eye, Send, Undo2, RotateCcw, Save, Loader2, ExternalLink, Plus, Trash2, Upload, UserRound } from 'lucide-react';
+import { PAGES, builtInValue, photoUrl } from '../content/siteDefaults';
 import RichTextEditor from './RichTextEditor';
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -180,7 +180,8 @@ export default function PageContentManager() {
                 </div>
                 <div className="flex items-center gap-2">{dirty && <span className="text-[10px] font-bold text-amber-600 uppercase">Unsaved</span>}<Chip s={statusOf(rows[key])} /></div>
               </div>
-              {def.kind === 'section' ? <SectionEditor {...props} /> : def.kind === 'fields' ? <FieldsEditor {...props} /> : <ListEditor {...props} />}
+              {def.kind === 'section' ? <SectionEditor {...props} /> : def.kind === 'fields' ? <FieldsEditor {...props} />
+                : def.kind === 'members' ? <MembersEditor {...props} /> : <ListEditor {...props} />}
               <div className="mt-4 flex flex-wrap gap-2 justify-end border-t border-stone/8 pt-4">
                 {rows[key]?.draft && <Btn onClick={() => discardItem(key)} disabled={!!busy} icon={Undo2} busy={busy === `discard:${key}`} tone="light">Discard draft</Btn>}
                 {(rows[key]?.published || (rows[key]?.draft && !rows[key].draft.reset)) && <Btn onClick={() => restoreItem(key)} disabled={!!busy} icon={RotateCcw} busy={busy === `reset:${key}`} tone="light" title="Back to the page's original content">Restore original</Btn>}
@@ -312,6 +313,78 @@ function ListEditor({ value, onChange }) {
         })}
         {!rows.length && <div className="p-4"><Btn onClick={() => setRows([{ type: 'item', ta: '', en: '' }])} icon={Plus} tone="light">Add a row</Btn></div>}
       </div>
+    </div>
+  );
+}
+
+// People of the Team page: photo, post and name of each member, in display order
+const MAX_PHOTO_MB = 8;
+const emptyMember = () => ({ photo: '', name_ta: '', name_en: '', title_ta: '', title_en: '' });
+function MembersEditor({ value, onChange }) {
+  const rows = value.rows;
+  const [uploading, setUploading] = useState(-1);
+  const [notes, setNotes] = useState({});          // row index → { tone, text }
+  const setRows = (next) => onChange({ ...value, rows: next });
+  const update = (i, patch) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const insert = (i) => { setRows([...rows.slice(0, i + 1), emptyMember(), ...rows.slice(i + 1)]); setNotes({}); };
+  const remove = (i) => {
+    const r = rows[i];
+    if ((r.name_ta || r.name_en) && !window.confirm(`Remove "${r.name_ta || r.name_en}" from the team?`)) return;
+    setRows(rows.filter((_, j) => j !== i)); setNotes({});
+  };
+  const upload = async (i, file) => {
+    if (!file) return;
+    if (!/\.(jpe?g|png|webp)$/i.test(file.name)) { setNotes(n => ({ ...n, [i]: { tone: 'error', text: 'Choose a JPEG, PNG or WebP image.' } })); return; }
+    if (file.size > MAX_PHOTO_MB * 1024 * 1024) { setNotes(n => ({ ...n, [i]: { tone: 'error', text: `The photo is larger than ${MAX_PHOTO_MB} MB.` } })); return; }
+    setUploading(i);
+    try {
+      const fd = new FormData(); fd.append('image', file);
+      const r = await axios.post(`${API}/site-content-photo`, fd);
+      update(i, { photo: r.data.url });
+      setNotes(n => ({ ...n, [i]: r.data.warning ? { tone: 'warn', text: r.data.warning } : { tone: 'ok', text: 'Photo uploaded. Save the draft and publish the page to show it.' } }));
+    } catch (e) { setNotes(n => ({ ...n, [i]: { tone: 'error', text: errorText(e) } })); }
+    finally { setUploading(-1); }
+  };
+  const noteCls = { ok: 'text-green-700', warn: 'text-amber-700', error: 'text-red-600' };
+  return (
+    <div className="space-y-3">
+      {rows.map((r, i) => (
+        <div key={i} className="border border-stone/10 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row gap-4">
+          <div className="flex sm:flex-col items-center gap-3 sm:w-36 shrink-0">
+            <span className="text-xs font-bold text-stone/40 sm:self-start">{i + 1}.</span>
+            <div className="w-24 aspect-[1/1.2] bg-stone/5 border border-stone/10 overflow-hidden flex items-center justify-center">
+              {r.photo ? <img src={photoUrl(r.photo, BASE)} alt="" className="w-full h-full object-cover" /> : <UserRound className="w-8 h-8 text-stone/25" />}
+            </div>
+            <label className={`inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-stone/15 bg-white text-stone/70 hover:text-maroon hover:border-maroon/30 cursor-pointer ${uploading >= 0 ? 'opacity-40 pointer-events-none' : ''}`}>
+              {uploading === i ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+              {r.photo ? 'Change photo' : 'Upload photo'}
+              <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => { upload(i, e.target.files[0]); e.target.value = ''; }} />
+            </label>
+          </div>
+          <div className="flex-1 min-w-0 space-y-3">
+            <div className="grid md:grid-cols-2 gap-3">
+              <label className="block"><Label>Post — Tamil</Label>
+                <input className={inputCls} lang="ta" value={r.title_ta} onChange={e => update(i, { title_ta: e.target.value })} style={{ fontFamily: '"Noto Sans Tamil", sans-serif' }} />
+              </label>
+              <label className="block"><Label>Post — English (empty = Tamil is shown)</Label>
+                <input className={inputCls} lang="en" value={r.title_en} onChange={e => update(i, { title_en: e.target.value })} />
+              </label>
+              <label className="block"><Label>Name — Tamil</Label>
+                <input className={inputCls} lang="ta" value={r.name_ta} onChange={e => update(i, { name_ta: e.target.value })} style={{ fontFamily: '"Noto Sans Tamil", sans-serif' }} />
+              </label>
+              <label className="block"><Label>Name — English (empty = Tamil is shown)</Label>
+                <input className={inputCls} lang="en" value={r.name_en} onChange={e => update(i, { name_en: e.target.value })} />
+              </label>
+            </div>
+            {notes[i] && <p className={`text-xs ${noteCls[notes[i].tone]}`}>{notes[i].text}</p>}
+            <div className="flex gap-2 justify-end">
+              <Btn onClick={() => insert(i)} icon={Plus} tone="light" title="Add a new member below this one">Add member below</Btn>
+              <Btn onClick={() => remove(i)} icon={Trash2} tone="light" title="Remove this member">Remove</Btn>
+            </div>
+          </div>
+        </div>
+      ))}
+      {!rows.length && <Btn onClick={() => setRows([emptyMember()])} icon={Plus} tone="light">Add a member</Btn>}
     </div>
   );
 }

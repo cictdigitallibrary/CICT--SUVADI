@@ -361,6 +361,10 @@ a {
   .home-hero-title { font-size: clamp(14px, 4.4vw, 18px) !important; }
   .home-hero-subtitle { font-size: clamp(11px, 3.2vw, 13px) !important; }
   .home-hero-title, .home-hero-subtitle { word-break: normal !important; overflow-wrap: normal !important; }
+  /* English: longer words ("Manuscriptology", capitals of the institute name) — a little
+     smaller so every line stays between the palm leaves */
+  html[lang="en"] .home-hero-title { font-size: clamp(11px, 3.4vw, 15px) !important; }
+  html[lang="en"] .home-hero-subtitle { font-size: clamp(8px, 2.3vw, 10.5px) !important; letter-spacing: 0 !important; }
 }
 
 /* ── Reduce the giant py-40 padding (10rem each side → 2rem) ── */

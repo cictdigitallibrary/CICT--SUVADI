@@ -136,18 +136,48 @@ const ebooks = {
   },
 };
 
+// ── Team (/team) ──────────────────────────────────────────────────────────────
+// Photos: /images/team/… are served by the backend, other /images/… by the website itself,
+// /api/site-banners/file/… are photos uploaded in the admin.
+const m = (photo, name_ta, name_en, title_ta, title_en) => ({ photo, name_ta, name_en, title_ta, title_en });
+const team = {
+  label: 'Team', path: '/team',
+  sections: {
+    members: {
+      kind: 'members', label: 'Team members — சுவடியியல் புலக்குழு',
+      help: 'One member per row, shown on the page from top to bottom in this order: photo, post, name. Photos are shown in an upright frame (recommended 600 × 720 pixels, JPEG / PNG / WebP, up to 8 MB).',
+      rows: [
+        m('/images/team/director.jpg', 'பேராசிரியர் இரா. சந்திரசேகரன்', 'Prof. Ra. Chandrasekaran', 'இயக்குநர்', 'Director'),
+        m('/images/registrar.png', 'முனைவர் ரெ. புவனேஸ்வரி', 'Dr. Re. Bhuvaneswari', 'பதிவாளர்', 'Registrar'),
+        m('/images/team/arulmani.jpg', 'முனைவர் இரா. அருள்மணி', 'Dr. Ra. Arulmani', 'ஒருங்கிணைப்பாளர் & ஆராய்ச்சி அலுவலர்', 'Coordinator & Research Officer'),
+        m('/images/team/tamilvannan.jpg', 'முனைவர் ம. தமிழ்வாணன்', 'Dr. M. Tamilvannan', 'இளநிலை ஆராய்ச்சி அலுவலர்', 'Junior Research Officer'),
+        m('/images/team/karumbu.jpg', 'முனைவர் சே. கரும்பாயிரம்', 'Dr. Se. Karumpaayiram', 'இளநிலை ஆராய்ச்சி அலுவலர்', 'Junior Research Officer'),
+        m('/images/team/nagarajan.jpg', 'முனைவர் ம. நாகராஜன்', 'Dr. M. Nagarajan', 'இளநிலை ஆராய்ச்சி அலுவலர்', 'Junior Research Officer'),
+        m('/images/Murugaswaminathan.jpg', 'திரு. அ. முருக சுவாமிநாதன்', 'Mr. A. Muruga Swaminathan', 'நிரலாளர்', 'Programmer'),
+        m('/images/team/aruloli.jpg', 'திரு. தி.ஞா. அருள்ஒளி', 'Mr. Ti. Gna. Arulolli', 'தரவு உள்ளீட்டாளர்', 'Data Entry Operator'),
+      ],
+    },
+  },
+};
+
 export const PAGES = {
   home,
   'classical-texts': classicalTexts,
   'classical-texts-list': classicalTextsList,
   search,
   ebooks,
+  team,
 };
+
+// Address of a team photo (see the Team section above)
+export const photoUrl = (photo, api) => (!photo ? ''
+  : /^\/(api|images\/team)\//.test(photo) ? `${api}${photo}` : photo);
 
 // Built-in value of a section, in the stored shape
 export function builtInValue(def) {
   if (def.kind === 'section') return { title_ta: def.ta.title || '', title_en: def.en.title || '', body_ta: def.ta.body || '', body_en: def.en.body || '' };
   if (def.kind === 'fields') return { values: Object.fromEntries(def.fields.map(x => [x.key, { ta: x.ta || '', en: x.en || '' }])) };
+  if (def.kind === 'members') return { rows: def.rows.map(r => ({ ...r })) };
   return { title_ta: def.title.ta || '', title_en: def.title.en || '', rows: def.rows.map(r => ({ ...r })) };
 }
 

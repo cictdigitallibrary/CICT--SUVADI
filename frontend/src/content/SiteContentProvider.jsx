@@ -18,7 +18,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { PAGES, BANNERS, builtInValue } from './siteDefaults';
+import { PAGES, BANNERS, builtInValue, photoUrl } from './siteDefaults';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const MAX_WAIT = 2000;
@@ -156,6 +156,13 @@ export function usePageContent(pageKey) {
           rows: v.rows.map(r => ({ ...r, text: pick(r, language) })),
         };
       },
+      // members(key) → [{ photo (full address), name, title, name_en }] in display order
+      members: (key) => value(key).rows.map(r => ({
+        photo: photoUrl(r.photo, API),
+        name: pick({ ta: r.name_ta, en: r.name_en }, language),
+        title: pick({ ta: r.title_ta, en: r.title_en }, language),
+        name_en: r.name_en || r.name_ta || '',
+      })),
     };
   }, [page, pageKey, published, language]);
 }
