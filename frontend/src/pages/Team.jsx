@@ -164,7 +164,7 @@ const Team = () => {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.05 }}
-            className="flex flex-col gap-6 sm:gap-8 max-w-3xl mx-auto"
+            className="flex flex-col items-center gap-14 sm:gap-16"
           >
             {members.map((member) => {
               const photoUrl = member.localAsset ? member.photo
@@ -172,9 +172,9 @@ const Team = () => {
                 : `${API}/images/team/${member.photo}`;
 
               return (
-                <motion.div key={member.id} variants={fadeUp} className="group flex items-center gap-5 sm:gap-8 bg-white/60 border border-maroon/10 p-3 sm:p-4 shadow-sm hover:shadow-lg hover:border-gold/30 transition-all duration-500">
+                <motion.div key={member.id} variants={fadeUp} className="group w-full max-w-md">
                   {/* Photo Frame */}
-                  <div className="relative shrink-0 w-28 sm:w-40 overflow-hidden aspect-[1/1.2] bg-white border border-maroon/10 p-1.5 sm:p-2 shadow-md group-hover:shadow-xl group-hover:border-gold/30 transition-all duration-500">
+                  <div className="relative mb-6 mx-auto w-full max-w-[240px] sm:max-w-[260px] overflow-hidden aspect-[1/1.2] bg-white border border-maroon/10 p-2 shadow-md group-hover:shadow-xl group-hover:border-gold/30 transition-all duration-500">
                     <div className="absolute top-0 left-0 w-0 group-hover:w-full h-[3px] bg-gradient-to-r from-maroon to-gold transition-all duration-700 z-10" />
 
                     <div className="w-full h-full overflow-hidden bg-stone/5 relative">
@@ -199,7 +199,7 @@ const Team = () => {
                   </div>
 
                   {/* Meta */}
-                  <div className="min-w-0 flex-1 text-left">
+                  <div className="text-center">
                     <div className="inline-block px-3 py-1 bg-maroon/[0.04] border border-maroon/10 mb-3 group-hover:bg-gold/10 group-hover:border-gold/20 transition-all duration-300">
                       <span className="tamil-label text-[12px] sm:text-[13px] text-bronze uppercase tracking-[0.1em] sm:tracking-[0.2em] font-bold">
                         {member.title_tamil}
