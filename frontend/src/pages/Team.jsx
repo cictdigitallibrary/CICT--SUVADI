@@ -157,14 +157,14 @@ const Team = () => {
           </div>
         </motion.div>
 
-        {/* ── Team Grid ── */}
+        {/* ── Team list: one member per row, top to bottom in the order of the hierarchy ── */}
         <div className="mb-24">
           <motion.div
             variants={stagger}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, amount: 0.1 }}
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 xl:gap-10"
+            viewport={{ once: true, amount: 0.05 }}
+            className="flex flex-col gap-6 sm:gap-8 max-w-3xl mx-auto"
           >
             {members.map((member) => {
               const photoUrl = member.localAsset ? member.photo
@@ -172,9 +172,9 @@ const Team = () => {
                 : `${API}/images/team/${member.photo}`;
 
               return (
-                <motion.div key={member.id} variants={fadeUp} className="group">
+                <motion.div key={member.id} variants={fadeUp} className="group flex items-center gap-5 sm:gap-8 bg-white/60 border border-maroon/10 p-3 sm:p-4 shadow-sm hover:shadow-lg hover:border-gold/30 transition-all duration-500">
                   {/* Photo Frame */}
-                  <div className="relative mb-6 overflow-hidden aspect-[1/1.2] bg-white border border-maroon/10 p-2 shadow-md group-hover:shadow-xl group-hover:border-gold/30 transition-all duration-500">
+                  <div className="relative shrink-0 w-28 sm:w-40 overflow-hidden aspect-[1/1.2] bg-white border border-maroon/10 p-1.5 sm:p-2 shadow-md group-hover:shadow-xl group-hover:border-gold/30 transition-all duration-500">
                     <div className="absolute top-0 left-0 w-0 group-hover:w-full h-[3px] bg-gradient-to-r from-maroon to-gold transition-all duration-700 z-10" />
 
                     <div className="w-full h-full overflow-hidden bg-stone/5 relative">
@@ -199,13 +199,13 @@ const Team = () => {
                   </div>
 
                   {/* Meta */}
-                  <div className="text-center">
+                  <div className="min-w-0 flex-1 text-left">
                     <div className="inline-block px-3 py-1 bg-maroon/[0.04] border border-maroon/10 mb-3 group-hover:bg-gold/10 group-hover:border-gold/20 transition-all duration-300">
-                      <span className="tamil-label text-[13px] text-bronze uppercase tracking-[0.2em] font-bold">
+                      <span className="tamil-label text-[12px] sm:text-[13px] text-bronze uppercase tracking-[0.1em] sm:tracking-[0.2em] font-bold">
                         {member.title_tamil}
                       </span>
                     </div>
-                    <h3 className="tamil-label text-[15px] text-maroon font-black mb-1 group-hover:text-gold transition-colors duration-300 leading-snug">
+                    <h3 className="tamil-label text-[15px] sm:text-[18px] text-maroon font-black mb-1 group-hover:text-gold transition-colors duration-300 leading-snug">
                       {member.name_tamil}
                     </h3>
                   </div>
