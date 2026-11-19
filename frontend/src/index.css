@@ -346,6 +346,23 @@ a {
     linear-gradient(to bottom, rgba(15, 5, 0, 0.06) 0%, transparent 16%, transparent 82%, rgba(15, 5, 0, 0.07) 100%);
 }
 
+/* Phones (below 640px): a taller banner. The box takes the banner image's own
+   proportions (1600 × 853) instead of the flat 1920:555 panorama, so the picture is not
+   squeezed and the heading is easier to read. Tablets and desktops are unchanged. */
+@media (max-width: 639px) {
+  .home-hero {
+    aspect-ratio: 1600 / 853 !important;
+    max-height: 260px;               /* no sudden jump next to the 640px tablet size */
+    background-size: cover !important;
+  }
+  /* Text inside the clear parchment band between the palm leaves, words kept whole */
+  .home-hero-safe { max-width: 38% !important; padding-left: 0 !important; padding-right: 0 !important; }
+  .home-hero-heading { padding-left: 0 !important; padding-right: 0 !important; }
+  .home-hero-title { font-size: clamp(14px, 4.4vw, 18px) !important; }
+  .home-hero-subtitle { font-size: clamp(11px, 3.2vw, 13px) !important; }
+  .home-hero-title, .home-hero-subtitle { word-break: normal !important; overflow-wrap: normal !important; }
+}
+
 /* ── Reduce the giant py-40 padding (10rem each side → 2rem) ── */
 .home-hero .py-40 {
   padding-top: 2rem !important;

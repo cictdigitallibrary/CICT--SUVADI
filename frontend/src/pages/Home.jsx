@@ -320,6 +320,7 @@ const Home = () => {
           }}
         >
           <div
+            className="home-hero-safe"
             style={{
               /* Keep content inside the safe 50% centre band to clear the side manuscript graphics */
               width: '100%',
@@ -339,6 +340,7 @@ const Home = () => {
 
               {/* Fixed-Width Heading Container (Matches safe center zone) */}
               <div
+                className="home-hero-heading"
                 style={{
                   width: '100%',
                   display: 'flex',
@@ -350,7 +352,7 @@ const Home = () => {
               >
                 {/* Main title (Secondary Heading) */}
                 <motion.h1
-                  className="tamil-heading text-maroon italic"
+                  className="home-hero-title tamil-heading text-maroon italic"
                   style={{
                     fontSize: 'clamp(12px, 2.2vw, 2.2rem)',
                     textShadow: '0 2px 20px rgba(201,151,59,0.15)',
@@ -366,7 +368,7 @@ const Home = () => {
 
                 {/* Institutional label (Primary Heading) */}
                 <motion.h2
-                  className="tamil-heading text-maroon italic uppercase"
+                  className="home-hero-subtitle tamil-heading text-maroon italic uppercase"
                   style={{
                     fontSize: language === 'ta' ? 'clamp(10px, 1.8vw, 1.7rem)' : 'clamp(10px, 2vw, 1.9rem)',
                     textShadow: '0 2px 15px rgba(201,151,59,0.15)',
