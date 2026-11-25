@@ -195,12 +195,21 @@ function layoutBlock(el) {
           // to fit, at most 1px
           set(Math.max(-1, step * (width - words) / gained).toFixed(3));
           after = pieces.reduce((s, p) => s + widthOf(p), 0);
+          if (after > width - 0.5) {
+            // still wider (a very long word on a small phone): that word only is set a
+            // little smaller, just enough to fit (at most 15% smaller); never split
+            const factor = Math.max(0.85, (width - 0.5) / after);
+            for (const p of pieces) p.style.fontSize = `${(parseFloat(getComputedStyle(p).fontSize) * factor).toFixed(2)}px`;
+            after = pieces.reduce((s, p) => s + widthOf(p), 0);
+          }
         }
         wordsNow = after;
       }
       // spaces: exact widths so the line fills the paragraph
       if (gapsEls.length) {
-        const each = (width - wordsNow) / gapsEls.length;
+        // half a pixel short of the edge (invisible), so rounding never pushes the last word
+        // of the line onto the next line
+        const each = (width - wordsNow - 0.5) / gapsEls.length;
         for (const g of gapsEls) {
           g.style.display = 'inline-block';
           g.style.width = `${Math.max(0, each).toFixed(3)}px`;
@@ -221,10 +230,31 @@ export function justifyBlock(el) {
   if (el.__jtOriginal == null || el.innerHTML !== el.__jtOutput) el.__jtOriginal = el.innerHTML.replace(SHY, '');
   let lastKey = '';
   let frame = 0;
+  let waiting = false;
+  let loadTried = false;
   const run = (force) => {
+    if (!el.isConnected || !el.clientWidth) return;
+    // Measure only in the real font: until it has loaded, show ordinary justified text
+    if (document.fonts && document.fonts.check) {
+      const cs = getComputedStyle(el);
+      const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const sample = el.textContent.slice(0, 80) || 'அ';
+      let ready = true;
+      try { ready = document.fonts.check(font, sample); } catch { ready = true; }
+      if (!ready && !loadTried) {
+        if (!el.getAttribute('data-jt')) el.setAttribute('data-jt', 'wait');
+        if (!waiting) {
+          waiting = true;
+          // one attempt; if the font cannot be loaded the paragraph is laid out anyway
+          const timeout = new Promise((r) => setTimeout(r, 3000));
+          Promise.race([document.fonts.load(font, sample).catch(() => {}), timeout])
+            .then(() => { waiting = false; loadTried = true; requestAnimationFrame(() => run(true)); });
+        }
+        return;
+      }
+    }
     const key = `${window.innerWidth < MIN_SCREEN ? 'n' : 'w'}${el.clientWidth}`;
     if (!force && key === lastKey) return;
-    if (!el.isConnected || !el.clientWidth) return;
     lastKey = key;
     layoutBlock(el);
     el.__jtOutput = el.innerHTML;

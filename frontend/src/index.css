@@ -1417,8 +1417,9 @@ footer.bg-stone>div {
 }
 
 /* Paragraphs justified by utils/justify.js: the lines are set by the script (whole words,
-   exact widths); the browser must not justify, hyphenate or re-wrap them. Phones ("plain"):
-   ordinary left-aligned text with whole words. */
+   exact widths, each line ended by a line break); the browser must not justify or hyphenate
+   them. Lines are not forbidden to wrap, so text never leaves its box, even for a moment.
+   "wait" = until the paragraph's font has loaded: ordinary justified text without hyphens. */
 [data-jt] {
   text-align: left !important;
   text-align-last: auto !important;
@@ -1426,8 +1427,13 @@ footer.bg-stone>div {
   -webkit-hyphens: none !important;
   hyphens: none !important;
 }
-[data-jt="on"] { white-space: nowrap; }
-[data-jt="on"] .jt-s { white-space: pre; }
+[data-jt="wait"] {
+  text-align: justify !important;
+  text-align-last: left !important;
+  text-justify: inter-word !important;
+}
+[data-jt] .jt-w { white-space: nowrap; }
+[data-jt] .jt-s { white-space: pre; }
 
 /* Publication pages (/publication/:id): the description, justified by
    components/JustifiedText (whole words; extra space only between words, never between
