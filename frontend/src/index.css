@@ -1416,24 +1416,26 @@ footer.bg-stone>div {
   overflow-wrap: break-word;
 }
 
-/* Paragraphs justified by utils/justify.js: the lines are set by the script (whole words,
-   exact widths, each line ended by a line break); the browser must not justify or hyphenate
-   them. Lines are not forbidden to wrap, so text never leaves its box, even for a moment.
+/* Paragraphs justified by utils/justify.js. The script chooses where the lines break (whole
+   words, spare space shared evenly); the spaces inside a line cannot break (.jt-k), and the
+   browser justifies each line to the full width by widening those spaces only — never the
+   letters, never hyphens. If the paragraph's width changes slightly (a scrollbar appearing
+   while the page loads) every line stays justified at once.
    "wait" = until the paragraph's font has loaded: ordinary justified text without hyphens. */
 [data-jt] {
-  text-align: left !important;
-  text-align-last: auto !important;
-  text-justify: auto !important;
-  -webkit-hyphens: none !important;
-  hyphens: none !important;
-}
-[data-jt="wait"] {
   text-align: justify !important;
   text-align-last: left !important;
   text-justify: inter-word !important;
+  -webkit-hyphens: none !important;
+  hyphens: none !important;
 }
+[data-jt="measure"] { text-align: left !important; }
 [data-jt] .jt-w { white-space: nowrap; }
-[data-jt] .jt-s { white-space: pre; }
+[data-jt] .jt-k { white-space: nowrap; }
+
+/* Room for the scrollbar is kept at all times, so the page does not change width (and its
+   text does not shift) when the scrollbar appears or disappears while content loads. */
+html { scrollbar-gutter: stable; }
 
 /* Publication pages (/publication/:id): the description, justified by
    components/JustifiedText (whole words; extra space only between words, never between

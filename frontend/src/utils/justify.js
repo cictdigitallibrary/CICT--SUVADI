@@ -24,6 +24,7 @@ const MAX_LETTER = 0.35;   // px added between letters, at most (not visible at 
 const MIN_LETTER = -0.2;   // px: letters may close up this much, to fit one more word
 const MIN_SPACE = 0.65;    // a space may shrink to this part of its width, to fit one more word
 const MIN_SCREEN = 0;      // justified on every screen size, phones included
+const RESERVE = 8;         // px: lines are chosen this much narrower (at most 3%) than the paragraph
 
 const SHY = /­/g;
 const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('ta', { granularity: 'grapheme' }) : null;
@@ -141,7 +142,9 @@ function layoutBlock(el) {
     }
     return;
   }
-  el.setAttribute('data-jt', 'on');
+  // Words are measured with justification switched off (while justified, the browser may
+  // stretch the letters of a temporary line and the words would measure too wide)
+  el.setAttribute('data-jt', 'measure');
   const segments = tokenize(el);
   const range = document.createRange();
   // Measured on screen, then divided by any scaling of the page section (entrance animations
@@ -159,21 +162,22 @@ function layoutBlock(el) {
   }
   const space = spaceCount ? spaceSum / spaceCount : 4.5;
 
+  // Lines are chosen a few pixels narrower than the paragraph; the browser then justifies
+  // each line to the full width (spaces only). So if the paragraph becomes a little narrower
+  // or wider (a scrollbar appearing while the page loads), every line still fits and stays
+  // justified at once — no line breaks differently and nothing waits for a new layout.
+  const target = width - Math.min(RESERVE, width * 0.03);
   for (const seg of segments) {
-    const lines = breakLines(seg, space, width);
+    const lines = breakLines(seg, space, target);
     lines.forEach(([a, b], k) => {
       const lineWords = seg.slice(a, b);
       const lastLine = k === lines.length - 1;
-      // the space at the end of the line becomes the line break
-      const end = lineWords[lineWords.length - 1];
-      if (!lastLine && end.spaceAfter) {
-        end.spaceAfter.style.display = 'none';
-        end.spaceAfter.insertAdjacentElement('afterend', document.createElement('br'));
-      }
+      // spaces inside the line cannot break; the space at its end is where the line breaks
       const gapsEls = lineWords.slice(0, -1).map((wd) => wd.spaceAfter).filter(Boolean);
+      for (const g of gapsEls) g.classList.add('jt-k');
       const words = lineWords.reduce((s, wd) => s + wd.w, 0);
       const spacesNatural = lineWords.slice(0, -1).reduce((s, wd) => s + (wd.space || 0), 0);
-      const delta = width - (words + spacesNatural);
+      const delta = target - (words + spacesNatural);
       // the last line keeps its natural spacing, unless it was given one word more than fits
       if (lastLine && delta >= 0) return;
       // letters
@@ -190,33 +194,30 @@ function layoutBlock(el) {
         if (Math.abs(gained) > share && Math.abs(gained) > 0.01) {
           set((step * share / Math.abs(gained)).toFixed(3));
           after = pieces.reduce((s, p) => s + widthOf(p), 0);
-        } else if (!gapsEls.length && delta < 0 && after > width && Math.abs(gained) > 0.01) {
+        } else if (!gapsEls.length && delta < 0 && after > target && Math.abs(gained) > 0.01) {
           // one word wider than the box (narrow phones): close its letters up just enough
           // to fit, at most 1px
-          set(Math.max(-1, step * (width - words) / gained).toFixed(3));
+          set(Math.max(-1, step * (target - words) / gained).toFixed(3));
           after = pieces.reduce((s, p) => s + widthOf(p), 0);
-          if (after > width - 0.5) {
+          if (after > target) {
             // still wider (a very long word on a small phone): that word only is set a
             // little smaller, just enough to fit (at most 15% smaller); never split
-            const factor = Math.max(0.85, (width - 0.5) / after);
+            const factor = Math.max(0.85, target / after);
             for (const p of pieces) p.style.fontSize = `${(parseFloat(getComputedStyle(p).fontSize) * factor).toFixed(2)}px`;
             after = pieces.reduce((s, p) => s + widthOf(p), 0);
           }
         }
         wordsNow = after;
       }
-      // spaces: exact widths so the line fills the paragraph
-      if (gapsEls.length) {
-        // half a pixel short of the edge (invisible), so rounding never pushes the last word
-        // of the line onto the next line
-        const each = (width - wordsNow - 0.5) / gapsEls.length;
-        for (const g of gapsEls) {
-          g.style.display = 'inline-block';
-          g.style.width = `${Math.max(0, each).toFixed(3)}px`;
-        }
+      // A line that was given one word more than fits: its spaces close up a little so it
+      // fits; otherwise the browser's justification widens the spaces to the full width
+      if (gapsEls.length && wordsNow + spacesNatural > target) {
+        const shrinkEach = (wordsNow + spacesNatural - target) / gapsEls.length;
+        for (const g of gapsEls) g.style.wordSpacing = `${(-shrinkEach).toFixed(3)}px`;
       }
     });
   }
+  el.setAttribute('data-jt', 'on');
 }
 
 const blocks = new Set();
