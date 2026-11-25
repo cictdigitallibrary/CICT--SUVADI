@@ -8,8 +8,9 @@
  * edited in the admin looks exactly like the page's own text. Links to pages of this
  * site (href starting with "/") open inside the app without a full reload.
  */
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useLayoutEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { justifyBlock } from '../utils/justify';
 
 const ALLOWED = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'S', 'SMALL', 'UL', 'OL', 'LI', 'A', 'H3', 'H4', 'BLOCKQUOTE', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD']);
 const DROP = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'NOSCRIPT', 'TEMPLATE', 'SVG', 'MATH', 'FORM', 'TEXTAREA', 'SELECT', 'BUTTON', 'INPUT', 'LINK', 'META', 'TITLE', 'HEAD']);
@@ -131,9 +132,19 @@ export function ContentLink({ link, className, children }) {
   );
 }
 
-export default function RichText({ html, classes, className, as: Tag = 'div', ...rest }) {
+// justify: justified with whole words and normal letter spacing (utils/justify.js) — the
+// element itself when it is a p / li, else each p and li inside it.
+export default function RichText({ html, classes, className, as: Tag = 'div', justify = false, ...rest }) {
   const navigate = useNavigate();
   const safe = useMemo(() => sanitizeRichHtml(html, classes), [html, classes]);
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!justify || !el) return undefined;
+    const targets = /^(P|LI)$/.test(el.tagName) ? [el] : [...el.querySelectorAll('p, li')];
+    const stops = targets.map(justifyBlock);
+    return () => stops.forEach((stop) => stop());
+  }, [safe, justify]);
   const onClick = useCallback((e) => {
     const a = e.target.closest && e.target.closest('a[href]');
     if (!a || a.target === '_blank' || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
@@ -145,5 +156,5 @@ export default function RichText({ html, classes, className, as: Tag = 'div', ..
   }, [navigate]);
   if (!safe) return null;
   // eslint-disable-next-line react/no-danger
-  return <Tag className={className} onClick={onClick} dangerouslySetInnerHTML={{ __html: safe }} {...rest} />;
+  return <Tag ref={ref} className={className} onClick={onClick} dangerouslySetInnerHTML={{ __html: safe }} {...rest} />;
 }

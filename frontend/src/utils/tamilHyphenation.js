@@ -64,6 +64,8 @@ function hyphenateElement(el) {
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
     const text = n.nodeValue;
     if (!text || text.length < 6) continue;
+    // paragraphs justified by utils/justify.js keep their words whole
+    if (n.parentElement && n.parentElement.closest('[data-jt]')) continue;
     const next = text.replace(TAMIL_WORD, hyphenateTamilWord);
     if (next !== text) n.nodeValue = next;
   }

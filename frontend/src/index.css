@@ -1416,6 +1416,39 @@ footer.bg-stone>div {
   overflow-wrap: break-word;
 }
 
+/* Paragraphs justified by utils/justify.js: the lines are set by the script (whole words,
+   exact widths); the browser must not justify, hyphenate or re-wrap them. Phones ("plain"):
+   ordinary left-aligned text with whole words. */
+[data-jt] {
+  text-align: left !important;
+  text-align-last: auto !important;
+  text-justify: auto !important;
+  -webkit-hyphens: none !important;
+  hyphens: none !important;
+}
+[data-jt="on"] { white-space: nowrap; }
+[data-jt="on"] .jt-s { white-space: pre; }
+
+/* Publication pages (/publication/:id): the description, justified by
+   components/JustifiedText (whole words; extra space only between words, never between
+   letters), on every screen size, phones included. (The browser
+   itself does not justify it: the lines are set by the component.) */
+.publication-about {
+  text-align: left;
+  -webkit-hyphens: none;
+  hyphens: none;
+  overflow-wrap: normal;
+  word-break: normal;
+  font-size: 0.9375rem;
+  line-height: 2;
+}
+@media (min-width: 640px) {
+  .publication-about { font-size: 1.0625rem; }
+}
+@media (min-width: 768px) {
+  .publication-about { font-size: 1.125rem; }
+}
+
 .faculty-article-p {
   text-align: justify;
   text-align-last: left;

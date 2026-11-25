@@ -28,14 +28,14 @@ const PROJECT_TEAM = [
 function SectionParagraphs({ html, pClass, boldClass }) {
   return toBlocks(html).map((b, i) => {
     if (b.tag === 'ol' || b.tag === 'ul') {
-      return <RichText key={i} as={b.tag} className={`${b.tag === 'ol' ? 'list-decimal' : 'list-disc'} pl-6 space-y-2`} html={b.items.map(it => `<li>${it.html}</li>`).join('')} />;
+      return <RichText key={i} as={b.tag} className={`${b.tag === 'ol' ? 'list-decimal' : 'list-disc'} pl-6 space-y-2`} html={b.items.map(it => `<li>${it.html}</li>`).join('')} justify />;
     }
     const bold = /^\s*<(strong|b)>[\s\S]*<\/\1>\s*$/i.test(b.html) && !/<\/(strong|b)>[\s\S]*<(strong|b)>/i.test(b.html);
     // h4 ("Sub-heading" in the admin editor): a main division, with more space above it
     if (b.tag === 'h3' || b.tag === 'h4' || bold) {
       return <RichText key={i} as="p" className={b.tag === 'h4' ? `${boldClass} mt-8` : boldClass} html={b.html.replace(/^\s*<(strong|b)>|<\/(strong|b)>\s*$/gi, '')} />;
     }
-    return <RichText key={i} as="p" className={pClass} html={b.html} />;
+    return <RichText key={i} as="p" className={pClass} html={b.html} justify />;
   });
 }
 

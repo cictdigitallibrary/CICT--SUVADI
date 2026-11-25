@@ -225,7 +225,7 @@ function FacultyArticle({ html }) {
     ) : b.tag === 'table' ? (
       <RichText key={i} as="div" className="faculty-article-table" html={b.html} />
     ) : (
-      <RichText key={i} as="p" className="faculty-article-p" html={b.html} />
+      <RichText key={i} as="p" className="faculty-article-p" html={b.html} justify />
     )
   ));
 }

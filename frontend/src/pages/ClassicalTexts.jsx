@@ -120,7 +120,7 @@ function ContentBox({ section }) {
         {groups.map((g, gi) => (
           g.tag === 'p' ? (
             <div key={gi} className={BODY_TEXT}>
-              {g.items.map((b, i) => <RichText key={i} as="p" html={b.html} />)}
+              {g.items.map((b, i) => <RichText key={i} as="p" html={b.html} justify />)}
             </div>
           ) : g.tag === 'ol' ? (
             <div key={gi} className="space-y-6">
@@ -135,7 +135,7 @@ function ContentBox({ section }) {
                       <div className={rest.length ? 'space-y-3 min-w-0' : 'min-w-0'}>
                         {heading && <RichText as="h3" className="font-tamil-bold text-lg text-maroon font-bold" html={heading} />}
                         {rest.map((b, j) => (
-                          <RichText key={j} as={b.tag === 'p' ? 'p' : 'div'} className="tamil-body text-stone/80 text-[15px] sm:text-base leading-relaxed text-justify" html={b.html || ''} />
+                          <RichText key={j} as={b.tag === 'p' ? 'p' : 'div'} className="tamil-body text-stone/80 text-[15px] sm:text-base leading-relaxed text-justify" html={b.html || ''} justify={b.tag === 'p'} />
                         ))}
                       </div>
                     </div>
@@ -145,7 +145,7 @@ function ContentBox({ section }) {
             </div>
           ) : g.tag === 'ul' ? (
             <ul key={gi} className={`${BODY_TEXT} list-disc pl-6`}>
-              {g.items.map((item, i) => <RichText key={i} as="li" html={item.html} />)}
+              {g.items.map((item, i) => <RichText key={i} as="li" html={item.html} justify />)}
             </ul>
           ) : (
             <RichText key={gi} as="h3" className="font-tamil-bold text-lg text-maroon font-bold" html={g.html} />
